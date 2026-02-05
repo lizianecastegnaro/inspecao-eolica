@@ -1,0 +1,4249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0000FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Inspeção Eólica">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>Inspeção de Torres Eólicas - Coxilha Negra</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #0000FF;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="month"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #0000FF;
+            box-shadow: 0 0 0 3px rgba(0, 0, 255, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .tree-nav {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tree-item {
+            margin: 5px 0;
+        }
+
+        .tree-category {
+            font-weight: bold;
+            color: #0000FF;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .tree-category:hover {
+            background: #e6e6ff;
+        }
+
+        .tree-subcategory {
+            margin-left: 20px;
+            color: #555;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .tree-subcategory:hover {
+            background: #f0f0f0;
+        }
+
+        .tree-component {
+            margin-left: 40px;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tree-component:hover {
+            background: #fff;
+            border-left-color: #0000FF;
+        }
+
+        .tree-component.active {
+            background: #0000FF;
+            color: white;
+            border-left-color: #0066FF;
+        }
+
+        .inspection-form {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .photo-upload {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .photo-upload:hover {
+            border-color: #0000FF;
+            background: #f0f0ff;
+        }
+
+        .photo-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .photo-item {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .progress-info {
+            background: #e6e6ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0000FF 0%, #0066FF 100%);
+            transition: width 0.3s;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        /* Notificação Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .toast.hide {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        /* Modal de Diagnóstico */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Cards de diagnóstico */
+        .diag-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .diag-card h3 {
+            margin: 0 0 15px 0;
+            color: #0000FF;
+            font-size: 16px;
+        }
+
+        .diag-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .diag-stat {
+            text-align: center;
+        }
+
+        .diag-stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0000FF;
+        }
+
+        .diag-stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .diag-alert {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .diag-alert.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .diag-alert.warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .diag-alert.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+
+        .diag-alert.info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .diag-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .diag-table th,
+        .diag-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .diag-table th {
+            background: #e9ecef;
+            font-weight: 600;
+        }
+
+        .diag-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* Fotos no diagnóstico */
+        .diag-photos-container {
+            margin-top: 20px;
+        }
+
+        .diag-photo-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .diag-photo-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .diag-photo-title {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .diag-photo-count {
+            color: #666;
+            font-weight: normal;
+        }
+
+        .diag-photo-thumbs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .diag-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .diag-thumb:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        }
+
+        .diag-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Modal de foto ampliada */
+        .photo-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .photo-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .photo-modal-content img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .photo-modal-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            background: white;
+            border: none;
+            color: #333;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .photo-modal-close:hover {
+            background: #f0f0f0;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+
+            .buttons-row {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .modal-content {
+                max-height: 95vh;
+            }
+
+            .diag-stats {
+                gap: 15px;
+            }
+
+            .diag-stat-value {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Modal de Diagnóstico -->
+    <div id="diagnosticModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔍 Diagnóstico do Sistema</h2>
+                <button class="modal-close" onclick="closeDiagnosticModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="diagnosticContent">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeDiagnosticModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Foto Ampliada -->
+    <div id="photoModal" class="photo-modal-overlay" style="display: none;" onclick="closePhotoModal()">
+        <div class="photo-modal-content" onclick="event.stopPropagation()">
+            <button class="photo-modal-close" onclick="closePhotoModal()">&times;</button>
+            <img id="photoModalImg" src="" alt="Foto ampliada">
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🌬️ Inspeção de Torres Eólicas</h1>
+            <p id="parqueNome"><strong>Parque Eólico Coxilha Negra</strong></p>
+            <div style="margin-top: 15px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 8px;">
+                <p id="progressoParque" style="margin: 0 0 8px 0; font-size: 14px; opacity: 0.95;">
+                    📊 Aerogeradores completos: <strong>0/72</strong> (0%)
+                </p>
+                <div style="height: 6px; background: rgba(255,255,255,0.3); border-radius: 10px; overflow: hidden;">
+                    <div id="progressoParqueBarra" style="height: 100%; background: #4CAF50; width: 0%; transition: width 0.5s;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Informações Gerais -->
+            <div class="section">
+                <h2 class="section-title">📋 Informações Gerais</h2>
+                
+                <div class="form-group">
+                    <label>Parque Eólico <span class="required">*</span></label>
+                    <select id="parque" required>
+                        <option value="coxilha_negra" selected>Parque Eólico Coxilha Negra</option>
+                        <option value="entorno_2" disabled style="color:#999;">Parque Eólico Entorno 2 (em breve)</option>
+                        <option value="cerro_chato" disabled style="color:#999;">Parque Eólico Cerro Chato (em breve)</option>
+                        <option value="ibirapuita" disabled style="color:#999;">Parque Eólico Ibirapuitã (em breve)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Aerogerador <span class="required">*</span></label>
+                    <select id="aerogerador" required>
+                        <option value="">Selecione o aerogerador...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Mês e Ano da Inspeção <span class="required">*</span></label>
+                    <input type="month" id="mesAno" required>
+                </div>
+            </div>
+
+            <!-- Progresso -->
+            <div class="progress-info">
+                <strong>Progresso da Inspeção:</strong> <span id="progressText">0 de 105 componentes</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Navegação em Árvore -->
+            <div class="section">
+                <h2 class="section-title">🌳 Selecione o Componente</h2>
+                <div class="tree-nav" id="treeNav"></div>
+            </div>
+
+            <!-- Formulário de Inspeção -->
+            <div class="section" id="inspectionSection" style="display: none;">
+                <h2 class="section-title">✏️ Inspeção do Componente</h2>
+                
+                <div class="inspection-form">
+                    <h3 id="componentTitle" style="margin-bottom: 20px; color: #0000FF;"></h3>
+
+                    <div class="form-group">
+                        <label>Classificação <span class="required">*</span></label>
+                        <select id="classificacao" required>
+                            <option value="">Selecione...</option>
+                            <option value="Verificado">Verificado</option>
+                            <option value="Defeito Ligeiro">Defeito Ligeiro</option>
+                            <option value="Defeito Grave">Defeito Grave </option>
+                            <option value="Ação Imediata">Ação Imediata</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="falhaGroup" style="display: none;">
+                        <label>Falha <span class="required">*</span></label>
+                        <select id="falha" required>
+                            <option value="">Selecione a falha...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="falhaOutraGroup" style="display: none;">
+                        <label>Descreva a falha <span class="required">*</span></label>
+                        <input type="text" id="falhaOutra" placeholder="Digite a falha encontrada...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observações (opcional)</label>
+                        <textarea id="observacoes" placeholder="Digite observações adicionais..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fotos (opcional)</label>
+                        <div class="photo-upload" id="photoUpload">
+                            <p>📸 Clique ou arraste fotos aqui</p>
+                            <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
+                        </div>
+                        <div class="photo-preview" id="photoPreview"></div>
+                    </div>
+
+                    <div class="buttons-row">
+                        <button class="btn btn-primary" id="saveComponent">💾 Salvar Componente</button>
+                        <button class="btn btn-secondary" id="clearForm">🗑️ Limpar Formulário</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="section">
+                <div class="buttons-row">
+                    <button class="btn btn-success" id="exportData">📊 Exportar para Excel/CSV</button>
+                    <button class="btn btn-success" id="exportAll">📊 Exportar TODAS as Inspeções</button>
+                    <button class="btn btn-secondary" id="viewData">📄 Ver Relatório</button>
+                    <button class="btn btn-secondary" id="diagData" title="Verificar integridade dos dados salvos">🔍 Diagnóstico</button>
+                </div>
+                <div class="buttons-row" style="margin-top: 10px;">
+                    <button class="btn btn-primary" id="backupData" title="Salvar todos os dados em um arquivo">💾 Fazer Backup</button>
+                    <button class="btn btn-secondary" id="restoreData" title="Restaurar dados de um arquivo de backup">📂 Restaurar Backup</button>
+                    <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// Dados da estrutura de inspeção
+const ESTRUTURA = {
+  "classificacoes": [
+    "Verificado",
+    "Defeito Ligeiro",
+    "Defeito Grave",
+    "Ação Imediata"
+  ],
+  "categorias": {
+    "Exterior e Acessos": {
+      "Fundação": {
+        "Fundação": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano no acabamento do grout",
+            "Contaminação por óleo"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Tampas de inspeção": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Tampa ausente",
+            "Tampa Danificada",
+            "Aterramento não localizado",
+            "Aterramento danificado"
+          ]
+        }
+      },
+      "Carenagem": {
+        "PAD": {
+          "classificacoes": [],
+          "falhas": [
+            "Obstáculos no acesso",
+            "Vegetação em excesso"
+          ]
+        },
+        "Escada externa": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Contaminação por óleo",
+            "Defeito estrutural",
+            "Presença de animais"
+          ]
+        },
+        "Porta lado externo": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Vedação danificada",
+            "Danos estruturais"
+          ]
+        },
+        "Porta lado interno": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Vedação danificada",
+            "Danos estruturais"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Identificação da turbina": {
+          "classificacoes": [],
+          "falhas": [
+            "Identificação ausente",
+            "Identificação danificada"
+          ]
+        }
+      },
+      "Torre  exterior": {
+        "Tramos": {
+          "classificacoes": [],
+          "falhas": [
+            "Erosão acentuada",
+            "Trincas no concreto",
+            "Presença animais"
+          ]
+        },
+        "Pintura": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de sujeira",
+            "Contaminação por óleo"
+          ]
+        }
+      },
+      "Vias de acesso": {
+        "Vias de acesso": {
+          "classificacoes": [],
+          "falhas": [
+            "Obstáculos no acesso",
+            "Vegetação em excesso"
+          ]
+        }
+      }
+    },
+    "Torre do Aerogerador": {
+      "Carenagem": {
+        "Interior - Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de Sujeira",
+            "Acúmmulo de água",
+            "Presença de animais"
+          ]
+        },
+        "Aterramento da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Danos por arco elétrico",
+            "Ausência de isolamento",
+            "Conexão danificada"
+          ]
+        }
+      },
+      "Torre interior": {
+        "Tramos": {
+          "classificacoes": [],
+          "falhas": [
+            "Trincas no concreto",
+            "Dano na estrutura",
+            "Infiltração de água"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Iluminação da base": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        },
+        "Iluminação de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        },
+        "Degraus da escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Ausência de certificação",
+            "Danos estruturais",
+            "Fixação danificada"
+          ]
+        },
+        "Parafusos de fixação da escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Folgas nas conexões",
+            "Marcações alteradas"
+          ]
+        },
+        "Linha de vida": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Ausência de certificação",
+            "Oxidação",
+            "Danos estruturais",
+            "Validade da ceritificação expirada"
+          ]
+        }
+      },
+      "Elevador de serviço": {
+        "Certificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Ausência de certificação",
+            "Validade da inspeção inspirada"
+          ]
+        },
+        "Manutenção": {
+          "classificacoes": [],
+          "falhas": [
+            "Ausência de livro de registro",
+            "Manutenção atrasada"
+          ]
+        },
+        "Parapeito": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos estruturais",
+            "Fixação inadequada",
+            "Oxidação"
+          ]
+        },
+        "Painel elétrico": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos estruturais",
+            "Fixação inadequada",
+            "Oxidação",
+            "Painel elétrico violado"
+          ]
+        },
+        "Teste funcional": {
+          "classificacoes": [],
+          "falhas": [
+            "Elevador bloqueado",
+            "Danos estruturais",
+            "Cabos danificados",
+            "Mecanismo danificado",
+            "Elevador inoperante",
+            "Acúmulo de sujeira",
+            "Acúmulo de materiais"
+          ]
+        }
+      },
+      "Aterramentos": {
+        "Conexões na base": {
+          "classificacoes": [],
+          "falhas": [
+            "Aterramento ausente",
+            "Aterramento danificado",
+            "Aterramento solto",
+            "Oxidação"
+          ]
+        }
+      }
+    },
+    "Subsolo": {
+      "Estado geral": {
+        "Limpeza": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de sujeira",
+            "Acúmulo de água",
+            "Presença de animais"
+          ]
+        },
+        "Iluminação": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        }
+      }
+    },
+    "Sistema elétrico / Gabinetes": {
+      "Sistema elétrico/Ventilação": {
+        "Número de série da UPS": {
+          "classificacoes": [],
+          "falhas": [
+            "Identificação ausente",
+            "Identificação danificada"
+          ]
+        },
+        "Testar UPS": {
+          "classificacoes": [],
+          "falhas": [
+            "UPS inoperante"
+          ]
+        },
+        "Tomadas auxiliares/tomadas da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada inoperante",
+            "Falha na isolação",
+            "Fixação inadequada",
+            "Sinais de aquecimento"
+          ]
+        },
+        "Cabos de potência": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste por atrito",
+            "Oxidação nas fixações",
+            "Instalação inadequada"
+          ]
+        },
+        "Sistema de ventilação": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de sujeira",
+            "Filtro de ar ausente",
+            "Filtro de ar danificado",
+            "Danos estruturais",
+            "Sistema inoperante"
+          ]
+        }
+      },
+      "Cubículo de Saída": {
+        "Condições externas do Swichgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de sujeira",
+            "Ausência da TAG"
+          ]
+        },
+        "Carcaça": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Ausência de aterramento",
+            "Danos na pintura"
+          ]
+        },
+        "Vedações do Switchgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Aterramento ausente",
+            "Danos estruturais"
+          ]
+        },
+        "Chave de comutação": {
+          "classificacoes": [],
+          "falhas": [
+            "Chave ausente",
+            "Chave fora de padrão"
+          ]
+        },
+        "Indicadores de posição": {
+          "classificacoes": [],
+          "falhas": [
+            "Parafuso ausente",
+            "Swichgear inoperante"
+          ]
+        }
+      },
+      "Cubiculo de Saída": {
+        "Pressão de gás do Swichgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressão de gás baixa",
+            "Ausência de pressão"
+          ]
+        }
+      }
+    },
+    "Torre Seção do Yaw Loop": {
+      "Cabos do Loop": {
+        "Circuitos potencia/controle/comunicação": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de aquecimento",
+            "Sinais de arco elétrico",
+            "cabos desconectados",
+            "Cabos torcidos",
+            "Danos estruturais",
+            "Cabos rompidos"
+          ]
+        },
+        "Sensor de torção dos cabos": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação",
+            "Fixação inadequada",
+            "Fim de curso com Falha"
+          ]
+        },
+        "Tomadas auxiliares/tomadas da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação",
+            "Fixação inadequada",
+            "Sinais de arco elétrico"
+          ]
+        },
+        "Instalação dos cabos": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabos cruzados",
+            "Danos estruturais",
+            "Danos nas guias de fixação"
+          ]
+        },
+        "Plataforma do elevador/loop": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos estruturais",
+            "Fixação inadequada"
+          ]
+        }
+      },
+      "Sistema do Yaw": {
+        "Lubrificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Lubrificação insuficiente",
+            "Excesso de graxa",
+            "Graxa contaminada",
+            "Graxa degradada",
+            "Ponto de lubrificação obstruído",
+            "Sistema de Lubrificação automática ausente"
+          ]
+        },
+        "Sensor de pocição da nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor inoperante",
+            "Fixação inadequada",
+            "Sensor não identificado",
+            "Sensor danificado"
+          ]
+        },
+        "Dentes e pinhões do yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste excessivo",
+            "Dano mecânico",
+            "Lubrificação insuficiente",
+            "Desalinhamento"
+          ]
+        },
+        "Rolamento do yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Vedação danificada",
+            "Folga excessiva",
+            "Dano mecânico"
+          ]
+        },
+        "Parafusos nacelle-torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Marcas de torque desalinhadas",
+            "Oxidação",
+            "Parafuso ausente",
+            "Parafuso danificado",
+            "Fixação frouxa"
+          ]
+        }
+      },
+      "Motor-Redutor Yaw": {
+        "Registrar placa de identificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ausente",
+            "Placa danificada"
+          ]
+        },
+        "Nível de óleo dos motores redutores": {
+          "classificacoes": [],
+          "falhas": [
+            "Nível de óleo baixo",
+            "Carcaça danificada",
+            "Oxidação"
+          ]
+        },
+        "Pinhoes e cremalheira": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste excessivo",
+            "Dano mecânico",
+            "Lubrificação insuficiente",
+            "Desalinhamento"
+          ]
+        },
+        "Acionamento para os dois lados": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruídos anormais",
+            "Dano mecânico",
+            "Não aciona em um sentido",
+            "Não aciona em ambos sentidos"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Iluminação": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        },
+        "Iluminação de emergencia": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Trinca",
+            "Oxidação",
+            "Dano estrutural"
+          ]
+        },
+        "Escada de acesso a Nacelle": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Trinca",
+            "Oxidação",
+            "Dano estrutural",
+            "Degrau danificado"
+          ]
+        },
+        "Plataforma do Yaw e parapeitos": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos estruturais",
+            "Fixação inadequada"
+          ]
+        }
+      }
+    },
+    "Drive train": {
+      "Drive train": {
+        "Conexão do Hub - Main Carrier": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Dano mecânico",
+            "Desgaste excessivo",
+            "Marcas de torque desalinhadas",
+            "Folga entre o flange da tampa e alojamento",
+            "Fixação inadequada"
+          ]
+        },
+        "Eixo principal": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano mecânico",
+            "Oxidação",
+            "Pintura danificada",
+            "Vazamento",
+            "Marca de torque desalinhada",
+            "Parafuso danificado",
+            "Parafuso frouxo",
+            "Desalinhamento",
+            "Desnivelamento",
+            "Parafuso ausente"
+          ]
+        },
+        "Rolamento principal": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de graxa",
+            "Vedação danificada",
+            "Lubrificação insuficiente",
+            "Excesso de graxa",
+            "Graxa contaminada",
+            "Coletor de graxa sujo"
+          ]
+        },
+        "Rolamento frontal": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de graxa",
+            "Vedação danificada",
+            "Lubrificação insuficiente",
+            "Excesso de graxa",
+            "Graxa contaminada",
+            "Coletor de graxa sujo"
+          ]
+        }
+      },
+      "Sistema hidráulico/Freio": {
+        "Sistema hidráulico": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Filtro dessecante saturado",
+            "Pressão baixa",
+            "Válvula com falha",
+            "Sensor com falha",
+            "Óleo contaminado",
+            "Mangueira danificada",
+            "Vazamento de óleo",
+            "Óleo degradado"
+          ]
+        },
+        "Idle, stop/reset e emergency stop": {
+          "classificacoes": [],
+          "falhas": [
+            "Acionamento parcial",
+            "Resposta lenta",
+            "Falha de comando",
+            "Emergency stop não atia",
+            "Ruído anormal"
+          ]
+        },
+        "Funcionamento mecânico do freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Freio inoperante",
+            "Acionamento parcial",
+            "Resposta lenta",
+            "Falha de comando",
+            "Ruído anormal",
+            "Falha no emergency stop"
+          ]
+        },
+        "Funcionamento do Rotor Lock": {
+          "classificacoes": [],
+          "falhas": [
+            "nificado",
+            "Pino trava ausente",
+            "Braço danificado",
+            "Fixação inadequada",
+            "Mangueiras desconctadas"
+          ]
+        }
+      }
+    },
+    "Gerador": {
+      "Estado geral": {
+        "Carcaça": {
+          "classificacoes": [],
+          "falhas": [
+            "Identificação ausente",
+            "Identificação ilegível",
+            "Dano mecânico",
+            "Trinca",
+            "Oxidação",
+            "Contaminação por óleo",
+            "Deformação"
+          ]
+        },
+        "Escudo do estator": {
+          "classificacoes": [],
+          "falhas": [
+            "Enrolamento danificado",
+            "Pólo danificado",
+            "Bucin danificado",
+            "Fixação inadequada",
+            "Isolamento danificado",
+            "Oxidação",
+            "Sinal de aquecimento",
+            "Sinal de arco elétrico"
+          ]
+        },
+        "Rotor": {
+          "classificacoes": [],
+          "falhas": [
+            "Enrolamento danificado",
+            "Pólo danificado",
+            "Bucin danificado",
+            "Fixação inadequada",
+            "Isolamento danificado",
+            "Oxidação",
+            "Sinal de aquecimento",
+            "Sinal de arco elétrico"
+          ]
+        },
+        "Retificador/conversor": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo solto",
+            "Cabo danificado",
+            "Sinal de arco elétrico",
+            "Sinal de aquecimento",
+            "Proteção acrílica danificada",
+            "Proteção acrílica ausente",
+            "Entrada de ar obstruída",
+            "Componente frouxo",
+            "Filtro sujo",
+            "Filtro danificado"
+          ]
+        },
+        "Filtro do gerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Filtro sujo",
+            "Filtro obstruído",
+            "Filtro danificado",
+            "Filtro ausente",
+            "Fixação inadequada",
+            "Elemento de fixação frouxo",
+            "Entrada de ar obstruída",
+            "Vedação danificada"
+          ]
+        }
+      }
+    },
+    "Conversor/Painéis": {
+      "Retificadores e Conversores": {
+        "Painéis U01": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Painéis U02": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Painéis U48": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Painéis U20": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Painéis U50": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Painéis U06": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Conexões gabinetes/cabos de fibra óptica": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabos desconectados",
+            "Cabos rompidos"
+          ]
+        },
+        "Proteção contra interrupção de corrente": {
+          "classificacoes": [],
+          "falhas": [
+            "Disjuntor desarmado"
+          ]
+        },
+        "Cabos de potência": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabos desconectados",
+            "Cabos rompidos"
+          ]
+        },
+        "DPS": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinal de descarga atmosférica"
+          ]
+        }
+      }
+    },
+    "Nacelle Interior": {
+      "Estado geral": {
+        "Carenagem de aço": {
+          "classificacoes": [],
+          "falhas": [
+            "Pintura danificada",
+            "Dano mecânico",
+            "Oxidação",
+            "Fixação inadequada",
+            "Elemento de fixação frouxo",
+            "Marca de torque desalinhada",
+            "Selante danificado",
+            "Selante ausente",
+            "Escotilha com falha de funcionamento",
+            "Entrada de ar obstruída"
+          ]
+        },
+        "Estruturas de suporte": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Trinca",
+            "Marca de impacto",
+            "Solda danificada",
+            "Fixação inadequada",
+            "Elemento de fixação frouxo",
+            "Marca de torque desalinhada",
+            "Dano mecânico"
+          ]
+        },
+        "Escotilha de evacuação da nacelle": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Solda danificada",
+            "Marca de torque desalinhada",
+            "Trava com falha",
+            "Trava danificada",
+            "Fixação inadequada",
+            "Elemento de fixação frouxo",
+            "Mobilidade comprometida",
+            "Não opera",
+            "Funcionamento irregular",
+            "Dano mecânico"
+          ]
+        },
+        "Guincho/Talha": {
+          "classificacoes": [],
+          "falhas": [
+            "Funcionamento irregular",
+            "Corrente danificada",
+            "Corrente desgastada",
+            "Corrente com corrosão",
+            "Gancho danificado",
+            "Trava do gancho com falha",
+            "Vazamento na talha",
+            "Bacia de contenção danificada",
+            "Bacia de contenção ausente"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Painel de controle da nacelle": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo solto",
+            "Cabo danificado",
+            "Componente frouxo",
+            "Entrada de ar obstruída",
+            "Filtro sujo",
+            "Filtro danificado",
+            "Filtro ausente",
+            "Sinal de aquecimento",
+            "Sinal de arco elétrico"
+          ]
+        },
+        "Armário de controle das luzes de navegação": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo solto",
+            "Cabo danificado",
+            "Fixação inadequada",
+            "Entrada de ar obstruída",
+            "Filtro sujo",
+            "Filtro danificado",
+            "Filtro ausente",
+            "Sinal de aquecimento",
+            "Sinal de arco elétrico"
+          ]
+        },
+        "Inversor de Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo solto",
+            "Cabo danificado",
+            "Fixação inadequada",
+            "Entrada de ar obstruída",
+            "Filtro sujo",
+            "Filtro danificado",
+            "Filtro ausente",
+            "Sinal de aquecimento",
+            "Sinal de arco elétrico"
+          ]
+        },
+        "Cabos e fios": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Isolamento danificado",
+            "Cabo solto",
+            "Fixação inadequada",
+            "Roteamento inadequado",
+            "Torção excessiva",
+            "Cabo prensado",
+            "Guia de cabo danificada",
+            "Guia de cabo ausente"
+          ]
+        },
+        "UPS": {
+          "classificacoes": [],
+          "falhas": [
+            "UPS inoperante",
+            "Autonomia insuficiente",
+            "Bateria degradada",
+            "Bateria danificada",
+            "Alarme ativo",
+            "Falha no autoteste",
+            "Dano mecânico",
+            "Fixação inadequada",
+            "Indicador de falha ativo"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Sinalizações de advertência": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ausente",
+            "Placa danificada"
+          ]
+        },
+        "Iluminação e iluminação de emergencia": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        },
+        "Tomadas auxiliares/tomadas da nacelle": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação",
+            "Fixação inadequada",
+            "Sinais de arco elétrico"
+          ]
+        },
+        "Teste funcional Parada de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação"
+          ]
+        },
+        "Kit resgate": {
+          "classificacoes": [],
+          "falhas": [
+            "Ausência de certificação"
+          ]
+        },
+        "Extintores de incêndio": {
+          "classificacoes": [],
+          "falhas": [
+            "Carga baixa",
+            "Extintor descarregado",
+            "Validade vencida",
+            "Lacre violado",
+            "Manômetro fora da faixa",
+            "Extintor danificado",
+            "Suporte de fixação danificado"
+          ]
+        }
+      }
+    },
+    "Nacelle Exterior": {
+      "Estado geral": {
+        "Carenagem exterior": {
+          "classificacoes": [],
+          "falhas": [
+            "Pintura danificada",
+            "Dano mecânico",
+            "Oxidação",
+            "Fixação inadequada",
+            "Elemento de fixação frouxo",
+            "Marca de torque desalinhada",
+            "Selante danificado",
+            "Selante ausente",
+            "Escotilha com falha de funcionamento",
+            "Entrada de ar obstruída"
+          ]
+        },
+        "Escotilha de acesso e manobra": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Solda danificada",
+            "Marca de torque desalinhada",
+            "Trava com falha",
+            "Trava danificada",
+            "Fixação inadequada",
+            "Elemento de fixação frouxo",
+            "Mobilidade comprometida",
+            "Não opera",
+            "Funcionamento irregular",
+            "Dano mecânico"
+          ]
+        },
+        "Sensores meterológicos": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano mecânico",
+            "Vedação danificada",
+            "Fixação inadequada",
+            "Sinal de descarga elétrica",
+            "Revestimento fissurado",
+            "Proteção da cavidade danificada",
+            "Sensor inoperante",
+            "Leitura instável"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Luzes de aviação": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação",
+            "Ausência da luz de aviação"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Trinca",
+            "Oxidação",
+            "Dano estrutural"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Para-raios e suporte de fixação": {
+          "classificacoes": [],
+          "falhas": [
+            "Para-raios danificado",
+            "Oxidação",
+            "Sinal de descarga elétrica",
+            "Suporte de fixação danificado",
+            "Suporte de fixação ausente",
+            "Conexão solta"
+          ]
+        },
+        "Conexão ao SPDA": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão ausente",
+            "Conexão solta",
+            "Conexão elétrica danificada",
+            "Oxidação",
+            "Corrosão",
+            "Sinal de descarga elétrica",
+            "Fixação inadequada"
+          ]
+        }
+      },
+      "Sistema de Arrefecimento": {
+        "Radiadores externos": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Vazamentos"
+          ]
+        },
+        "Eletro-ventilador": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Vazamentos"
+          ]
+        },
+        "Mangueiras e Conexões": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação",
+            "Vazamentos"
+          ]
+        },
+        "Estrutura de fixação": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos estruturais",
+            "Ausência de parafuso",
+            "Oxidação",
+            "Pintura danificada"
+          ]
+        }
+      }
+    }
+  }
+};
+
+// Lista de aerogeradores
+const AEROGERADORES = [
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-01"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-02"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-03"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-04"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-05"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-06"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-07"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-08"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-09"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-10"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-11"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-12"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-13"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-14"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-15"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-16"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-17"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-18"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-19"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-20"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-21"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-22"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-23"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 2",
+    "codigo": "ECN2-24"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-01"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-02"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-03"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-04"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-05"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-06"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-07"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-08"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-09"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-10"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-11"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-12"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-13"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-14"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-15"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-16"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-17"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-18"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-19"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-20"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-21"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-22"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-23"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-24"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 3",
+    "codigo": "ECN3-25"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-01"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-02"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-03"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-04"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-05"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-06"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-07"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-08"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-09"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-10"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-11"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-12"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-13"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-14"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-15"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-16"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-17"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-18"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-19"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-20"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-21"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-22"
+  },
+  {
+    "parque": "Coxilha Negra",
+    "sub_parque": "Coxilha Negra 4",
+    "codigo": "ECN4-23"
+  }
+];
+
+        // Estado da aplicação
+        let currentComponent = null;
+        let currentPhotos = [];
+        let inspectionData = {};
+        let totalComponentes = 0;
+        let db = null; // Referência ao IndexedDB
+
+        // ========== SISTEMA DE ARMAZENAMENTO IndexedDB ==========
+        const DB_NAME = 'InspecaoEolicaDB';
+        const DB_VERSION = 1;
+        const STORE_INSPECTIONS = 'inspections';
+        const STORE_PHOTOS = 'photos';
+
+        /**
+         * Inicializa o IndexedDB
+         */
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error('Erro ao abrir IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB aberto com sucesso');
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    console.log('Criando/atualizando estrutura do IndexedDB...');
+                    const database = event.target.result;
+
+                    // Store para inspeções
+                    if (!database.objectStoreNames.contains(STORE_INSPECTIONS)) {
+                        const inspStore = database.createObjectStore(STORE_INSPECTIONS, { keyPath: 'key' });
+                        inspStore.createIndex('aerogerador', 'aerogerador', { unique: false });
+                        inspStore.createIndex('categoria', 'categoria', { unique: false });
+                    }
+
+                    // Store para fotos
+                    if (!database.objectStoreNames.contains(STORE_PHOTOS)) {
+                        database.createObjectStore(STORE_PHOTOS, { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+
+        /**
+         * Salva uma inspeção no IndexedDB
+         */
+        function saveInspectionToDB(key, data) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('DB não inicializado'));
+                    return;
+                }
+                const transaction = db.transaction([STORE_INSPECTIONS], 'readwrite');
+                const store = transaction.objectStore(STORE_INSPECTIONS);
+                const request = store.put({ key, ...data });
+
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        /**
+         * Carrega todas as inspeções do IndexedDB
+         */
+        function loadAllInspectionsFromDB() {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('DB não inicializado'));
+                    return;
+                }
+                const transaction = db.transaction([STORE_INSPECTIONS], 'readonly');
+                const store = transaction.objectStore(STORE_INSPECTIONS);
+                const request = store.getAll();
+
+                request.onsuccess = (event) => {
+                    const results = event.target.result;
+                    const data = {};
+                    results.forEach(item => {
+                        const key = item.key;
+                        delete item.key;
+                        data[key] = item;
+                    });
+                    resolve(data);
+                };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        /**
+         * Salva fotos no IndexedDB
+         */
+        function savePhotosToDB(key, photos) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('DB não inicializado'));
+                    return;
+                }
+                const transaction = db.transaction([STORE_PHOTOS], 'readwrite');
+                const store = transaction.objectStore(STORE_PHOTOS);
+                
+                if (photos && photos.length > 0) {
+                    const request = store.put({ key, photos });
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e.target.error);
+                } else {
+                    const request = store.delete(key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e.target.error);
+                }
+            });
+        }
+
+        /**
+         * Carrega fotos do IndexedDB
+         */
+        function loadPhotosFromDB(key) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('DB não inicializado'));
+                    return;
+                }
+                const transaction = db.transaction([STORE_PHOTOS], 'readonly');
+                const store = transaction.objectStore(STORE_PHOTOS);
+                const request = store.get(key);
+
+                request.onsuccess = (event) => {
+                    const result = event.target.result;
+                    resolve(result ? result.photos : []);
+                };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        /**
+         * Carrega todas as fotos do IndexedDB
+         */
+        function loadAllPhotosFromDB() {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('DB não inicializado'));
+                    return;
+                }
+                const transaction = db.transaction([STORE_PHOTOS], 'readonly');
+                const store = transaction.objectStore(STORE_PHOTOS);
+                const request = store.getAll();
+
+                request.onsuccess = (event) => {
+                    const results = event.target.result;
+                    const data = {};
+                    results.forEach(item => {
+                        data[item.key] = item.photos;
+                    });
+                    resolve(data);
+                };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        /**
+         * Limpa todos os dados do IndexedDB
+         */
+        function clearAllDB() {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('DB não inicializado'));
+                    return;
+                }
+                const transaction = db.transaction([STORE_INSPECTIONS, STORE_PHOTOS], 'readwrite');
+                
+                transaction.objectStore(STORE_INSPECTIONS).clear();
+                transaction.objectStore(STORE_PHOTOS).clear();
+
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        /**
+         * Obtém estatísticas de armazenamento
+         */
+        async function getStorageStats() {
+            if (navigator.storage && navigator.storage.estimate) {
+                const estimate = await navigator.storage.estimate();
+                return {
+                    usage: estimate.usage,
+                    quota: estimate.quota,
+                    usageFormatted: formatBytes(estimate.usage),
+                    quotaFormatted: formatBytes(estimate.quota),
+                    percentUsed: ((estimate.usage / estimate.quota) * 100).toFixed(2) + '%'
+                };
+            }
+            return null;
+        }
+
+        // Inicializar
+        async function init() {
+            console.log('=== INICIANDO APLICAÇÃO PWA ===');
+            console.log('Timestamp:', new Date().toISOString());
+            
+            try {
+                // Registrar Service Worker para funcionar offline
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const registration = await navigator.serviceWorker.register('./service-worker.js');
+                        console.log('Service Worker registrado:', registration.scope);
+                    } catch (swError) {
+                        console.warn('Service Worker não registrado:', swError);
+                    }
+                }
+
+                console.log('1. Inicializando banco de dados...');
+                await initDB();
+                
+                console.log('2. Contando componentes...');
+                countTotalComponents();
+                
+                console.log('3. Carregando aerogeradores...');
+                loadAerogeradores();
+                
+                console.log('4. Construindo árvore...');
+                buildTree();
+                
+                console.log('5. Configurando event listeners...');
+                setupEventListeners();
+                
+                console.log('6. Carregando dados salvos...');
+                await loadSavedData();
+                
+                console.log('7. Definindo mês padrão...');
+                setDefaultMonth();
+                
+                console.log('8. Atualizando progresso do parque...');
+                updateParqueProgress();
+                
+                // Mostrar estatísticas de armazenamento
+                const stats = await getStorageStats();
+                if (stats) {
+                    console.log(`Armazenamento: ${stats.usageFormatted} de ${stats.quotaFormatted} (${stats.percentUsed})`);
+                }
+                
+                console.log('=== APLICAÇÃO PWA INICIADA COM SUCESSO ===');
+            } catch (error) {
+                console.error('ERRO AO INICIAR:', error);
+                alert('Erro ao iniciar aplicação: ' + error.message);
+            }
+        }
+
+        function setDefaultMonth() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('mesAno').value = `${year}-${month}`;
+        }
+
+        function loadAerogeradores() {
+            const select = document.getElementById('aerogerador');
+            AEROGERADORES.forEach(aero => {
+                const option = document.createElement('option');
+                option.value = aero.codigo;
+                option.textContent = `${aero.codigo} - ${aero.sub_parque}`;
+                
+                // Verificar se este aerogerador está 100% completo
+                const progresso = getAerogeradorProgress(aero.codigo);
+                if (progresso.percentual === 100) {
+                    option.textContent = `✅ ${aero.codigo} - ${aero.sub_parque} (Completo)`;
+                    option.style.color = '#28a745';
+                    option.style.fontWeight = 'bold';
+                }
+                
+                select.appendChild(option);
+            });
+        }
+        
+        function getAerogeradorProgress(aerogerador) {
+            const completed = Object.keys(inspectionData).filter(key => {
+                return key.startsWith(aerogerador + '_');
+            }).length;
+            
+            const percentual = totalComponentes > 0 ? (completed / totalComponentes) * 100 : 0;
+            
+            return {
+                completed,
+                total: totalComponentes,
+                percentual: Math.round(percentual)
+            };
+        }
+
+        function countTotalComponents() {
+            let count = 0;
+            const categorias = ESTRUTURA.categorias;
+            for (const subcategorias of Object.values(categorias)) {
+                for (const componentes of Object.values(subcategorias)) {
+                    count += Object.keys(componentes).length;
+                }
+            }
+            totalComponentes = count;
+        }
+
+        function updateComponentIcon(categoria, subcategoria, componente) {
+            // Atualizar apenas o ícone do componente específico
+            document.querySelectorAll('.tree-component').forEach(comp => {
+                const text = comp.textContent;
+                if (text.includes(componente)) {
+                    const status = getComponentStatus(categoria, subcategoria, componente);
+                    const icon = status ? '✅' : '⭕';
+                    // Preservar apenas o nome do componente, trocar o ícone
+                    comp.textContent = `${icon} ${componente}`;
+                }
+            });
+        }
+        
+        function updateTreeCounters() {
+            // Atualizar contadores nas categorias e subcategorias sem reconstruir
+            const aero = document.getElementById('aerogerador').value;
+            if (!aero) return;
+            
+            document.querySelectorAll('.tree-category').forEach(catEl => {
+                const catText = catEl.textContent;
+                // Extrair nome da categoria (remover ícone e contador)
+                const catMatch = catText.match(/[📁✅]\s+(.+?)(?:\s+\(\d+\/\d+\))?$/);
+                if (!catMatch) return;
+                
+                const categoria = catMatch[1];
+                const subcategorias = ESTRUTURA.categorias[categoria];
+                if (!subcategorias) return;
+                
+                let totalCat = 0;
+                let completosCat = 0;
+                
+                for (const [subcat, componentes] of Object.entries(subcategorias)) {
+                    totalCat += Object.keys(componentes).length;
+                    for (const comp of Object.keys(componentes)) {
+                        if (getComponentStatus(categoria, subcat, comp)) {
+                            completosCat++;
+                        }
+                    }
+                }
+                
+                const catIcon = completosCat === totalCat && totalCat > 0 ? '✅' : '📁';
+                catEl.textContent = `${catIcon} ${categoria} (${completosCat}/${totalCat})`;
+            });
+            
+            // Atualizar subcategorias
+            document.querySelectorAll('.tree-subcategory').forEach(subEl => {
+                const subText = subEl.textContent;
+                const subMatch = subText.match(/[└─✅]\s+(.+?)(?:\s+\(\d+\/\d+\))?$/);
+                if (!subMatch) return;
+                
+                const subcategoria = subMatch[1];
+                
+                // Encontrar categoria pai
+                let categoria = null;
+                for (const [cat, subcats] of Object.entries(ESTRUTURA.categorias)) {
+                    if (subcats[subcategoria]) {
+                        categoria = cat;
+                        break;
+                    }
+                }
+                
+                if (!categoria) return;
+                
+                const componentes = ESTRUTURA.categorias[categoria][subcategoria];
+                const totalSub = Object.keys(componentes).length;
+                let completosSub = 0;
+                
+                for (const comp of Object.keys(componentes)) {
+                    if (getComponentStatus(categoria, subcategoria, comp)) {
+                        completosSub++;
+                    }
+                }
+                
+                const subIcon = completosSub === totalSub && totalSub > 0 ? '✅' : '└─';
+                subEl.textContent = `${subIcon} ${subcategoria} (${completosSub}/${totalSub})`;
+            });
+        }
+        
+        function buildTree() {
+            const treeNav = document.getElementById('treeNav');
+            const categorias = ESTRUTURA.categorias;
+            const aero = document.getElementById('aerogerador').value;
+
+            // Salvar estado atual da árvore (quais estão abertos)
+            const openCategories = new Set();
+            const openSubcategories = new Set();
+            
+            treeNav.querySelectorAll('.tree-category').forEach(cat => {
+                const container = cat.nextElementSibling;
+                if (container && container.style.display !== 'none') {
+                    openCategories.add(cat.textContent);
+                }
+            });
+            
+            treeNav.querySelectorAll('.tree-subcategory').forEach(sub => {
+                const container = sub.nextElementSibling;
+                if (container && container.style.display !== 'none') {
+                    openSubcategories.add(sub.textContent);
+                }
+            });
+
+            treeNav.innerHTML = '';
+
+            for (const [categoria, subcategorias] of Object.entries(categorias)) {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'tree-item';
+                
+                // Contar total e completos na categoria
+                let totalCat = 0;
+                let completosCat = 0;
+                for (const componentes of Object.values(subcategorias)) {
+                    totalCat += Object.keys(componentes).length;
+                    for (const [comp] of Object.entries(componentes)) {
+                        if (aero && inspectionData[`${aero}_${categoria}_${Object.keys(subcategorias).find(sk => componentes === subcategorias[sk])}_${comp}`]) {
+                            completosCat++;
+                        }
+                    }
+                }
+                
+                const catTitle = document.createElement('div');
+                catTitle.className = 'tree-category';
+                const catIcon = completosCat === totalCat && totalCat > 0 ? '✅' : '📁';
+                const catProgress = totalCat > 0 ? ` (${completosCat}/${totalCat})` : '';
+                catTitle.textContent = `${catIcon} ${categoria}${catProgress}`;
+                catDiv.appendChild(catTitle);
+
+                const subContainer = document.createElement('div');
+                const catKey = `📁 ${categoria}${catProgress}`;
+                subContainer.style.display = openCategories.has(catKey) || openCategories.size === 0 ? 'block' : 'none';
+
+                for (const [subcategoria, componentes] of Object.entries(subcategorias)) {
+                    // Contar total e completos na subcategoria
+                    const totalSub = Object.keys(componentes).length;
+                    let completosSub = 0;
+                    for (const [comp] of Object.entries(componentes)) {
+                        if (aero && inspectionData[`${aero}_${categoria}_${subcategoria}_${comp}`]) {
+                            completosSub++;
+                        }
+                    }
+                    
+                    const subDiv = document.createElement('div');
+                    subDiv.className = 'tree-subcategory';
+                    const subIcon = completosSub === totalSub && totalSub > 0 ? '✅' : '└─';
+                    const subProgress = ` (${completosSub}/${totalSub})`;
+                    subDiv.textContent = `${subIcon} ${subcategoria}${subProgress}`;
+                    subContainer.appendChild(subDiv);
+
+                    const compContainer = document.createElement('div');
+                    const subKey = `└─ ${subcategoria}${subProgress}`;
+                    compContainer.style.display = openSubcategories.has(subKey) || openSubcategories.size === 0 ? 'block' : 'none';
+
+                    for (const [componente, dados] of Object.entries(componentes)) {
+                        const compDiv = document.createElement('div');
+                        compDiv.className = 'tree-component';
+                        
+                        const status = getComponentStatus(categoria, subcategoria, componente);
+                        const icon = status ? '✅' : '⭕';
+                        compDiv.textContent = `${icon} ${componente}`;
+                        
+                        compDiv.onclick = () => selectComponent(categoria, subcategoria, componente, dados);
+                        compContainer.appendChild(compDiv);
+                    }
+
+                    subDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        compContainer.style.display = compContainer.style.display === 'none' ? 'block' : 'none';
+                    };
+
+                    subContainer.appendChild(compContainer);
+                }
+
+                catTitle.onclick = () => {
+                    subContainer.style.display = subContainer.style.display === 'none' ? 'block' : 'none';
+                };
+
+                catDiv.appendChild(subContainer);
+                treeNav.appendChild(catDiv);
+            }
+        }
+
+        function getComponentStatus(categoria, subcategoria, componente) {
+            const aero = document.getElementById('aerogerador').value;
+            if (!aero) return false;
+            
+            const key = `${aero}_${categoria}_${subcategoria}_${componente}`;
+            return inspectionData[key] !== undefined;
+        }
+
+        function selectComponent(categoria, subcategoria, componente, dados) {
+            currentComponent = {categoria, subcategoria, componente, dados};
+            
+            // Atualizar UI
+            document.querySelectorAll('.tree-component').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Mostrar formulário
+            document.getElementById('inspectionSection').style.display = 'block';
+            document.getElementById('componentTitle').textContent = 
+                `${categoria} > ${subcategoria} > ${componente}`;
+
+            // Carregar dados salvos se existirem
+            loadComponentData();
+            
+            // Scroll suave
+            document.getElementById('inspectionSection').scrollIntoView({behavior: 'smooth'});
+        }
+
+        function loadComponentData() {
+            const aero = document.getElementById('aerogerador').value;
+            if (!aero || !currentComponent) return;
+
+            const key = `${aero}_${currentComponent.categoria}_${currentComponent.subcategoria}_${currentComponent.componente}`;
+            const saved = inspectionData[key];
+
+            if (saved) {
+                document.getElementById('classificacao').value = saved.classificacao || '';
+                document.getElementById('observacoes').value = saved.observacoes || '';
+                updateFalhaDropdown();
+                if (saved.falha) {
+                    // Verificar se é uma falha personalizada (não está na lista)
+                    const falhaSelect = document.getElementById('falha');
+                    const opcaoExiste = Array.from(falhaSelect.options).some(opt => opt.value === saved.falha);
+                    
+                    if (opcaoExiste) {
+                        falhaSelect.value = saved.falha;
+                    } else if (saved.falha) {
+                        // É uma falha personalizada
+                        falhaSelect.value = '__outra__';
+                        document.getElementById('falhaOutra').value = saved.falha;
+                        document.getElementById('falhaOutraGroup').style.display = 'block';
+                    }
+                }
+                loadPhotos(key);
+            } else {
+                clearForm();
+            }
+        }
+
+        function updateFalhaDropdown() {
+            const classificacao = document.getElementById('classificacao').value;
+            const falhaGroup = document.getElementById('falhaGroup');
+            const falhaSelect = document.getElementById('falha');
+            const falhaOutraGroup = document.getElementById('falhaOutraGroup');
+
+            if (classificacao === 'Verificado' || !classificacao) {
+                falhaGroup.style.display = 'none';
+                falhaOutraGroup.style.display = 'none';
+                falhaSelect.required = false;
+            } else {
+                falhaGroup.style.display = 'block';
+                falhaSelect.required = true;
+
+                // Preencher opções de falha
+                falhaSelect.innerHTML = '<option value="">Selecione a falha...</option>';
+                
+                if (currentComponent && currentComponent.dados && currentComponent.dados.falhas) {
+                    const falhas = currentComponent.dados.falhas;
+                    
+                    falhas.forEach(falha => {
+                        const option = document.createElement('option');
+                        option.value = falha;
+                        option.textContent = falha;
+                        falhaSelect.appendChild(option);
+                    });
+                }
+                
+                // Adicionar opção "Outra falha..."
+                const optionOutra = document.createElement('option');
+                optionOutra.value = '__outra__';
+                optionOutra.textContent = '➕ Outra falha...';
+                optionOutra.style.fontStyle = 'italic';
+                falhaSelect.appendChild(optionOutra);
+            }
+            
+            // Esconder campo de falha personalizada
+            falhaOutraGroup.style.display = 'none';
+        }
+        
+        function handleFalhaChange() {
+            const falhaSelect = document.getElementById('falha');
+            const falhaOutraGroup = document.getElementById('falhaOutraGroup');
+            const falhaOutraInput = document.getElementById('falhaOutra');
+            
+            if (falhaSelect.value === '__outra__') {
+                falhaOutraGroup.style.display = 'block';
+                falhaOutraInput.required = true;
+                falhaOutraInput.focus();
+            } else {
+                falhaOutraGroup.style.display = 'none';
+                falhaOutraInput.required = false;
+                falhaOutraInput.value = '';
+            }
+        }
+
+        function setupEventListeners() {
+            console.log('=== setupEventListeners iniciando ===');
+            
+            const saveBtn = document.getElementById('saveComponent');
+            const clearBtn = document.getElementById('clearForm');
+            const exportBtn = document.getElementById('exportData');
+            const exportAllBtn = document.getElementById('exportAll');
+            const viewBtn = document.getElementById('viewData');
+            const diagBtn = document.getElementById('diagData');
+            
+            console.log('Botões encontrados:', {
+                saveBtn: !!saveBtn,
+                clearBtn: !!clearBtn,
+                exportBtn: !!exportBtn,
+                exportAllBtn: !!exportAllBtn,
+                viewBtn: !!viewBtn,
+                diagBtn: !!diagBtn
+            });
+            
+            // Atualizar título quando parque muda
+            document.getElementById('parque').addEventListener('change', function() {
+                const parqueSelect = this;
+                const parqueNome = parqueSelect.options[parqueSelect.selectedIndex].text;
+                document.getElementById('parqueNome').innerHTML = `<strong>${parqueNome}</strong>`;
+            });
+            
+            document.getElementById('classificacao').addEventListener('change', updateFalhaDropdown);
+            
+            document.getElementById('falha').addEventListener('change', handleFalhaChange);
+            
+            document.getElementById('photoUpload').addEventListener('click', () => {
+                document.getElementById('photoInput').click();
+            });
+
+            document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
+
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    console.log('Botão SALVAR clicado!');
+                    saveComponentData();
+                });
+            }
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    console.log('Botão LIMPAR clicado!');
+                    clearForm();
+                });
+            }
+            
+            if (exportBtn) {
+                exportBtn.addEventListener('click', () => {
+                    console.log('Botão EXPORTAR clicado!');
+                    exportData();
+                });
+            }
+            
+            if (exportAllBtn) {
+                exportAllBtn.addEventListener('click', () => {
+                    console.log('Botão EXPORTAR TODAS clicado!');
+                    exportAllData();
+                });
+            }
+            
+            if (viewBtn) {
+                viewBtn.addEventListener('click', () => {
+                    console.log('Botão VER DADOS clicado!');
+                    viewSavedData();
+                });
+            }
+            
+            if (diagBtn) {
+                diagBtn.addEventListener('click', () => {
+                    console.log('Botão DIAGNÓSTICO clicado!');
+                    runDiagnostics();
+                });
+            }
+
+            const backupBtn = document.getElementById('backupData');
+            const restoreBtn = document.getElementById('restoreData');
+            const restoreFileInput = document.getElementById('restoreFileInput');
+
+            if (backupBtn) {
+                backupBtn.addEventListener('click', () => {
+                    console.log('Botão BACKUP clicado!');
+                    createBackup();
+                });
+            }
+
+            if (restoreBtn) {
+                restoreBtn.addEventListener('click', () => {
+                    console.log('Botão RESTAURAR clicado!');
+                    restoreFileInput.click();
+                });
+            }
+
+            if (restoreFileInput) {
+                restoreFileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        restoreBackup(e.target.files[0]);
+                        e.target.value = ''; // Limpar para permitir selecionar o mesmo arquivo novamente
+                    }
+                });
+            }
+
+            document.getElementById('aerogerador').addEventListener('change', () => {
+                buildTree();
+                updateProgress();
+            });
+            
+            console.log('=== setupEventListeners concluído ===');
+        }
+
+        function handlePhotoUpload(e) {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`A foto ${file.name} é muito grande. Máximo 5MB por foto.`);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentPhotos.push(e.target.result);
+                    displayPhotos();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function displayPhotos() {
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = '';
+            
+            currentPhotos.forEach((photo, index) => {
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                
+                const img = document.createElement('img');
+                img.src = photo;
+                
+                const btn = document.createElement('button');
+                btn.className = 'photo-remove';
+                btn.textContent = '×';
+                btn.onclick = () => {
+                    currentPhotos.splice(index, 1);
+                    displayPhotos();
+                };
+                
+                div.appendChild(img);
+                div.appendChild(btn);
+                preview.appendChild(div);
+            });
+        }
+
+        async function loadPhotos(key) {
+            try {
+                // Tentar carregar do IndexedDB primeiro
+                let photos = await loadPhotosFromDB(`photos_${key}`);
+                
+                // Se não encontrou no IndexedDB, tentar localStorage (migração)
+                if ((!photos || photos.length === 0)) {
+                    const lsKey = `photos_${key}`;
+                    const lsPhotos = localStorage.getItem(lsKey);
+                    if (lsPhotos) {
+                        photos = JSON.parse(lsPhotos);
+                        // Migrar para IndexedDB
+                        await savePhotosToDB(lsKey, photos);
+                    }
+                }
+                
+                // Validar fotos
+                if (photos && Array.isArray(photos)) {
+                    currentPhotos = photos.filter(photo => {
+                        if (typeof photo !== 'string') return false;
+                        return photo.startsWith('data:image/') && photo.includes('base64,');
+                    });
+                } else {
+                    currentPhotos = [];
+                }
+                
+                displayPhotos();
+            } catch (e) {
+                console.error('Erro ao carregar fotos:', e);
+                currentPhotos = [];
+                displayPhotos();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            // Remover toast anterior se existir
+            const oldToast = document.querySelector('.toast');
+            if (oldToast) {
+                oldToast.remove();
+            }
+            
+            // Criar novo toast
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            const colors = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+            
+            toast.style.background = colors[type] || colors.success;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            // Remover após 3 segundos
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        async function saveComponentData() {
+            const aero = document.getElementById('aerogerador').value;
+            const mesAno = document.getElementById('mesAno').value;
+            const classificacao = document.getElementById('classificacao').value;
+            const falhaSelect = document.getElementById('falha').value;
+            const falhaOutra = document.getElementById('falhaOutra').value.trim();
+            const observacoes = document.getElementById('observacoes').value;
+            
+            // Determinar a falha final (do dropdown ou personalizada)
+            const falha = falhaSelect === '__outra__' ? falhaOutra : falhaSelect;
+
+            if (!aero || !mesAno) {
+                alert('Por favor, preencha o aerogerador e mês/ano da inspeção.');
+                return;
+            }
+
+            if (!currentComponent) {
+                alert('Por favor, selecione um componente.');
+                return;
+            }
+
+            if (!classificacao) {
+                alert('Por favor, selecione a classificação.');
+                return;
+            }
+
+            if (classificacao !== 'Verificado' && !falha) {
+                alert('Por favor, selecione ou descreva a falha quando a classificação não for "Verificado".');
+                return;
+            }
+
+            const key = `${aero}_${currentComponent.categoria}_${currentComponent.subcategoria}_${currentComponent.componente}`;
+            
+            // Verificar se já existe inspeção para este componente
+            if (inspectionData[key]) {
+                const confirmacao = confirm(
+                    `⚠️ ATENÇÃO!\n\n` +
+                    `Este componente já foi inspecionado anteriormente para ${aero}.\n\n` +
+                    `Dados salvos:\n` +
+                    `- Classificação: ${inspectionData[key].classificacao}\n` +
+                    `- Falha: ${inspectionData[key].falha || 'Nenhuma'}\n` +
+                    `- Data: ${new Date(inspectionData[key].timestamp).toLocaleString('pt-BR')}\n\n` +
+                    `Deseja SUBSTITUIR a inspeção anterior?`
+                );
+                
+                if (!confirmacao) {
+                    return; // Cancela o salvamento
+                }
+            }
+            
+            inspectionData[key] = {
+                aerogerador: aero,
+                mesAno,
+                categoria: currentComponent.categoria,
+                subcategoria: currentComponent.subcategoria,
+                componente: currentComponent.componente,
+                classificacao,
+                falha: classificacao === 'Verificado' ? '' : falha,
+                observacoes,
+                temFotos: currentPhotos.length > 0,
+                numFotos: currentPhotos.length,
+                timestamp: new Date().toISOString()
+            };
+
+            // Salvar fotos separadamente no IndexedDB
+            try {
+                await savePhotosToDB(`photos_${key}`, currentPhotos);
+            } catch (e) {
+                console.error('Erro ao salvar fotos:', e);
+                // Fallback para localStorage
+                if (currentPhotos.length > 0) {
+                    localStorage.setItem(`photos_${key}`, JSON.stringify(currentPhotos));
+                } else {
+                    localStorage.removeItem(`photos_${key}`);
+                }
+            }
+
+            await saveToLocalStorage();
+            
+            // Salvar aerogerador selecionado
+            const aeroSelecionado = aero;
+            
+            // Salvar posição do scroll antes de atualizar
+            const treeNav = document.getElementById('treeNav');
+            const scrollPos = treeNav.scrollTop;
+            
+            // Atualizar apenas o ícone do componente atual sem reconstruir toda árvore
+            updateComponentIcon(currentComponent.categoria, currentComponent.subcategoria, currentComponent.componente);
+            
+            // Atualizar contadores de progresso
+            updateProgress();
+            updateTreeCounters();
+            
+            // Atualizar lista de aerogeradores para refletir progresso (sem perder seleção)
+            const selectAero = document.getElementById('aerogerador');
+            selectAero.innerHTML = '<option value="">Selecione o aerogerador...</option>';
+            loadAerogeradores();
+            selectAero.value = aeroSelecionado; // Manter selecionado
+            
+            // Restaurar posição do scroll
+            treeNav.scrollTop = scrollPos;
+            
+            // Remover marcação de componente ativo
+            document.querySelectorAll('.tree-component').forEach(comp => {
+                comp.classList.remove('active');
+            });
+
+            showToast('✅ Componente salvo com sucesso!');
+            
+            // Limpar formulário e preparar para próximo componente
+            clearForm();
+            document.getElementById('inspectionSection').style.display = 'none';
+            currentComponent = null;
+            
+            // Scroll suave para a árvore de componentes
+            document.getElementById('treeNav').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function clearForm() {
+            document.getElementById('classificacao').value = '';
+            document.getElementById('falha').value = '';
+            document.getElementById('falhaOutra').value = '';
+            document.getElementById('falhaOutraGroup').style.display = 'none';
+            document.getElementById('observacoes').value = '';
+            currentPhotos = [];
+            displayPhotos();
+            updateFalhaDropdown();
+        }
+
+        async function saveToLocalStorage() {
+            // Salvar todas as inspeções no IndexedDB
+            try {
+                for (const [key, data] of Object.entries(inspectionData)) {
+                    await saveInspectionToDB(key, data);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar no IndexedDB:', error);
+                // Fallback para localStorage
+                localStorage.setItem('inspectionData', JSON.stringify(inspectionData));
+            }
+        }
+
+        // ========== SISTEMA DE VALIDAÇÃO DE DADOS ==========
+        
+        // Campos obrigatórios para cada registro de inspeção
+        const REQUIRED_FIELDS = ['aerogerador', 'mesAno', 'categoria', 'subcategoria', 'componente', 'classificacao', 'timestamp'];
+        
+        // Classificações válidas
+        const VALID_CLASSIFICATIONS = ['Verificado', 'Defeito Ligeiro', 'Defeito Grave', 'Ação Imediata'];
+        
+        /**
+         * Valida um único registro de inspeção
+         * @param {string} key - Chave do registro
+         * @param {object} data - Dados do registro
+         * @returns {object} - { valid: boolean, errors: string[], sanitized: object|null }
+         */
+        function validateInspectionRecord(key, data) {
+            const errors = [];
+            
+            // Verificar se data é um objeto válido
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                return { valid: false, errors: ['Registro não é um objeto válido'], sanitized: null };
+            }
+            
+            // Verificar campos obrigatórios
+            for (const field of REQUIRED_FIELDS) {
+                if (data[field] === undefined || data[field] === null) {
+                    errors.push(`Campo obrigatório ausente: ${field}`);
+                }
+            }
+            
+            // Se faltar campos críticos, não tenta sanitizar
+            if (!data.aerogerador || !data.categoria || !data.subcategoria || !data.componente) {
+                return { valid: false, errors, sanitized: null };
+            }
+            
+            // Validar tipos dos campos
+            const typeValidations = {
+                aerogerador: 'string',
+                mesAno: 'string',
+                categoria: 'string',
+                subcategoria: 'string',
+                componente: 'string',
+                classificacao: 'string',
+                falha: 'string',
+                observacoes: 'string',
+                timestamp: 'string'
+            };
+            
+            for (const [field, expectedType] of Object.entries(typeValidations)) {
+                if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+                    if (typeof data[field] !== expectedType) {
+                        errors.push(`Campo ${field} deveria ser ${expectedType}, mas é ${typeof data[field]}`);
+                    }
+                }
+            }
+            
+            // Validar classificação
+            if (data.classificacao && !VALID_CLASSIFICATIONS.includes(data.classificacao)) {
+                errors.push(`Classificação inválida: "${data.classificacao}"`);
+            }
+            
+            // Validar se aerogerador existe na lista
+            const aeroExists = AEROGERADORES.some(a => a.codigo === data.aerogerador);
+            if (!aeroExists) {
+                errors.push(`Aerogerador não encontrado: "${data.aerogerador}"`);
+            }
+            
+            // Validar se categoria existe na estrutura
+            if (!ESTRUTURA.categorias[data.categoria]) {
+                errors.push(`Categoria não encontrada: "${data.categoria}"`);
+            } else {
+                // Validar subcategoria
+                if (!ESTRUTURA.categorias[data.categoria][data.subcategoria]) {
+                    errors.push(`Subcategoria não encontrada: "${data.subcategoria}"`);
+                } else {
+                    // Validar componente
+                    if (!ESTRUTURA.categorias[data.categoria][data.subcategoria][data.componente]) {
+                        errors.push(`Componente não encontrado: "${data.componente}"`);
+                    } else {
+                        // Validar falha se classificação não for "Verificado"
+                        if (data.classificacao && data.classificacao !== 'Verificado' && data.falha) {
+                            const falhasValidas = ESTRUTURA.categorias[data.categoria][data.subcategoria][data.componente].falhas || [];
+                            if (!falhasValidas.includes(data.falha)) {
+                                errors.push(`Falha não encontrada para este componente: "${data.falha}"`);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Validar formato do mesAno (YYYY-MM)
+            if (data.mesAno && !/^\d{4}-\d{2}$/.test(data.mesAno)) {
+                errors.push(`Formato de mês/ano inválido: "${data.mesAno}"`);
+            }
+            
+            // Validar timestamp
+            if (data.timestamp) {
+                const date = new Date(data.timestamp);
+                if (isNaN(date.getTime())) {
+                    errors.push(`Timestamp inválido: "${data.timestamp}"`);
+                }
+            }
+            
+            // Validar consistência da chave
+            const expectedKey = `${data.aerogerador}_${data.categoria}_${data.subcategoria}_${data.componente}`;
+            if (key !== expectedKey) {
+                errors.push(`Chave inconsistente: esperado "${expectedKey}", encontrado "${key}"`);
+            }
+            
+            // Validar campos booleanos e numéricos
+            if (data.temFotos !== undefined && typeof data.temFotos !== 'boolean') {
+                errors.push(`Campo temFotos deveria ser boolean`);
+            }
+            
+            if (data.numFotos !== undefined && (typeof data.numFotos !== 'number' || data.numFotos < 0)) {
+                errors.push(`Campo numFotos deveria ser número não-negativo`);
+            }
+            
+            // Se há erros críticos (estrutura), não sanitiza
+            const criticalErrors = errors.filter(e => 
+                e.includes('não encontrado') || 
+                e.includes('Chave inconsistente') ||
+                e.includes('não é um objeto')
+            );
+            
+            if (criticalErrors.length > 0) {
+                return { valid: false, errors, sanitized: null };
+            }
+            
+            // Sanitizar dados (corrigir problemas menores)
+            const sanitized = {
+                aerogerador: String(data.aerogerador || '').trim(),
+                mesAno: String(data.mesAno || '').trim(),
+                categoria: String(data.categoria || '').trim(),
+                subcategoria: String(data.subcategoria || '').trim(),
+                componente: String(data.componente || '').trim(),
+                classificacao: VALID_CLASSIFICATIONS.includes(data.classificacao) ? data.classificacao : 'Verificado',
+                falha: String(data.falha || '').trim(),
+                observacoes: String(data.observacoes || '').trim(),
+                temFotos: Boolean(data.temFotos),
+                numFotos: Math.max(0, parseInt(data.numFotos) || 0),
+                timestamp: data.timestamp || new Date().toISOString()
+            };
+            
+            // Se classificação é Verificado, limpar falha
+            if (sanitized.classificacao === 'Verificado') {
+                sanitized.falha = '';
+            }
+            
+            return { 
+                valid: errors.length === 0, 
+                errors, 
+                sanitized 
+            };
+        }
+        
+        /**
+         * Valida todos os dados de inspeção carregados
+         * @param {object} data - Objeto com todos os registros
+         * @returns {object} - { validData: object, invalidKeys: string[], totalErrors: number, report: string }
+         */
+        function validateAllInspectionData(data) {
+            const validData = {};
+            const invalidKeys = [];
+            const allErrors = [];
+            let totalErrors = 0;
+            
+            if (!data || typeof data !== 'object') {
+                return { 
+                    validData: {}, 
+                    invalidKeys: [], 
+                    totalErrors: 1, 
+                    report: '❌ Dados não são um objeto válido. Iniciando com dados vazios.' 
+                };
+            }
+            
+            for (const [key, record] of Object.entries(data)) {
+                const validation = validateInspectionRecord(key, record);
+                
+                if (validation.sanitized) {
+                    validData[key] = validation.sanitized;
+                    
+                    if (!validation.valid) {
+                        // Dados foram sanitizados mas tinham problemas menores
+                        allErrors.push(`⚠️ ${key}: ${validation.errors.join(', ')}`);
+                        totalErrors += validation.errors.length;
+                    }
+                } else {
+                    // Dados inválidos, não podem ser recuperados
+                    invalidKeys.push(key);
+                    allErrors.push(`❌ ${key}: ${validation.errors.join(', ')}`);
+                    totalErrors += validation.errors.length;
+                }
+            }
+            
+            // Gerar relatório
+            let report = '';
+            const totalRecords = Object.keys(data).length;
+            const validRecords = Object.keys(validData).length;
+            
+            if (totalErrors === 0) {
+                report = `✅ Todos os ${totalRecords} registros foram validados com sucesso.`;
+            } else {
+                report = `📊 Validação concluída:\n`;
+                report += `• ${validRecords} de ${totalRecords} registros válidos\n`;
+                report += `• ${invalidKeys.length} registros removidos por erros críticos\n`;
+                report += `• ${totalErrors} problemas encontrados no total\n\n`;
+                
+                if (allErrors.length <= 10) {
+                    report += `Detalhes:\n${allErrors.join('\n')}`;
+                } else {
+                    report += `Primeiros 10 problemas:\n${allErrors.slice(0, 10).join('\n')}\n... e mais ${allErrors.length - 10} problemas.`;
+                }
+            }
+            
+            return { validData, invalidKeys, totalErrors, report };
+        }
+        
+        /**
+         * Valida fotos armazenadas no localStorage
+         * @param {string} key - Chave da foto
+         * @returns {array} - Array de fotos válidas (base64)
+         */
+        function validatePhotos(key) {
+            try {
+                const photosJson = localStorage.getItem(`photos_${key}`);
+                if (!photosJson) return [];
+                
+                const photos = JSON.parse(photosJson);
+                
+                if (!Array.isArray(photos)) {
+                    console.warn(`Fotos para ${key} não são um array válido`);
+                    return [];
+                }
+                
+                // Filtrar apenas strings base64 válidas
+                return photos.filter(photo => {
+                    if (typeof photo !== 'string') return false;
+                    // Verificar se é uma string base64 de imagem válida
+                    return photo.startsWith('data:image/') && photo.includes('base64,');
+                });
+                
+            } catch (e) {
+                console.error(`Erro ao validar fotos para ${key}:`, e);
+                return [];
+            }
+        }
+        
+        /**
+         * Carrega e valida dados salvos do IndexedDB (com fallback para localStorage)
+         */
+        async function loadSavedData() {
+            try {
+                // Tentar carregar do IndexedDB primeiro
+                let rawData = await loadAllInspectionsFromDB();
+                
+                // Se IndexedDB estiver vazio, tentar migrar do localStorage
+                if (Object.keys(rawData).length === 0) {
+                    const saved = localStorage.getItem('inspectionData');
+                    if (saved) {
+                        console.log('Migrando dados do localStorage para IndexedDB...');
+                        rawData = JSON.parse(saved);
+                        
+                        // Salvar no IndexedDB
+                        for (const [key, data] of Object.entries(rawData)) {
+                            await saveInspectionToDB(key, data);
+                        }
+                        
+                        // Migrar fotos também
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const lsKey = localStorage.key(i);
+                            if (lsKey.startsWith('photos_')) {
+                                const photos = JSON.parse(localStorage.getItem(lsKey));
+                                await savePhotosToDB(lsKey, photos);
+                            }
+                        }
+                        
+                        console.log('Migração concluída! Dados movidos para IndexedDB.');
+                        showToast('📦 Dados migrados para novo formato!', 'success');
+                    }
+                }
+                
+                if (Object.keys(rawData).length === 0) {
+                    inspectionData = {};
+                    updateProgress();
+                    return;
+                }
+                
+                // Validar todos os dados
+                const validation = validateAllInspectionData(rawData);
+                
+                // Usar apenas dados válidos/sanitizados
+                inspectionData = validation.validData;
+                
+                // Se houve problemas, informar o usuário
+                if (validation.totalErrors > 0) {
+                    console.warn('Problemas encontrados nos dados salvos:', validation.report);
+                    
+                    // Mostrar alerta apenas se houve registros removidos
+                    if (validation.invalidKeys.length > 0) {
+                        setTimeout(() => {
+                            showToast(`⚠️ ${validation.invalidKeys.length} registro(s) inválido(s) foram ignorados`, 'warning');
+                        }, 1000);
+                    }
+                }
+                
+                // Log detalhado no console para debug
+                console.log('=== VALIDAÇÃO DE DADOS ===');
+                console.log(validation.report);
+                console.log('Registros carregados:', Object.keys(inspectionData).length);
+                
+            } catch (e) {
+                console.error('Erro crítico ao carregar dados:', e);
+                inspectionData = {};
+                showToast('❌ Erro ao carregar dados', 'error');
+            }
+            
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const aero = document.getElementById('aerogerador').value;
+            const completed = Object.keys(inspectionData).filter(key => {
+                return aero && key.startsWith(aero + '_');
+            }).length;
+
+            const percentage = (completed / totalComponentes) * 100;
+            document.getElementById('progressText').textContent = `${completed} de ${totalComponentes} componentes`;
+            document.getElementById('progressFill').style.width = `${percentage}%`;
+            
+            // Atualizar progresso do parque (aerogeradores completos)
+            updateParqueProgress();
+        }
+        
+        function updateParqueProgress() {
+            let totalAeros = AEROGERADORES.length;
+            let completosAeros = 0;
+            
+            AEROGERADORES.forEach(aero => {
+                const progresso = getAerogeradorProgress(aero.codigo);
+                if (progresso.percentual === 100) {
+                    completosAeros++;
+                }
+            });
+            
+            const percentualParque = totalAeros > 0 ? (completosAeros / totalAeros) * 100 : 0;
+            
+            document.getElementById('progressoParque').innerHTML = 
+                `📊 Aerogeradores completos: <strong>${completosAeros}/${totalAeros}</strong> (${Math.round(percentualParque)}%)`;
+            document.getElementById('progressoParqueBarra').style.width = `${percentualParque}%`;
+        }
+
+        function exportData() {
+            const aero = document.getElementById('aerogerador').value;
+            if (!aero) {
+                alert('Por favor, selecione um aerogerador para exportar.');
+                return;
+            }
+
+            const filteredData = Object.entries(inspectionData)
+                .filter(([key]) => key.startsWith(aero + '_'))
+                .map(([_, data]) => data);
+
+            if (filteredData.length === 0) {
+                alert('Não há dados para exportar para este aerogerador.');
+                return;
+            }
+
+            exportToCSV(filteredData, `inspecao_${aero}_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        function exportAllData() {
+            const allData = Object.values(inspectionData);
+            
+            if (allData.length === 0) {
+                alert('Não há dados para exportar.');
+                return;
+            }
+
+            exportToCSV(allData, `inspecao_TODAS_${new Date().toISOString().split('T')[0]}.csv`);
+        }
+
+        function exportToCSV(data, filename) {
+            const headers = ['Aerogerador', 'Mês/Ano', 'Categoria', 'Sub-categoria', 'Componente', 'Classificação', 'Falha', 'Observações', 'Tem Fotos', 'Num Fotos', 'Data/Hora'];
+            const csv = [
+                headers.join(','),
+                ...data.map(row => [
+                    row.aerogerador,
+                    row.mesAno,
+                    `"${row.categoria}"`,
+                    `"${row.subcategoria}"`,
+                    `"${row.componente}"`,
+                    row.classificacao,
+                    `"${row.falha || ''}"`,
+                    `"${(row.observacoes || '').replace(/"/g, '""')}"`,
+                    row.temFotos ? 'Sim' : 'Não',
+                    row.numFotos || 0,
+                    row.timestamp
+                ].join(','))
+            ].join('\n');
+
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+
+            showToast('✅ Dados exportados com sucesso!');
+        }
+
+        function viewSavedData() {
+            const aero = document.getElementById('aerogerador').value;
+            if (!aero) {
+                alert('Por favor, selecione um aerogerador.');
+                return;
+            }
+
+            const filteredData = Object.entries(inspectionData)
+                .filter(([key]) => key.startsWith(aero + '_'))
+                .map(([_, data]) => data);
+
+            if (filteredData.length === 0) {
+                alert('Não há dados para gerar o relatório deste aerogerador.');
+                return;
+            }
+
+            // Agrupar por categoria
+            const porCategoria = {};
+            filteredData.forEach(data => {
+                if (!porCategoria[data.categoria]) {
+                    porCategoria[data.categoria] = [];
+                }
+                porCategoria[data.categoria].push(data);
+            });
+
+            // Construir HTML
+            let html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+            html += '<title>Relatório - ' + aero + '</title>';
+            html += '<style>';
+            html += 'body { font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: 0 auto; }';
+            html += 'h2 { color: #0000FF; }';
+            html += 'h3 { color: #0066FF; margin-top: 20px; }';
+            html += 'ul { line-height: 1.6; list-style: none; padding: 0; }';
+            html += 'li { margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; }';
+            html += 'hr { border: none; border-top: 2px solid #e0e0e0; margin: 20px 0; }';
+            html += '.foto-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }';
+            html += '.foto-thumb { width: 100px; height: 100px; border-radius: 6px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }';
+            html += '.foto-thumb img { width: 100%; height: 100%; object-fit: cover; }';
+            html += '.foto-thumb:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.25); }';
+            html += '.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }';
+            html += '.modal-overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; }';
+            html += '.modal-close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; }';
+            html += '.classificacao-verificado { color: #28a745; }';
+            html += '.classificacao-ligeiro { color: #ffc107; }';
+            html += '.classificacao-grave { color: #fd7e14; }';
+            html += '.classificacao-imediata { color: #dc3545; font-weight: bold; }';
+            html += '.btn-print { position: fixed; top: 20px; right: 20px; background: #0000FF; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px; }';
+            html += '.btn-print:hover { background: #0066FF; }';
+            html += '@media print { .btn-print { display: none; } .modal-overlay { display: none !important; } body { padding: 10px; } .foto-thumb { width: 80px; height: 80px; } }';
+            html += '</style></head><body>';
+            
+            // Botão de impressão
+            html += '<button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>';
+            
+            // Modal para foto ampliada
+            html += '<div id="fotoModal" class="modal-overlay" onclick="this.style.display=\'none\'">';
+            html += '<span class="modal-close">&times;</span>';
+            html += '<img id="fotoModalImg" src="" alt="Foto ampliada">';
+            html += '</div>';
+            
+            html += '<h2>Relatório - ' + aero + '</h2>';
+            html += '<p>Total de componentes inspecionados: <strong>' + filteredData.length + '</strong></p>';
+            html += '<hr>';
+            
+            for (const [categoria, items] of Object.entries(porCategoria)) {
+                html += '<h3>📁 ' + categoria + '</h3><ul>';
+                items.forEach(data => {
+                    // Determinar classe de cor baseado na classificação
+                    let classeCor = '';
+                    if (data.classificacao === 'Verificado') classeCor = 'classificacao-verificado';
+                    else if (data.classificacao === 'Defeito Ligeiro') classeCor = 'classificacao-ligeiro';
+                    else if (data.classificacao === 'Defeito Grave') classeCor = 'classificacao-grave';
+                    else if (data.classificacao === 'Ação Imediata') classeCor = 'classificacao-imediata';
+                    
+                    html += '<li>';
+                    html += '<strong>' + data.componente + '</strong>: <span class="' + classeCor + '">' + data.classificacao + '</span>';
+                    if (data.falha) html += ' - ' + data.falha;
+                    if (data.observacoes) html += '<br><em>' + data.observacoes + '</em>';
+                    
+                    // Adicionar fotos se existirem
+                    if (data.temFotos && data.numFotos > 0) {
+                        const photoKey = `photos_${aero}_${data.categoria}_${data.subcategoria}_${data.componente}`;
+                        const photosJson = localStorage.getItem(photoKey);
+                        if (photosJson) {
+                            try {
+                                const photos = JSON.parse(photosJson);
+                                if (photos.length > 0) {
+                                    html += '<div class="foto-container">';
+                                    photos.forEach((photo, idx) => {
+                                        html += '<div class="foto-thumb" onclick="document.getElementById(\'fotoModal\').style.display=\'flex\'; document.getElementById(\'fotoModalImg\').src=\'' + photo.replace(/'/g, "\\'") + '\'">';
+                                        html += '<img src="' + photo + '" alt="Foto ' + (idx + 1) + '">';
+                                        html += '</div>';
+                                    });
+                                    html += '</div>';
+                                }
+                            } catch(e) {
+                                html += '<br>📸 ' + data.numFotos + ' foto(s) - erro ao carregar';
+                            }
+                        }
+                    }
+                    
+                    html += '</li>';
+                });
+                html += '</ul>';
+            }
+            
+            html += '</body></html>';
+
+            // Tentar abrir nova janela
+            const win = window.open('', '_blank', 'width=800,height=600');
+            if (!win || win.closed || typeof win.closed == 'undefined') {
+                // Popup bloqueado, mostrar em alert
+                let resumo = 'DADOS SALVOS - ' + aero + '\n\n';
+                resumo += 'Total: ' + filteredData.length + ' componentes\n\n';
+                
+                for (const [categoria, items] of Object.entries(porCategoria)) {
+                    resumo += '\n' + categoria + ':\n';
+                    items.forEach(data => {
+                        resumo += '  - ' + data.componente + ': ' + data.classificacao;
+                        if (data.falha) resumo += ' - ' + data.falha;
+                        resumo += '\n';
+                    });
+                }
+                
+                alert(resumo);
+                return;
+            }
+            
+            win.document.write(html);
+            win.document.close();
+        }
+
+        // ========== SISTEMA DE BACKUP E RESTAURAÇÃO ==========
+
+        /**
+         * Cria um backup completo de todos os dados (inspeções + fotos)
+         */
+        async function createBackup() {
+            console.log('=== CRIANDO BACKUP ===');
+            
+            const backup = {
+                version: '2.0',
+                createdAt: new Date().toISOString(),
+                appName: 'Inspeção de Torres Eólicas - Coxilha Negra (PWA)',
+                data: {
+                    inspectionData: {},
+                    photos: {}
+                }
+            };
+
+            try {
+                // Carregar dados de inspeção do IndexedDB
+                backup.data.inspectionData = await loadAllInspectionsFromDB();
+                
+                // Carregar todas as fotos do IndexedDB
+                backup.data.photos = await loadAllPhotosFromDB();
+                
+            } catch (e) {
+                console.error('Erro ao ler dados do IndexedDB:', e);
+                // Fallback para localStorage
+                const inspectionDataJson = localStorage.getItem('inspectionData');
+                if (inspectionDataJson) {
+                    backup.data.inspectionData = JSON.parse(inspectionDataJson);
+                }
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('photos_')) {
+                        backup.data.photos[key] = JSON.parse(localStorage.getItem(key));
+                    }
+                }
+            }
+
+            // Estatísticas do backup
+            const numInspecoes = Object.keys(backup.data.inspectionData).length;
+            const numFotosKeys = Object.keys(backup.data.photos).length;
+            let numFotosTotal = 0;
+            for (const photos of Object.values(backup.data.photos)) {
+                if (Array.isArray(photos)) {
+                    numFotosTotal += photos.length;
+                }
+            }
+
+            console.log(`Backup: ${numInspecoes} inspeções, ${numFotosTotal} fotos`);
+
+            // Criar arquivo e baixar
+            const jsonStr = JSON.stringify(backup);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `backup_inspecao_${date}.json`;
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+
+            showToast(`✅ Backup criado! ${numInspecoes} inspeções, ${numFotosTotal} fotos`, 'success');
+        }
+
+        /**
+         * Restaura dados de um arquivo de backup
+         */
+        async function restoreBackup(file) {
+            console.log('=== RESTAURANDO BACKUP ===');
+            
+            if (!file) {
+                showToast('❌ Nenhum arquivo selecionado', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    
+                    // Validar estrutura do backup
+                    if (!backup.data || !backup.version) {
+                        throw new Error('Arquivo de backup inválido');
+                    }
+
+                    // Contar o que será restaurado
+                    const numInspecoes = Object.keys(backup.data.inspectionData || {}).length;
+                    const numFotosKeys = Object.keys(backup.data.photos || {}).length;
+                    let numFotosTotal = 0;
+                    for (const photos of Object.values(backup.data.photos || {})) {
+                        if (Array.isArray(photos)) {
+                            numFotosTotal += photos.length;
+                        }
+                    }
+
+                    // Confirmar com o usuário
+                    const dataBackup = new Date(backup.createdAt).toLocaleString('pt-BR');
+                    const confirmMsg = `⚠️ ATENÇÃO!\n\n` +
+                        `Você está prestes a restaurar um backup de ${dataBackup}.\n\n` +
+                        `Conteúdo do backup:\n` +
+                        `• ${numInspecoes} inspeções\n` +
+                        `• ${numFotosTotal} fotos\n\n` +
+                        `Isso irá SUBSTITUIR todos os dados atuais.\n\n` +
+                        `Deseja continuar?`;
+
+                    if (!confirm(confirmMsg)) {
+                        showToast('Restauração cancelada', 'info');
+                        return;
+                    }
+
+                    // Limpar dados atuais do IndexedDB
+                    try {
+                        await clearAllDB();
+                    } catch (e) {
+                        console.warn('Erro ao limpar IndexedDB:', e);
+                    }
+
+                    // Restaurar dados de inspeção no IndexedDB
+                    if (backup.data.inspectionData && Object.keys(backup.data.inspectionData).length > 0) {
+                        for (const [key, data] of Object.entries(backup.data.inspectionData)) {
+                            await saveInspectionToDB(key, data);
+                        }
+                        inspectionData = backup.data.inspectionData;
+                    }
+
+                    // Restaurar fotos no IndexedDB
+                    if (backup.data.photos) {
+                        for (const [key, photos] of Object.entries(backup.data.photos)) {
+                            if (Array.isArray(photos) && photos.length > 0) {
+                                await savePhotosToDB(key, photos);
+                            }
+                        }
+                    }
+
+                    // Atualizar interface
+                    await loadSavedData();
+                    buildTree();
+                    updateProgress();
+                    updateParqueProgress();
+
+                    // Recarregar lista de aerogeradores
+                    const selectAero = document.getElementById('aerogerador');
+                    const currentAero = selectAero.value;
+                    selectAero.innerHTML = '<option value="">Selecione o aerogerador...</option>';
+                    loadAerogeradores();
+                    if (currentAero) {
+                        selectAero.value = currentAero;
+                    }
+
+                    showToast(`✅ Backup restaurado! ${numInspecoes} inspeções, ${numFotosTotal} fotos`, 'success');
+                    console.log('Backup restaurado com sucesso');
+
+                } catch (error) {
+                    console.error('Erro ao restaurar backup:', error);
+                    showToast('❌ Erro ao ler arquivo de backup: ' + error.message, 'error');
+                }
+            };
+
+            reader.onerror = function() {
+                showToast('❌ Erro ao ler arquivo', 'error');
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Variável global para armazenar o relatório atual (para copiar JSON)
+        let currentDiagnosticReport = null;
+
+        /**
+         * Abre o modal de diagnóstico
+         */
+        function openDiagnosticModal() {
+            document.getElementById('diagnosticModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Impedir scroll do body
+        }
+
+        /**
+         * Fecha o modal de diagnóstico
+         */
+        function closeDiagnosticModal() {
+            document.getElementById('diagnosticModal').style.display = 'none';
+            document.body.style.overflow = ''; // Restaurar scroll
+        }
+
+        /**
+         * Abre o modal com a foto ampliada
+         */
+        function openPhotoModal(photoSrc) {
+            document.getElementById('photoModalImg').src = photoSrc;
+            document.getElementById('photoModal').style.display = 'flex';
+        }
+
+        /**
+         * Fecha o modal de foto
+         */
+        function closePhotoModal() {
+            document.getElementById('photoModal').style.display = 'none';
+            document.getElementById('photoModalImg').src = '';
+        }
+
+        /**
+         * Executa diagnóstico completo dos dados e IndexedDB
+         */
+        async function runDiagnostics() {
+            console.log('=== INICIANDO DIAGNÓSTICO ===');
+            
+            const report = {
+                timestamp: new Date().toISOString(),
+                storage: {},
+                inspectionData: {},
+                photos: {},
+                estrutura: {},
+                recommendations: []
+            };
+            
+            // 1. Análise do armazenamento (IndexedDB)
+            try {
+                const stats = await getStorageStats();
+                if (stats) {
+                    report.storage = {
+                        type: 'IndexedDB (PWA)',
+                        usage: stats.usage,
+                        quota: stats.quota,
+                        usageFormatted: stats.usageFormatted,
+                        quotaFormatted: stats.quotaFormatted,
+                        percentUsed: stats.percentUsed
+                    };
+                    
+                    const percentNum = parseFloat(stats.percentUsed);
+                    if (percentNum > 80) {
+                        report.recommendations.push('⚠️ Armazenamento está quase cheio (' + stats.percentUsed + ').');
+                    }
+                } else {
+                    report.storage = {
+                        type: 'IndexedDB (PWA)',
+                        usageFormatted: 'N/A',
+                        quotaFormatted: 'Ilimitado*',
+                        percentUsed: 'N/A'
+                    };
+                }
+            } catch (e) {
+                report.storage.error = e.message;
+            }
+            
+            // 2. Análise dos dados de inspeção
+            try {
+                const rawData = await loadAllInspectionsFromDB();
+                if (Object.keys(rawData).length > 0) {
+                    const validation = validateAllInspectionData(rawData);
+                    
+                    report.inspectionData = {
+                        totalRecords: Object.keys(rawData).length,
+                        validRecords: Object.keys(validation.validData).length,
+                        invalidRecords: validation.invalidKeys.length,
+                        totalErrors: validation.totalErrors,
+                        invalidKeys: validation.invalidKeys,
+                        validationReport: validation.report
+                    };
+                    
+                    // Estatísticas por aerogerador
+                    const byAero = {};
+                    for (const [key, data] of Object.entries(validation.validData)) {
+                        const aero = data.aerogerador;
+                        if (!byAero[aero]) {
+                            byAero[aero] = { count: 0, classifications: {} };
+                        }
+                        byAero[aero].count++;
+                        byAero[aero].classifications[data.classificacao] = 
+                            (byAero[aero].classifications[data.classificacao] || 0) + 1;
+                    }
+                    report.inspectionData.byAerogerador = byAero;
+                    
+                } else {
+                    report.inspectionData = { message: 'Nenhum dado de inspeção encontrado', totalRecords: 0, validRecords: 0, invalidRecords: 0 };
+                }
+            } catch (e) {
+                report.inspectionData.error = 'Erro ao carregar dados: ' + e.message;
+                report.recommendations.push('❌ Erro ao acessar dados de inspeção.');
+            }
+            
+            // 3. Análise das fotos
+            let totalPhotos = 0;
+            const photoKeys = [];
+            
+            try {
+                const allPhotos = await loadAllPhotosFromDB();
+                for (const [key, photos] of Object.entries(allPhotos)) {
+                    if (Array.isArray(photos) && photos.length > 0) {
+                        photoKeys.push(key);
+                        totalPhotos += photos.length;
+                    }
+                }
+            } catch (e) {
+                console.error('Erro ao carregar fotos para diagnóstico:', e);
+            }
+            
+            report.photos = {
+                totalPhotoKeys: photoKeys.length,
+                totalPhotos: totalPhotos,
+                totalSize: 'Armazenado no IndexedDB',
+                keys: photoKeys
+            };
+            
+            // 4. Análise da estrutura
+            report.estrutura = {
+                totalCategorias: Object.keys(ESTRUTURA.categorias).length,
+                totalComponentes: totalComponentes,
+                totalAerogeradores: AEROGERADORES.length
+            };
+            
+            // 5. Verificar backups
+            if (localStorage.getItem('inspectionData_backup_corrupted')) {
+                report.recommendations.push('ℹ️ Existe um backup de dados corrompidos. Pode ser removido se não for necessário.');
+            }
+
+            // Guardar relatório para função de copiar
+            currentDiagnosticReport = report;
+            
+            // Gerar conteúdo do modal
+            const content = document.getElementById('diagnosticContent');
+            
+            // Determinar status geral
+            const hasProblems = report.recommendations.length > 0 || report.inspectionData.invalidRecords > 0;
+            
+            content.innerHTML = `
+                <p style="color: #666; margin-bottom: 20px;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+                
+                <!-- Status Geral -->
+                <div class="diag-card">
+                    ${hasProblems ? 
+                        `<div class="diag-alert warning">⚠️ Foram encontrados alguns pontos de atenção</div>` :
+                        `<div class="diag-alert success">✅ Sistema PWA funcionando corretamente!</div>`
+                    }
+                </div>
+                
+                <!-- Armazenamento IndexedDB -->
+                <div class="diag-card">
+                    <h3>💾 Armazenamento (IndexedDB)</h3>
+                    <div class="diag-stats">
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.storage.usageFormatted || 'N/A'}</div>
+                            <div class="diag-stat-label">Espaço usado</div>
+                        </div>
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.storage.quotaFormatted || 'Ilimitado*'}</div>
+                            <div class="diag-stat-label">Disponível</div>
+                        </div>
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.storage.percentUsed || '<1%'}</div>
+                            <div class="diag-stat-label">Utilização</div>
+                        </div>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">* IndexedDB permite armazenar muito mais dados que localStorage</p>
+                </div>
+                
+                <!-- Dados de Inspeção -->
+                <div class="diag-card">
+                    <h3>📋 Dados de Inspeção</h3>
+                    ${report.inspectionData.error ? 
+                        `<div class="diag-alert error">${report.inspectionData.error}</div>` :
+                        `<div class="diag-stats">
+                            <div class="diag-stat">
+                                <div class="diag-stat-value">${report.inspectionData.totalRecords || 0}</div>
+                                <div class="diag-stat-label">Registros totais</div>
+                            </div>
+                            <div class="diag-stat">
+                                <div class="diag-stat-value" style="color: #28a745;">${report.inspectionData.validRecords || 0}</div>
+                                <div class="diag-stat-label">Válidos</div>
+                            </div>
+                            <div class="diag-stat">
+                                <div class="diag-stat-value" style="color: ${report.inspectionData.invalidRecords > 0 ? '#dc3545' : '#28a745'};">${report.inspectionData.invalidRecords || 0}</div>
+                                <div class="diag-stat-label">Inválidos</div>
+                            </div>
+                        </div>
+                        ${report.inspectionData.invalidRecords > 0 ? 
+                            `<div class="diag-alert warning" style="margin-top: 15px;">
+                                <strong>Registros com problemas:</strong><br>
+                                ${report.inspectionData.invalidKeys.slice(0, 5).join('<br>')}
+                                ${report.inspectionData.invalidKeys.length > 5 ? `<br>... e mais ${report.inspectionData.invalidKeys.length - 5}` : ''}
+                            </div>` : 
+                            ''
+                        }`
+                    }
+                </div>
+                
+                <!-- Fotos -->
+                <div class="diag-card">
+                    <h3>📸 Fotos Armazenadas</h3>
+                    <div class="diag-stats">
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.photos.totalPhotos}</div>
+                            <div class="diag-stat-label">Total de fotos</div>
+                        </div>
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.photos.totalPhotoKeys}</div>
+                            <div class="diag-stat-label">Componentes</div>
+                        </div>
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.photos.totalSize}</div>
+                            <div class="diag-stat-label">Espaço usado</div>
+                        </div>
+                    </div>
+                    ${report.photos.totalPhotos > 0 ? `
+                        <div class="diag-photos-container">
+                            ${report.photos.keys.map(key => {
+                                const componentName = key.replace('photos_', '').split('_').slice(1).join(' > ');
+                                const aeroName = key.replace('photos_', '').split('_')[0];
+                                let photosHtml = '';
+                                try {
+                                    const photos = JSON.parse(localStorage.getItem(key) || '[]');
+                                    if (photos.length > 0) {
+                                        photosHtml = `
+                                            <div class="diag-photo-group">
+                                                <div class="diag-photo-title">
+                                                    <strong>${aeroName}</strong> - ${componentName}
+                                                    <span class="diag-photo-count">(${photos.length} foto${photos.length > 1 ? 's' : ''})</span>
+                                                </div>
+                                                <div class="diag-photo-thumbs">
+                                                    ${photos.map((photo, idx) => `
+                                                        <div class="diag-thumb" onclick="openPhotoModal('${photo.replace(/'/g, "\\'")}')">
+                                                            <img src="${photo}" alt="Foto ${idx + 1}">
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        `;
+                                    }
+                                } catch(e) {}
+                                return photosHtml;
+                            }).join('')}
+                        </div>
+                    ` : `
+                        <div class="diag-alert info" style="margin-top: 15px;">
+                            Nenhuma foto salva ainda.
+                        </div>
+                    `}
+                </div>
+                
+                <!-- Estrutura -->
+                <div class="diag-card">
+                    <h3>🏗️ Estrutura do Sistema</h3>
+                    <div class="diag-stats">
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.estrutura.totalCategorias}</div>
+                            <div class="diag-stat-label">Categorias</div>
+                        </div>
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.estrutura.totalComponentes}</div>
+                            <div class="diag-stat-label">Componentes</div>
+                        </div>
+                        <div class="diag-stat">
+                            <div class="diag-stat-value">${report.estrutura.totalAerogeradores}</div>
+                            <div class="diag-stat-label">Aerogeradores</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recomendações -->
+                ${report.recommendations.length > 0 ? `
+                <div class="diag-card">
+                    <h3>💡 Recomendações</h3>
+                    ${report.recommendations.map(r => {
+                        let alertClass = 'info';
+                        if (r.startsWith('❌')) alertClass = 'error';
+                        else if (r.startsWith('⚠️')) alertClass = 'warning';
+                        return `<div class="diag-alert ${alertClass}">${r}</div>`;
+                    }).join('')}
+                </div>
+                ` : ''}
+                
+                <!-- Detalhes por Aerogerador -->
+                ${report.inspectionData.byAerogerador && Object.keys(report.inspectionData.byAerogerador).length > 0 ? `
+                <div class="diag-card">
+                    <h3>📊 Inspeções por Aerogerador</h3>
+                    <table class="diag-table">
+                        <thead>
+                            <tr>
+                                <th>Aerogerador</th>
+                                <th>Componentes</th>
+                                <th>Verificados</th>
+                                <th>Com Defeito</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(report.inspectionData.byAerogerador).map(([aero, info]) => {
+                                const verificados = info.classifications['Verificado'] || 0;
+                                const comDefeito = info.count - verificados;
+                                return `<tr>
+                                    <td><strong>${aero}</strong></td>
+                                    <td>${info.count}</td>
+                                    <td style="color: #28a745;">${verificados}</td>
+                                    <td style="color: ${comDefeito > 0 ? '#dc3545' : '#666'};">${comDefeito}</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ` : ''}
+            `;
+            
+            // Abrir modal
+            openDiagnosticModal();
+            
+            console.log('Relatório de Diagnóstico:', report);
+        }
+        
+        /**
+         * Formata bytes para exibição legível
+         */
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Iniciar aplicação quando DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
