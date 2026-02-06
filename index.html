@@ -3606,111 +3606,128 @@ const AEROGERADORES = [
                 porCategoria[data.categoria].push(data);
             });
 
-            // Construir HTML
-            let html = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-            html += '<title>Relatório - ' + aero + '</title>';
-            html += '<style>';
-            html += 'body { font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: 0 auto; }';
-            html += 'h2 { color: #0000FF; }';
-            html += 'h3 { color: #0066FF; margin-top: 20px; }';
-            html += 'ul { line-height: 1.6; list-style: none; padding: 0; }';
-            html += 'li { margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; }';
-            html += 'hr { border: none; border-top: 2px solid #e0e0e0; margin: 20px 0; }';
-            html += '.foto-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }';
-            html += '.foto-thumb { width: 100px; height: 100px; border-radius: 6px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }';
-            html += '.foto-thumb img { width: 100%; height: 100%; object-fit: cover; }';
-            html += '.foto-thumb:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.25); }';
-            html += '.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }';
-            html += '.modal-overlay img { max-width: 90%; max-height: 90%; border-radius: 8px; }';
-            html += '.modal-close { position: fixed; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; }';
-            html += '.classificacao-verificado { color: #28a745; }';
-            html += '.classificacao-ligeiro { color: #ffc107; }';
-            html += '.classificacao-grave { color: #fd7e14; }';
-            html += '.classificacao-imediata { color: #dc3545; font-weight: bold; }';
-            html += '.btn-print { position: fixed; top: 20px; right: 20px; background: #0000FF; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px; }';
-            html += '.btn-print:hover { background: #0066FF; }';
-            html += '@media print { .btn-print { display: none; } .modal-overlay { display: none !important; } body { padding: 10px; } .foto-thumb { width: 80px; height: 80px; } }';
-            html += '</style></head><body>';
+            // Criar modal de relatório dentro do próprio app
+            let modalHtml = `
+                <div id="reportModal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: white;
+                    z-index: 9999;
+                    overflow-y: auto;
+                    padding: 20px;
+                    box-sizing: border-box;
+                ">
+                    <div style="max-width: 900px; margin: 0 auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; padding: 10px 0; border-bottom: 2px solid #e0e0e0;">
+                            <button onclick="document.getElementById('reportModal').remove()" style="
+                                background: #0000FF;
+                                color: white;
+                                border: none;
+                                padding: 12px 20px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            ">← Voltar</button>
+                            <button onclick="window.print()" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 12px 20px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                            ">🖨️ Imprimir</button>
+                        </div>
+                        
+                        <h2 style="color: #0000FF;">Relatório - ${aero}</h2>
+                        <p>Total de componentes inspecionados: <strong>${filteredData.length}</strong></p>
+                        <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 20px 0;">
+                        
+                        <div id="reportContent">Carregando fotos...</div>
+                    </div>
+                </div>
+            `;
             
-            // Botão de impressão
-            html += '<button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>';
+            // Adicionar modal ao DOM
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
             
-            // Modal para foto ampliada
-            html += '<div id="fotoModal" class="modal-overlay" onclick="this.style.display=\'none\'">';
-            html += '<span class="modal-close">&times;</span>';
-            html += '<img id="fotoModalImg" src="" alt="Foto ampliada">';
-            html += '</div>';
-            
-            html += '<h2>Relatório - ' + aero + '</h2>';
-            html += '<p>Total de componentes inspecionados: <strong>' + filteredData.length + '</strong></p>';
-            html += '<hr>';
+            // Construir conteúdo com fotos do IndexedDB
+            buildReportContent(porCategoria, aero);
+        }
+        
+        async function buildReportContent(porCategoria, aero) {
+            let contentHtml = '';
             
             for (const [categoria, items] of Object.entries(porCategoria)) {
-                html += '<h3>📁 ' + categoria + '</h3><ul>';
-                items.forEach(data => {
+                contentHtml += `<h3 style="color: #0066FF; margin-top: 20px;">📁 ${categoria}</h3><ul style="line-height: 1.6; list-style: none; padding: 0;">`;
+                
+                for (const data of items) {
                     // Determinar classe de cor baseado na classificação
-                    let classeCor = '';
-                    if (data.classificacao === 'Verificado') classeCor = 'classificacao-verificado';
-                    else if (data.classificacao === 'Defeito Ligeiro') classeCor = 'classificacao-ligeiro';
-                    else if (data.classificacao === 'Defeito Grave') classeCor = 'classificacao-grave';
-                    else if (data.classificacao === 'Ação Imediata') classeCor = 'classificacao-imediata';
+                    let cor = '#28a745';
+                    if (data.classificacao === 'Defeito Ligeiro') cor = '#ffc107';
+                    else if (data.classificacao === 'Defeito Grave') cor = '#fd7e14';
+                    else if (data.classificacao === 'Ação Imediata') cor = '#dc3545';
                     
-                    html += '<li>';
-                    html += '<strong>' + data.componente + '</strong>: <span class="' + classeCor + '">' + data.classificacao + '</span>';
-                    if (data.falha) html += ' - ' + data.falha;
-                    if (data.observacoes) html += '<br><em>' + data.observacoes + '</em>';
+                    contentHtml += `<li style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">`;
+                    contentHtml += `<strong>${data.componente}</strong>: <span style="color: ${cor}; ${data.classificacao === 'Ação Imediata' ? 'font-weight: bold;' : ''}">${data.classificacao}</span>`;
+                    if (data.falha) contentHtml += ` - ${data.falha}`;
+                    if (data.observacoes) contentHtml += `<br><em>${data.observacoes}</em>`;
                     
-                    // Adicionar fotos se existirem
+                    // Carregar fotos do IndexedDB
                     if (data.temFotos && data.numFotos > 0) {
                         const photoKey = `photos_${aero}_${data.categoria}_${data.subcategoria}_${data.componente}`;
-                        const photosJson = localStorage.getItem(photoKey);
-                        if (photosJson) {
-                            try {
-                                const photos = JSON.parse(photosJson);
-                                if (photos.length > 0) {
-                                    html += '<div class="foto-container">';
-                                    photos.forEach((photo, idx) => {
-                                        html += '<div class="foto-thumb" onclick="document.getElementById(\'fotoModal\').style.display=\'flex\'; document.getElementById(\'fotoModalImg\').src=\'' + photo.replace(/'/g, "\\'") + '\'">';
-                                        html += '<img src="' + photo + '" alt="Foto ' + (idx + 1) + '">';
-                                        html += '</div>';
-                                    });
-                                    html += '</div>';
-                                }
-                            } catch(e) {
-                                html += '<br>📸 ' + data.numFotos + ' foto(s) - erro ao carregar';
+                        try {
+                            const photos = await loadPhotosFromDB(photoKey);
+                            if (photos && photos.length > 0) {
+                                contentHtml += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">`;
+                                photos.forEach((photo, idx) => {
+                                    contentHtml += `<div style="width: 100px; height: 100px; border-radius: 6px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15);" onclick="showPhotoFullscreen('${photo.replace(/'/g, "\\'")}')">`;
+                                    contentHtml += `<img src="${photo}" alt="Foto ${idx + 1}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                                    contentHtml += `</div>`;
+                                });
+                                contentHtml += `</div>`;
                             }
+                        } catch (e) {
+                            contentHtml += `<br>📸 ${data.numFotos} foto(s) - erro ao carregar`;
                         }
                     }
                     
-                    html += '</li>';
-                });
-                html += '</ul>';
-            }
-            
-            html += '</body></html>';
-
-            // Tentar abrir nova janela
-            const win = window.open('', '_blank', 'width=800,height=600');
-            if (!win || win.closed || typeof win.closed == 'undefined') {
-                // Popup bloqueado, mostrar em alert
-                let resumo = 'DADOS SALVOS - ' + aero + '\n\n';
-                resumo += 'Total: ' + filteredData.length + ' componentes\n\n';
-                
-                for (const [categoria, items] of Object.entries(porCategoria)) {
-                    resumo += '\n' + categoria + ':\n';
-                    items.forEach(data => {
-                        resumo += '  - ' + data.componente + ': ' + data.classificacao;
-                        if (data.falha) resumo += ' - ' + data.falha;
-                        resumo += '\n';
-                    });
+                    contentHtml += `</li>`;
                 }
-                
-                alert(resumo);
-                return;
+                contentHtml += `</ul>`;
             }
             
-            win.document.write(html);
-            win.document.close();
+            document.getElementById('reportContent').innerHTML = contentHtml;
+        }
+        
+        function showPhotoFullscreen(photoSrc) {
+            const modal = document.createElement('div');
+            modal.id = 'photoFullscreenModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.95);
+                z-index: 99999;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+            `;
+            modal.innerHTML = `
+                <span style="position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer;">&times;</span>
+                <img src="${photoSrc}" style="max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 8px;">
+            `;
+            modal.onclick = () => modal.remove();
+            document.body.appendChild(modal);
         }
 
         // ========== SISTEMA DE BACKUP E RESTAURAÇÃO ==========
