@@ -1,7 +1,7 @@
 {
-  "name": "Inspeção de Torres Eólicas - Coxilha Negra",
-  "short_name": "Inspeção Eólica",
-  "description": "App para inspeção de torres eólicas do Parque Coxilha Negra",
+  "name": "Inspeções Eletromecânicas",
+  "short_name": "Inspeções",
+  "description": "App para inspeção eletromecânica de torres eólicas",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0000FF",
