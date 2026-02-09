@@ -270,6 +270,15 @@
             background: #218838;
         }
 
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
         .progress-info {
             background: #e6e6ff;
             padding: 15px;
@@ -777,6 +786,7 @@
                     <button class="btn btn-success" id="exportData">📊 Exportar para Excel/CSV</button>
                     <button class="btn btn-success" id="exportAll">📊 Exportar TODAS as Inspeções</button>
                     <button class="btn btn-secondary" id="viewData">📄 Ver Relatório</button>
+                    <button class="btn btn-info" id="exportHTML">📤 Exportar Relatório HTML</button>
                     <button class="btn btn-secondary" id="diagData" title="Verificar integridade dos dados salvos">🔍 Diagnóstico</button>
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
@@ -2830,6 +2840,7 @@ const AEROGERADORES = [
             const exportAllBtn = document.getElementById('exportAll');
             const viewBtn = document.getElementById('viewData');
             const diagBtn = document.getElementById('diagData');
+            const exportHTMLBtn = document.getElementById('exportHTML');
             
             console.log('Botões encontrados:', {
                 saveBtn: !!saveBtn,
@@ -2837,7 +2848,8 @@ const AEROGERADORES = [
                 exportBtn: !!exportBtn,
                 exportAllBtn: !!exportAllBtn,
                 viewBtn: !!viewBtn,
-                diagBtn: !!diagBtn
+                diagBtn: !!diagBtn,
+                exportHTMLBtn: !!exportHTMLBtn
             });
             
             // Atualizar título quando parque muda
@@ -2896,6 +2908,13 @@ const AEROGERADORES = [
                 diagBtn.addEventListener('click', () => {
                     console.log('Botão DIAGNÓSTICO clicado!');
                     runDiagnostics();
+                });
+            }
+            
+            if (exportHTMLBtn) {
+                exportHTMLBtn.addEventListener('click', () => {
+                    console.log('Botão EXPORTAR HTML clicado!');
+                    exportReportHTML();
                 });
             }
 
@@ -3738,6 +3757,271 @@ const AEROGERADORES = [
             `;
             modal.onclick = () => modal.remove();
             document.body.appendChild(modal);
+        }
+
+        /**
+         * Exporta o relatório como arquivo HTML para compartilhar
+         */
+        async function exportReportHTML() {
+            const aero = document.getElementById('aerogerador').value;
+            
+            if (!aero) {
+                showToast('⚠️ Selecione um aerogerador primeiro!', 'warning');
+                return;
+            }
+
+            const filteredData = Object.entries(inspectionData)
+                .filter(([key]) => key.startsWith(aero + '_'))
+                .map(([, data]) => data);
+
+            if (filteredData.length === 0) {
+                showToast('⚠️ Nenhum dado encontrado para este aerogerador', 'warning');
+                return;
+            }
+
+            showToast('⏳ Gerando relatório...', 'info');
+
+            // Agrupar por categoria
+            const porCategoria = {};
+            filteredData.forEach(data => {
+                if (!porCategoria[data.categoria]) {
+                    porCategoria[data.categoria] = [];
+                }
+                porCategoria[data.categoria].push(data);
+            });
+
+            // Construir HTML completo
+            let html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Inspeção - ${aero}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%); color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center; }
+        .header h1 { font-size: 24px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .summary { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .summary h2 { color: #0000FF; margin-bottom: 15px; }
+        .stats { display: flex; gap: 20px; flex-wrap: wrap; }
+        .stat { background: #f0f0ff; padding: 15px 25px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #0000FF; }
+        .stat-label { font-size: 12px; color: #666; }
+        .categoria { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .categoria h3 { color: #0066FF; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .componente { padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; }
+        .componente-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .componente-nome { font-weight: bold; }
+        .classificacao { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .classificacao-verificado { background: #d4edda; color: #155724; }
+        .classificacao-ligeiro { background: #fff3cd; color: #856404; }
+        .classificacao-grave { background: #ffe0b2; color: #e65100; }
+        .classificacao-imediata { background: #f8d7da; color: #721c24; }
+        .falha { color: #dc3545; font-size: 14px; margin-bottom: 5px; }
+        .observacoes { color: #666; font-style: italic; font-size: 14px; }
+        .fotos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .foto { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        @media print { body { background: white; } .header, .categoria, .summary { box-shadow: none; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌬️ Relatório de Inspeção Eletromecânica</h1>
+        <p><strong>Aerogerador:</strong> ${aero}</p>
+        <p><strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+    </div>
+
+    <div class="summary">
+        <h2>📊 Resumo</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">${filteredData.length}</div>
+                <div class="stat-label">Componentes Inspecionados</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">${filteredData.filter(d => d.classificacao === 'Verificado').length}</div>
+                <div class="stat-label">Verificados ✅</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">${filteredData.filter(d => d.classificacao === 'Defeito Ligeiro').length}</div>
+                <div class="stat-label">Defeitos Ligeiros ⚠️</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">${filteredData.filter(d => d.classificacao === 'Defeito Grave').length}</div>
+                <div class="stat-label">Defeitos Graves 🔶</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">${filteredData.filter(d => d.classificacao === 'Ação Imediata').length}</div>
+                <div class="stat-label">Ações Imediatas 🔴</div>
+            </div>
+        </div>
+    </div>`;
+
+            // Adicionar categorias
+            for (const [categoria, items] of Object.entries(porCategoria)) {
+                html += `
+    <div class="categoria">
+        <h3>📁 ${categoria}</h3>`;
+                
+                for (const data of items) {
+                    let classeClass = 'classificacao-verificado';
+                    if (data.classificacao === 'Defeito Ligeiro') classeClass = 'classificacao-ligeiro';
+                    else if (data.classificacao === 'Defeito Grave') classeClass = 'classificacao-grave';
+                    else if (data.classificacao === 'Ação Imediata') classeClass = 'classificacao-imediata';
+                    
+                    html += `
+        <div class="componente">
+            <div class="componente-header">
+                <span class="componente-nome">${data.componente}</span>
+                <span class="classificacao ${classeClass}">${data.classificacao}</span>
+            </div>`;
+                    
+                    if (data.falha) {
+                        html += `<div class="falha">⚠️ ${data.falha}</div>`;
+                    }
+                    if (data.observacoes) {
+                        html += `<div class="observacoes">📝 ${data.observacoes}</div>`;
+                    }
+                    
+                    // Adicionar fotos
+                    if (data.temFotos && data.numFotos > 0) {
+                        const photoKey = `photos_${aero}_${data.categoria}_${data.subcategoria}_${data.componente}`;
+                        try {
+                            const photos = await loadPhotosFromDB(photoKey);
+                            if (photos && photos.length > 0) {
+                                html += `<div class="fotos">`;
+                                photos.forEach(photo => {
+                                    html += `<img src="${photo}" class="foto" alt="Foto">`;
+                                });
+                                html += `</div>`;
+                            }
+                        } catch (e) {
+                            console.error('Erro ao carregar fotos:', e);
+                        }
+                    }
+                    
+                    html += `</div>`;
+                }
+                
+                html += `</div>`;
+            }
+
+            html += `
+    <div class="footer">
+        <p>Relatório gerado pelo App de Inspeções Eletromecânicas dos Parques Eólicos</p>
+        <p>© ${new Date().getFullYear()} - AXIA Energia</p>
+    </div>
+</body>
+</html>`;
+
+            // Abrir relatório em modal com opções
+            const modalHtml = `
+                <div id="exportModal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: white;
+                    z-index: 9999;
+                    overflow-y: auto;
+                ">
+                    <div style="position: sticky; top: 0; background: #0000FF; padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10000;">
+                        <button onclick="document.getElementById('exportModal').remove()" style="
+                            background: white;
+                            color: #0000FF;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 8px;
+                            font-weight: bold;
+                            cursor: pointer;
+                        ">← Voltar</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="compartilharRelatorio()" style="
+                                background: #25D366;
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 8px;
+                                font-weight: bold;
+                                cursor: pointer;
+                            ">📤 Compartilhar</button>
+                            <button onclick="window.print()" style="
+                                background: white;
+                                color: #0000FF;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 8px;
+                                font-weight: bold;
+                                cursor: pointer;
+                            ">🖨️ Imprimir</button>
+                        </div>
+                    </div>
+                    <iframe id="relatorioFrame" style="width: 100%; height: calc(100% - 70px); border: none;"></iframe>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Escrever conteúdo no iframe
+            const iframe = document.getElementById('relatorioFrame');
+            const iframeDoc = iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(html);
+            iframeDoc.close();
+            
+            // Guardar HTML para compartilhar
+            window.relatorioHTML = html;
+            window.relatorioAero = aero;
+        }
+        
+        async function compartilharRelatorio() {
+            const aero = window.relatorioAero;
+            const html = window.relatorioHTML;
+            const fileName = `relatorio_${aero}_${new Date().toISOString().split('T')[0]}.html`;
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const file = new File([blob], fileName, { type: 'text/html' });
+            
+            // Tentar compartilhamento nativo com arquivo
+            if (navigator.share) {
+                try {
+                    // Primeiro tenta com arquivo
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: `Relatório - ${aero}`
+                        });
+                        showToast('✅ Compartilhado!', 'success');
+                        return;
+                    }
+                } catch (e) {
+                    console.log('Compartilhamento de arquivo falhou:', e);
+                }
+                
+                // Se não deu, tenta só com texto
+                try {
+                    await navigator.share({
+                        title: `Relatório de Inspeção - ${aero}`,
+                        text: `Relatório de inspeção do aerogerador ${aero}. Abra o arquivo HTML anexo para ver os detalhes completos com fotos.`
+                    });
+                    showToast('💡 Compartilhe o arquivo manualmente', 'info');
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                }
+            }
+            
+            // Fallback: baixar arquivo
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast('✅ Arquivo salvo em Downloads!', 'success');
         }
 
         // ========== SISTEMA DE BACKUP E RESTAURAÇÃO ==========
