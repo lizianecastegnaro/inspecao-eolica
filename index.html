@@ -4529,12 +4529,47 @@ const AEROGERADORES = [
                     </table>
                 </div>
                 ` : ''}
+                
+                <!-- Botão Limpar Dados -->
+                <div class="diag-card" style="background: #fff5f5; border: 2px solid #dc3545;">
+                    <h3 style="color: #dc3545;">🗑️ Limpar Todos os Dados</h3>
+                    <p style="margin: 10px 0; color: #666;">Apaga todas as inspeções e fotos. Esta ação não pode ser desfeita!</p>
+                    <button onclick="confirmarLimpeza()" style="
+                        background: #dc3545;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        margin-top: 10px;
+                    ">🗑️ APAGAR TUDO</button>
+                </div>
             `;
             
             // Abrir modal
             openDiagnosticModal();
             
             console.log('Relatório de Diagnóstico:', report);
+        }
+        
+        async function confirmarLimpeza() {
+            if (confirm('⚠️ TEM CERTEZA?\\n\\nIsso vai apagar TODAS as inspeções e fotos.\\n\\nEsta ação NÃO pode ser desfeita!')) {
+                if (confirm('🚨 ÚLTIMA CHANCE!\\n\\nClique OK para APAGAR TUDO.')) {
+                    try {
+                        await clearAllDB();
+                        inspectionData = {};
+                        showToast('✅ Todos os dados foram apagados!', 'success');
+                        closeDiagnosticModal();
+                        updateProgress();
+                        updateAerogeradorProgress();
+                        buildTreeNav();
+                    } catch (e) {
+                        showToast('❌ Erro ao apagar dados: ' + e.message, 'error');
+                    }
+                }
+            }
         }
         
         /**
