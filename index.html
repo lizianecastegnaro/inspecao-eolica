@@ -4560,13 +4560,11 @@ const AEROGERADORES = [
                     try {
                         await clearAllDB();
                         inspectionData = {};
-                        showToast('✅ Todos os dados foram apagados!', 'success');
                         closeDiagnosticModal();
-                        updateProgress();
-                        updateParqueProgress();
-                        buildTreeNav();
+                        alert('✅ Todos os dados foram apagados!\n\nA página será recarregada.');
+                        location.reload();
                     } catch (e) {
-                        showToast('❌ Erro ao apagar dados: ' + e.message, 'error');
+                        alert('❌ Erro ao apagar dados: ' + e.message);
                     }
                 }
             }
