@@ -4555,15 +4555,15 @@ const AEROGERADORES = [
         }
         
         async function confirmarLimpeza() {
-            if (confirm('⚠️ TEM CERTEZA?\\n\\nIsso vai apagar TODAS as inspeções e fotos.\\n\\nEsta ação NÃO pode ser desfeita!')) {
-                if (confirm('🚨 ÚLTIMA CHANCE!\\n\\nClique OK para APAGAR TUDO.')) {
+            if (confirm('⚠️ TEM CERTEZA?\n\nIsso vai apagar TODAS as inspeções e fotos.\n\nEsta ação NÃO pode ser desfeita!')) {
+                if (confirm('🚨 ÚLTIMA CHANCE!\n\nClique OK para APAGAR TUDO.')) {
                     try {
                         await clearAllDB();
                         inspectionData = {};
                         showToast('✅ Todos os dados foram apagados!', 'success');
                         closeDiagnosticModal();
                         updateProgress();
-                        updateAerogeradorProgress();
+                        updateParqueProgress();
                         buildTreeNav();
                     } catch (e) {
                         showToast('❌ Erro ao apagar dados: ' + e.message, 'error');
