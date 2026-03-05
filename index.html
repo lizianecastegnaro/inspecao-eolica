@@ -279,6 +279,15 @@
             background: #138496;
         }
 
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
         .progress-info {
             background: #e6e6ff;
             padding: 15px;
@@ -793,6 +802,10 @@
                     <button class="btn btn-primary" id="backupData" title="Salvar todos os dados em um arquivo">💾 Fazer Backup</button>
                     <button class="btn btn-secondary" id="restoreData" title="Restaurar dados de um arquivo de backup">📂 Restaurar Backup</button>
                     <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+                </div>
+                <div class="buttons-row" style="margin-top: 10px;">
+                    <button class="btn btn-warning" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Mesclar Backups</button>
+                    <input type="file" id="mergeFileInput" accept=".json" style="display: none;">
                 </div>
             </div>
         </div>
@@ -2945,6 +2958,26 @@ const AEROGERADORES = [
                 });
             }
 
+            // Event listeners para mesclar backups
+            const mergeBtn = document.getElementById('mergeData');
+            const mergeFileInput = document.getElementById('mergeFileInput');
+            
+            if (mergeBtn) {
+                mergeBtn.addEventListener('click', () => {
+                    console.log('Botão MESCLAR clicado!');
+                    mergeFileInput.click();
+                });
+            }
+
+            if (mergeFileInput) {
+                mergeFileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        mergeBackup(e.target.files[0]);
+                        e.target.value = '';
+                    }
+                });
+            }
+
             document.getElementById('aerogerador').addEventListener('change', () => {
                 buildTree();
                 updateProgress();
@@ -3800,17 +3833,20 @@ const AEROGERADORES = [
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }
-        .header { background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%); color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px; text-align: center; }
-        .header h1 { font-size: 24px; margin-bottom: 10px; }
-        .header p { opacity: 0.9; }
+        .header-container { display: flex; margin-bottom: 30px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header-logo { background: #2d2d5b; padding: 15px 25px; display: flex; align-items: center; justify-content: center; }
+        .header-logo img { height: 70px; }
+        .header-info { background: #c8ced8; flex: 1; padding: 20px 30px; display: flex; flex-direction: column; justify-content: center; }
+        .header-info h1 { font-size: 20px; color: #3d3d6b; margin-bottom: 8px; font-weight: 600; }
+        .header-info p { color: #3d3d6b; font-size: 16px; }
         .summary { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .summary h2 { color: #0000FF; margin-bottom: 15px; }
+        .summary h2 { color: #3d3d6b; margin-bottom: 15px; }
         .stats { display: flex; gap: 20px; flex-wrap: wrap; }
         .stat { background: #f0f0ff; padding: 15px 25px; border-radius: 8px; text-align: center; }
-        .stat-value { font-size: 28px; font-weight: bold; color: #0000FF; }
+        .stat-value { font-size: 28px; font-weight: bold; color: #3d3d6b; }
         .stat-label { font-size: 12px; color: #666; }
         .categoria { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .categoria h3 { color: #0066FF; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
+        .categoria h3 { color: #3d3d6b; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; }
         .componente { padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; }
         .componente-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .componente-nome { font-weight: bold; }
@@ -3824,14 +3860,18 @@ const AEROGERADORES = [
         .fotos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .foto { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
         .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        @media print { body { background: white; } .header, .categoria, .summary { box-shadow: none; } }
+        @media print { body { background: white; } .header-container, .categoria, .summary { box-shadow: none; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🌬️ Relatório de Inspeção Eletromecânica</h1>
-        <p><strong>Aerogerador:</strong> ${aero}</p>
-        <p><strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+    <div class="header-container">
+        <div class="header-logo">
+            <!-- COLOQUE A LOGO AQUI -->
+        </div>
+        <div class="header-info">
+            <h1>Relatório de Inspeção</h1>
+            <p>Coxilha Negra - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
+        </div>
     </div>
 
     <div class="summary">
@@ -4186,6 +4226,130 @@ const AEROGERADORES = [
                 } catch (error) {
                     console.error('Erro ao restaurar backup:', error);
                     showToast('❌ Erro ao ler arquivo de backup: ' + error.message, 'error');
+                }
+            };
+
+            reader.onerror = function() {
+                showToast('❌ Erro ao ler arquivo', 'error');
+            };
+
+            reader.readAsText(file);
+        }
+
+        async function mergeBackup(file) {
+            console.log('=== MESCLANDO BACKUP ===');
+            
+            if (!file) {
+                showToast('❌ Nenhum arquivo selecionado', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    
+                    // Validar estrutura do backup
+                    if (!backup.data || !backup.version) {
+                        throw new Error('Arquivo de backup inválido');
+                    }
+
+                    // Contar o que será mesclado
+                    const backupInspections = backup.data.inspectionData || {};
+                    const backupPhotos = backup.data.photos || {};
+                    const numInspecoesBackup = Object.keys(backupInspections).length;
+                    
+                    let numFotosBackup = 0;
+                    for (const photos of Object.values(backupPhotos)) {
+                        if (Array.isArray(photos)) {
+                            numFotosBackup += photos.length;
+                        }
+                    }
+
+                    // Contar dados atuais
+                    const numInspecoesAtuais = Object.keys(inspectionData).length;
+
+                    // Confirmar com o usuário
+                    const dataBackup = new Date(backup.createdAt).toLocaleString('pt-BR');
+                    const confirmMsg = `🔀 MESCLAR BACKUPS\n\n` +
+                        `Backup a mesclar (${dataBackup}):\n` +
+                        `• ${numInspecoesBackup} inspeções\n` +
+                        `• ${numFotosBackup} fotos\n\n` +
+                        `Dados atuais:\n` +
+                        `• ${numInspecoesAtuais} inspeções\n\n` +
+                        `Os dados do backup serão ADICIONADOS aos dados atuais.\n` +
+                        `Se houver conflito (mesmo componente nos dois), o dado mais recente será mantido.\n\n` +
+                        `Deseja continuar?`;
+
+                    if (!confirm(confirmMsg)) {
+                        showToast('Mesclagem cancelada', 'info');
+                        return;
+                    }
+
+                    let inspecoesAdicionadas = 0;
+                    let inspecoesAtualizadas = 0;
+                    let fotosAdicionadas = 0;
+
+                    // Mesclar dados de inspeção
+                    for (const [key, newData] of Object.entries(backupInspections)) {
+                        const existingData = inspectionData[key];
+                        
+                        if (!existingData) {
+                            // Dado não existe, adicionar
+                            inspectionData[key] = newData;
+                            await saveInspectionToDB(key, newData);
+                            inspecoesAdicionadas++;
+                        } else {
+                            // Dado existe, comparar timestamps se disponíveis
+                            const existingTime = existingData.timestamp ? new Date(existingData.timestamp).getTime() : 0;
+                            const newTime = newData.timestamp ? new Date(newData.timestamp).getTime() : 0;
+                            
+                            if (newTime > existingTime) {
+                                // Dado do backup é mais recente, atualizar
+                                inspectionData[key] = newData;
+                                await saveInspectionToDB(key, newData);
+                                inspecoesAtualizadas++;
+                            }
+                            // Se o dado atual é mais recente ou igual, manter o atual
+                        }
+                    }
+
+                    // Mesclar fotos
+                    for (const [key, newPhotos] of Object.entries(backupPhotos)) {
+                        if (Array.isArray(newPhotos) && newPhotos.length > 0) {
+                            // Carregar fotos existentes
+                            let existingPhotos = await loadPhotosFromDB(key) || [];
+                            
+                            // Adicionar fotos que não existem (comparar por conteúdo)
+                            for (const newPhoto of newPhotos) {
+                                if (!existingPhotos.includes(newPhoto)) {
+                                    existingPhotos.push(newPhoto);
+                                    fotosAdicionadas++;
+                                }
+                            }
+                            
+                            // Salvar fotos mescladas
+                            await savePhotosToDB(key, existingPhotos);
+                        }
+                    }
+
+                    // Atualizar interface
+                    buildTree();
+                    updateProgress();
+                    updateParqueProgress();
+
+                    const resumo = [];
+                    if (inspecoesAdicionadas > 0) resumo.push(`${inspecoesAdicionadas} novas`);
+                    if (inspecoesAtualizadas > 0) resumo.push(`${inspecoesAtualizadas} atualizadas`);
+                    if (fotosAdicionadas > 0) resumo.push(`${fotosAdicionadas} fotos`);
+
+                    showToast(`✅ Mesclagem concluída! ${resumo.join(', ') || 'Nenhuma alteração'}`, 'success');
+                    console.log('Backup mesclado com sucesso');
+
+                } catch (error) {
+                    console.error('Erro ao mesclar backup:', error);
+                    showToast('❌ Erro ao mesclar backup: ' + error.message, 'error');
                 }
             };
 
