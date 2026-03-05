@@ -794,8 +794,7 @@
                 <div class="buttons-row">
                     <button class="btn btn-success" id="exportData">📊 Exportar para Excel/CSV</button>
                     <button class="btn btn-success" id="exportAll">📊 Exportar TODAS as Inspeções</button>
-                    <button class="btn btn-secondary" id="viewData">📄 Ver Relatório</button>
-                    <button class="btn btn-info" id="exportHTML">📤 Exportar Relatório HTML</button>
+                    <button class="btn btn-info" id="exportHTML">📄 Relatório HTML</button>
                     <button class="btn btn-secondary" id="diagData" title="Verificar integridade dos dados salvos">🔍 Diagnóstico</button>
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
@@ -4002,7 +4001,39 @@ const AEROGERADORES = [
         .fotos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .foto { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
         .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-        @media print { body { background: white; } .header-container, .categoria, .summary { box-shadow: none; } }
+        
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: white !important; padding: 10px !important; font-size: 11px !important; }
+            .header-container { box-shadow: none !important; margin-bottom: 15px !important; page-break-inside: avoid; }
+            .header-logo { padding: 10px 15px !important; }
+            .header-logo img { height: 50px !important; }
+            .header-info { padding: 10px 15px !important; }
+            .header-info h1 { font-size: 16px !important; margin-bottom: 4px !important; }
+            .header-info p { font-size: 12px !important; }
+            .summary { box-shadow: none !important; border: 1px solid #ddd !important; padding: 15px !important; margin-bottom: 15px !important; page-break-inside: avoid; }
+            .summary h2 { font-size: 14px !important; margin-bottom: 10px !important; }
+            .stats { gap: 10px !important; }
+            .stat { padding: 8px 12px !important; border: 1px solid #e0e0e0 !important; }
+            .stat-value { font-size: 18px !important; }
+            .stat-label { font-size: 9px !important; }
+            .categoria { box-shadow: none !important; border: 1px solid #ddd !important; padding: 15px !important; margin-bottom: 10px !important; page-break-inside: avoid; }
+            .categoria h3 { font-size: 13px !important; margin-bottom: 10px !important; padding-bottom: 8px !important; }
+            .componente { padding: 10px !important; margin-bottom: 8px !important; page-break-inside: avoid; }
+            .componente-header { margin-bottom: 5px !important; }
+            .componente-nome { font-size: 11px !important; }
+            .classificacao { padding: 2px 8px !important; font-size: 9px !important; }
+            .falha { font-size: 10px !important; margin-bottom: 3px !important; }
+            .observacoes { font-size: 10px !important; }
+            .fotos { gap: 5px !important; margin-top: 8px !important; }
+            .foto { width: 80px !important; height: 80px !important; border-radius: 4px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+            .footer { padding: 10px !important; font-size: 9px !important; page-break-inside: avoid; }
+        }
+        
+        @page {
+            size: A4;
+            margin: 15mm 10mm;
+        }
     </style>
 </head>
 <body>
@@ -4111,7 +4142,13 @@ const AEROGERADORES = [
                     z-index: 9999;
                     overflow-y: auto;
                 ">
-                    <div style="position: sticky; top: 0; background: #0000FF; padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10000;">
+                    <style>
+                        @media print {
+                            .no-print { display: none !important; }
+                            #exportModal { position: static !important; }
+                        }
+                    </style>
+                    <div class="no-print" style="position: sticky; top: 0; background: #0000FF; padding: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10000;">
                         <button onclick="document.getElementById('exportModal').remove()" style="
                             background: white;
                             color: #0000FF;
@@ -4130,8 +4167,8 @@ const AEROGERADORES = [
                                 border-radius: 8px;
                                 font-weight: bold;
                                 cursor: pointer;
-                            ">📤 Compartilhar</button>
-                            <button onclick="window.print()" style="
+                            ">💾 Salvar Arquivo</button>
+                            <button onclick="document.getElementById('relatorioFrame').contentWindow.print()" style="
                                 background: white;
                                 color: #0000FF;
                                 border: none;
@@ -4167,8 +4204,11 @@ const AEROGERADORES = [
             const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
             const file = new File([blob], fileName, { type: 'text/html' });
             
-            // Tentar compartilhamento nativo com arquivo
-            if (navigator.share) {
+            // Detectar se é mobile (compartilhamento funciona melhor)
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            
+            // No mobile, tentar compartilhamento nativo com arquivo
+            if (isMobile && navigator.share) {
                 try {
                     // Primeiro tenta com arquivo
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -4181,22 +4221,11 @@ const AEROGERADORES = [
                     }
                 } catch (e) {
                     console.log('Compartilhamento de arquivo falhou:', e);
-                }
-                
-                // Se não deu, tenta só com texto
-                try {
-                    await navigator.share({
-                        title: `Relatório de Inspeção - ${aero}`,
-                        text: `Relatório de inspeção do aerogerador ${aero}. Abra o arquivo HTML anexo para ver os detalhes completos com fotos.`
-                    });
-                    showToast('💡 Compartilhe o arquivo manualmente', 'info');
-                    return;
-                } catch (e) {
                     if (e.name === 'AbortError') return;
                 }
             }
             
-            // Fallback: baixar arquivo
+            // No desktop ou se falhou: baixar arquivo diretamente
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
