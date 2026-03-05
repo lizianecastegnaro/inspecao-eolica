@@ -4159,7 +4159,7 @@ const AEROGERADORES = [
                             cursor: pointer;
                         ">← Voltar</button>
                         <div style="display: flex; gap: 10px;">
-                            <button onclick="compartilharRelatorio()" style="
+                            <button id="btnCompartilhar" onclick="compartilharRelatorio()" style="
                                 background: #25D366;
                                 color: white;
                                 border: none;
@@ -4167,7 +4167,7 @@ const AEROGERADORES = [
                                 border-radius: 8px;
                                 font-weight: bold;
                                 cursor: pointer;
-                            ">📤 Compartilhar</button>
+                            ">📤 Salvar / Compartilhar</button>
                             <button onclick="document.getElementById('relatorioFrame').contentWindow.print()" style="
                                 background: white;
                                 color: #0000FF;
@@ -4184,6 +4184,13 @@ const AEROGERADORES = [
             `;
             
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Ajustar texto do botão baseado no dispositivo
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const btnCompartilhar = document.getElementById('btnCompartilhar');
+            if (btnCompartilhar) {
+                btnCompartilhar.textContent = isMobile ? '📤 Compartilhar' : '💾 Salvar Arquivo';
+            }
             
             // Escrever conteúdo no iframe
             const iframe = document.getElementById('relatorioFrame');
