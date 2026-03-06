@@ -4015,7 +4015,11 @@ const AEROGERADORES = [
         .falha { color: #dc3545; font-size: 14px; margin-bottom: 5px; }
         .observacoes { color: #666; font-style: italic; font-size: 14px; }
         .fotos { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .foto { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+        .foto { width: 120px; height: 120px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.15); cursor: pointer; }
+        .foto:hover { opacity: 0.8; }
+        .modal-foto { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; justify-content: center; align-items: center; cursor: pointer; }
+        .modal-foto img { max-width: 95%; max-height: 95%; object-fit: contain; border-radius: 8px; }
+        .modal-foto-fechar { position: absolute; top: 15px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
         .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
         
         @media print {
@@ -4123,7 +4127,7 @@ const AEROGERADORES = [
                             if (photos && photos.length > 0) {
                                 html += `<div class="fotos">`;
                                 photos.forEach(photo => {
-                                    html += `<img src="${photo}" class="foto" alt="Foto">`;
+                                    html += `<img src="${photo}" class="foto" alt="Foto" onclick="document.getElementById('modalFotoImg').src=this.src;document.getElementById('modalFoto').style.display='flex';">`;
                                 });
                                 html += `</div>`;
                             }
@@ -4142,6 +4146,10 @@ const AEROGERADORES = [
     <div class="footer">
         <p>Relatório gerado pelo App de Inspeções Eletromecânicas dos Parques Eólicos</p>
         <p>© ${new Date().getFullYear()} - AXIA Energia</p>
+    </div>
+    <div id="modalFoto" class="modal-foto" onclick="this.style.display='none'">
+        <span class="modal-foto-fechar">&times;</span>
+        <img id="modalFotoImg" src="" alt="Foto ampliada">
     </div>
 </body>
 </html>`;
