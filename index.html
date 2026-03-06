@@ -726,7 +726,7 @@
 
             <!-- Progresso -->
             <div class="progress-info">
-                <strong>Progresso da Inspeção:</strong> <span id="progressText">0 de 121 componentes</span>
+                <strong>Progresso da Inspeção:</strong> <span id="progressText">0 de 126 componentes</span>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                 </div>
@@ -1241,6 +1241,18 @@ const ESTRUTURA = {
             "Parafuso danificado",
             "Fixação frouxa"
           ]
+        },
+        "Sistema de lubrificação rolamento Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Bomba de lubrificação com falha",
+            "Linha de graxa obstruída",
+            "Linha de graxa com vazamento",
+            "Distribuidor de graxa com falha",
+            "Nível baixo de graxa no reservatório",
+            "Graxa contaminada",
+            "Lubrificação insuficiente no rolamento ou engrenagem de yaw"
+          ]
         }
       },
       "Motor-Redutor Yaw": {
@@ -1489,6 +1501,16 @@ const ESTRUTURA = {
       }
     },
     "Conversor/Painéis": {
+      "Estado geral": {
+        "Limpeza": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de sujeira",
+            "Acúmulo de água",
+            "Presença de animais"
+          ]
+        }
+      },
       "Retificadores e Conversores": {
         "Painéis U01": {
           "classificacoes": [],
@@ -1536,6 +1558,15 @@ const ESTRUTURA = {
           ]
         },
         "Painéis U06": {
+          "classificacoes": [],
+          "falhas": [
+            "Fechadura danificada",
+            "Cabos rompidos",
+            "Cabos sem isolação",
+            "Disjuntor desarmado"
+          ]
+        },
+        "Painel U80": {
           "classificacoes": [],
           "falhas": [
             "Fechadura danificada",
@@ -1702,6 +1733,30 @@ const ESTRUTURA = {
             "Dano mecânico",
             "Fixação inadequada",
             "Indicador de falha ativo"
+          ]
+        },
+        "TBS 40": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão elétrica frouxa",
+            "Conexão com sinais de aquecimento",
+            "Cabo ou isolação danificada",
+            "Presença de água",
+            "Oxidação",
+            "Vedação danificada",
+            "Danos mecânicos"
+          ]
+        },
+        "TBS 50": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão elétrica frouxa",
+            "Conexão com sinais de aquecimento",
+            "Cabo ou isolação danificada",
+            "Presença de água",
+            "Oxidação",
+            "Vedação danificada",
+            "Danos mecânicos"
           ]
         }
       },
