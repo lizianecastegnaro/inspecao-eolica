@@ -2556,16 +2556,32 @@ const AEROGERADORES = [
         function clearAllDB() {
             return new Promise((resolve, reject) => {
                 if (!db) {
-                    reject(new Error('DB não inicializado'));
+                    console.warn('DB não inicializado, tentando limpar mesmo assim...');
+                    resolve();
                     return;
                 }
-                const transaction = db.transaction([STORE_INSPECTIONS, STORE_PHOTOS], 'readwrite');
                 
-                transaction.objectStore(STORE_INSPECTIONS).clear();
-                transaction.objectStore(STORE_PHOTOS).clear();
+                try {
+                    const transaction = db.transaction([STORE_INSPECTIONS, STORE_PHOTOS], 'readwrite');
+                    
+                    const clearInspections = transaction.objectStore(STORE_INSPECTIONS).clear();
+                    const clearPhotos = transaction.objectStore(STORE_PHOTOS).clear();
+                    
+                    clearInspections.onsuccess = () => console.log('Store inspections limpo');
+                    clearPhotos.onsuccess = () => console.log('Store photos limpo');
 
-                transaction.oncomplete = () => resolve();
-                transaction.onerror = (e) => reject(e.target.error);
+                    transaction.oncomplete = () => {
+                        console.log('IndexedDB completamente limpo');
+                        resolve();
+                    };
+                    transaction.onerror = (e) => {
+                        console.error('Erro na transação:', e.target.error);
+                        reject(e.target.error);
+                    };
+                } catch (e) {
+                    console.error('Erro ao criar transação:', e);
+                    reject(e);
+                }
             });
         }
 
@@ -4900,12 +4916,29 @@ const AEROGERADORES = [
             if (confirm('⚠️ TEM CERTEZA?\n\nIsso vai apagar TODAS as inspeções e fotos.\n\nEsta ação NÃO pode ser desfeita!')) {
                 if (confirm('🚨 ÚLTIMA CHANCE!\n\nClique OK para APAGAR TUDO.')) {
                     try {
+                        // Limpar IndexedDB
                         await clearAllDB();
+                        
+                        // Limpar variável em memória
                         inspectionData = {};
+                        
+                        // Limpar localStorage (dados antigos/migração)
+                        const keysToRemove = [];
+                        for (let i = 0; i < localStorage.length; i++) {
+                            const key = localStorage.key(i);
+                            if (key && (key.startsWith('photos_') || key === 'inspectionData' || key.startsWith('inspection_'))) {
+                                keysToRemove.push(key);
+                            }
+                        }
+                        keysToRemove.forEach(key => localStorage.removeItem(key));
+                        
+                        console.log('Dados limpos:', keysToRemove.length, 'chaves do localStorage removidas');
+                        
                         closeDiagnosticModal();
                         alert('✅ Todos os dados foram apagados!\n\nA página será recarregada.');
                         location.reload();
                     } catch (e) {
+                        console.error('Erro ao apagar:', e);
                         alert('❌ Erro ao apagar dados: ' + e.message);
                     }
                 }
