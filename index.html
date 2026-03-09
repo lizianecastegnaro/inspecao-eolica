@@ -708,6 +708,7 @@
                         <option value="entorno_2" disabled style="color:#999;">Parque Eólico Entorno 2 (em breve)</option>
                         <option value="cerro_chato" disabled style="color:#999;">Parque Eólico Cerro Chato (em breve)</option>
                         <option value="ibirapuita" disabled style="color:#999;">Parque Eólico Ibirapuitã (em breve)</option>
+                        <option value="pindai" disabled style="color:#999;">Parque Eólico Pindaí (em breve)</option>
                     </select>
                 </div>
                 
@@ -726,7 +727,7 @@
 
             <!-- Progresso -->
             <div class="progress-info">
-                <strong>Progresso da Inspeção:</strong> <span id="progressText">0 de 126 componentes</span>
+                <strong>Progresso da Inspeção:</strong> <span id="progressText">0 de 138 componentes</span>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                 </div>
@@ -918,7 +919,7 @@ const ESTRUTURA = {
           "classificacoes": [],
           "falhas": [
             "Acúmulo de Sujeira",
-            "Acúmmulo de água",
+            "Acúmulo de água",
             "Presença de animais"
           ]
         },
@@ -939,6 +940,16 @@ const ESTRUTURA = {
             "Trincas no concreto",
             "Dano na estrutura",
             "Infiltração de água"
+          ]
+        },
+        "Cabos de potência": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Aquecimento anormal",
+            "Fixação solta",
+            "Umidade ou água",
+            "Arco elétrico"
           ]
         }
       },
@@ -981,49 +992,119 @@ const ESTRUTURA = {
             "Validade da ceritificação expirada"
           ]
         }
+      }
+    },
+    "Base do Aerogerador": {
+      "UPS": {
+        "Painel 168": {
+          "classificacoes": [],
+          "falhas": [
+            "Falha ou alarme ativo",
+            "Bateria degradada",
+            "Conexões soltas",
+            "Sujeira excessiva"
+          ]
+        }
+      },
+      "Cubículo de Saída": {
+        "Condições externas do Swichgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão externa",
+            "Sujeira excessiva",
+            "Danos mecânicos",
+            "Umidade ou água"
+          ]
+        },
+        "Carcaça": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano estrutural",
+            "Corrosão",
+            "Fixação solta",
+            "Vedação comprometida"
+          ]
+        },
+        "Vedações do Switchgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Vedação danificada",
+            "Entrada de umidade",
+            "Fixação solta"
+          ]
+        },
+        "Chave de comutação": {
+          "classificacoes": [],
+          "falhas": [
+            "Travamento ou dificuldade de operação",
+            "Desgaste mecânico",
+            "Corrosão"
+          ]
+        },
+        "Indicadores de posição": {
+          "classificacoes": [],
+          "falhas": [
+            "Indicador com falha",
+            "Indicação incorreta",
+            "Visor danificado"
+          ]
+        },
+        "Pressão de gás do Swichgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressão fora do nominal",
+            "Vazamento de gás",
+            "Indicador com falha"
+          ]
+        },
+        "Gradil da seccionadora": {
+          "classificacoes": [],
+          "falhas": [
+            "Gradil danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        }
       },
       "Elevador de serviço": {
         "Certificação": {
           "classificacoes": [],
           "falhas": [
-            "Ausência de certificação",
-            "Validade da inspeção inspirada"
+            "Certificação vencida",
+            "Identificação ausente ou ilegível"
           ]
         },
         "Manutenção": {
           "classificacoes": [],
           "falhas": [
-            "Ausência de livro de registro",
-            "Manutenção atrasada"
+            "Manutenção vencida",
+            "Vazamento de óleo ou graxa",
+            "Funcionamento irregular"
           ]
         },
         "Parapeito": {
           "classificacoes": [],
           "falhas": [
-            "Danos estruturais",
-            "Fixação inadequada",
-            "Oxidação"
+            "Parapeito danificado",
+            "Fixação solta",
+            "Corrosão"
           ]
         },
         "Painel elétrico": {
           "classificacoes": [],
           "falhas": [
-            "Danos estruturais",
-            "Fixação inadequada",
-            "Oxidação",
-            "Painel elétrico violado"
+            "Componentes elétricos danificados",
+            "Disjuntor com falha",
+            "Conexões soltas",
+            "Aquecimento anormal"
           ]
         },
         "Teste funcional": {
           "classificacoes": [],
           "falhas": [
-            "Elevador bloqueado",
-            "Danos estruturais",
-            "Cabos danificados",
-            "Mecanismo danificado",
-            "Elevador inoperante",
-            "Acúmulo de sujeira",
-            "Acúmulo de materiais"
+            "Falha no teste",
+            "Funcionamento irregular",
+            "Sistema inoperante"
           ]
         }
       },
@@ -1031,10 +1112,36 @@ const ESTRUTURA = {
         "Conexões na base": {
           "classificacoes": [],
           "falhas": [
-            "Aterramento ausente",
-            "Aterramento danificado",
-            "Aterramento solto",
-            "Oxidação"
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      },
+      "Estado geral": {
+        "Limpeza": {
+          "classificacoes": [],
+          "falhas": [
+            "Sujeira excessiva",
+            "Presença de água",
+            "Obstrução de passagem"
+          ]
+        },
+        "Estado geral dos componentes": {
+          "classificacoes": [],
+          "falhas": [
+            "Componente danificado",
+            "Corrosão",
+            "Fixação solta"
+          ]
+        },
+        "Iluminação da base": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta",
+            "Interruptor com falha"
           ]
         }
       }
@@ -1097,53 +1204,6 @@ const ESTRUTURA = {
             "Filtro de ar danificado",
             "Danos estruturais",
             "Sistema inoperante"
-          ]
-        }
-      },
-      "Cubículo de Saída": {
-        "Condições externas do Swichgear": {
-          "classificacoes": [],
-          "falhas": [
-            "Acúmulo de sujeira",
-            "Ausência da TAG"
-          ]
-        },
-        "Carcaça": {
-          "classificacoes": [],
-          "falhas": [
-            "Oxidação",
-            "Ausência de aterramento",
-            "Danos na pintura"
-          ]
-        },
-        "Vedações do Switchgear": {
-          "classificacoes": [],
-          "falhas": [
-            "Aterramento ausente",
-            "Danos estruturais"
-          ]
-        },
-        "Chave de comutação": {
-          "classificacoes": [],
-          "falhas": [
-            "Chave ausente",
-            "Chave fora de padrão"
-          ]
-        },
-        "Indicadores de posição": {
-          "classificacoes": [],
-          "falhas": [
-            "Parafuso ausente",
-            "Swichgear inoperante"
-          ]
-        }
-      },
-      "Cubiculo de Saída": {
-        "Pressão de gás do Swichgear": {
-          "classificacoes": [],
-          "falhas": [
-            "Pressão de gás baixa",
-            "Ausência de pressão"
           ]
         }
       }
@@ -1253,6 +1313,31 @@ const ESTRUTURA = {
             "Graxa contaminada",
             "Lubrificação insuficiente no rolamento ou engrenagem de yaw"
           ]
+        },
+        "Limpeza": {
+          "classificacoes": [],
+          "falhas": [
+            "Sujeira excessiva",
+            "Contaminação por óleo ou graxa"
+          ]
+        },
+        "Caliper de freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste das pastilhas",
+            "Vazamento hidráulico",
+            "Caliper travado",
+            "Fixação solta"
+          ]
+        },
+        "Bomba hidraulica do freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Pressão insuficiente",
+            "Mangueira danificada",
+            "Bomba inoperante"
+          ]
         }
       },
       "Motor-Redutor Yaw": {
@@ -1344,7 +1429,7 @@ const ESTRUTURA = {
             "Fixação inadequada"
           ]
         },
-        "Eixo principal": {
+        "Eixo Oco": {
           "classificacoes": [],
           "falhas": [
             "Dano mecânico",
@@ -1359,7 +1444,7 @@ const ESTRUTURA = {
             "Parafuso ausente"
           ]
         },
-        "Rolamento principal": {
+        "Rolamento Downwind": {
           "classificacoes": [],
           "falhas": [
             "Vazamento de graxa",
@@ -1370,7 +1455,7 @@ const ESTRUTURA = {
             "Coletor de graxa sujo"
           ]
         },
-        "Rolamento frontal": {
+        "Rolamento Upwind": {
           "classificacoes": [],
           "falhas": [
             "Vazamento de graxa",
@@ -1382,7 +1467,7 @@ const ESTRUTURA = {
           ]
         }
       },
-      "Sistema hidráulico/Freio": {
+      "Freio do rotor": {
         "Sistema hidráulico": {
           "classificacoes": [],
           "falhas": [
@@ -1395,16 +1480,6 @@ const ESTRUTURA = {
             "Mangueira danificada",
             "Vazamento de óleo",
             "Óleo degradado"
-          ]
-        },
-        "Idle, stop/reset e emergency stop": {
-          "classificacoes": [],
-          "falhas": [
-            "Acionamento parcial",
-            "Resposta lenta",
-            "Falha de comando",
-            "Emergency stop não atia",
-            "Ruído anormal"
           ]
         },
         "Funcionamento mecânico do freio": {
@@ -1426,6 +1501,31 @@ const ESTRUTURA = {
             "Braço danificado",
             "Fixação inadequada",
             "Mangueiras desconctadas"
+          ]
+        },
+        "Bumper": {
+          "classificacoes": [],
+          "falhas": [
+            "Bumper danificado",
+            "Fixação solta",
+            "Ausência do componente"
+          ]
+        },
+        "Caliper de freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste das pastilhas",
+            "Vazamento hidráulico",
+            "Caliper travado",
+            "Fixação solta"
+          ]
+        },
+        "Pista de freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste excessivo",
+            "Contaminação por óleo",
+            "Corrosão"
           ]
         }
       }
@@ -1469,34 +1569,6 @@ const ESTRUTURA = {
             "Sinal de aquecimento",
             "Sinal de arco elétrico"
           ]
-        },
-        "Retificador/conversor": {
-          "classificacoes": [],
-          "falhas": [
-            "Cabo solto",
-            "Cabo danificado",
-            "Sinal de arco elétrico",
-            "Sinal de aquecimento",
-            "Proteção acrílica danificada",
-            "Proteção acrílica ausente",
-            "Entrada de ar obstruída",
-            "Componente frouxo",
-            "Filtro sujo",
-            "Filtro danificado"
-          ]
-        },
-        "Filtro do gerador": {
-          "classificacoes": [],
-          "falhas": [
-            "Filtro sujo",
-            "Filtro obstruído",
-            "Filtro danificado",
-            "Filtro ausente",
-            "Fixação inadequada",
-            "Elemento de fixação frouxo",
-            "Entrada de ar obstruída",
-            "Vedação danificada"
-          ]
         }
       }
     },
@@ -1511,7 +1583,7 @@ const ESTRUTURA = {
           ]
         }
       },
-      "Retificadores e Conversores": {
+      "Conversores": {
         "Painéis U01": {
           "classificacoes": [],
           "falhas": [
@@ -1530,62 +1602,11 @@ const ESTRUTURA = {
             "Disjuntor desarmado"
           ]
         },
-        "Painéis U48": {
-          "classificacoes": [],
-          "falhas": [
-            "Fechadura danificada",
-            "Cabos rompidos",
-            "Cabos sem isolação",
-            "Disjuntor desarmado"
-          ]
-        },
-        "Painéis U20": {
-          "classificacoes": [],
-          "falhas": [
-            "Fechadura danificada",
-            "Cabos rompidos",
-            "Cabos sem isolação",
-            "Disjuntor desarmado"
-          ]
-        },
-        "Painéis U50": {
-          "classificacoes": [],
-          "falhas": [
-            "Fechadura danificada",
-            "Cabos rompidos",
-            "Cabos sem isolação",
-            "Disjuntor desarmado"
-          ]
-        },
-        "Painéis U06": {
-          "classificacoes": [],
-          "falhas": [
-            "Fechadura danificada",
-            "Cabos rompidos",
-            "Cabos sem isolação",
-            "Disjuntor desarmado"
-          ]
-        },
-        "Painel U80": {
-          "classificacoes": [],
-          "falhas": [
-            "Fechadura danificada",
-            "Cabos rompidos",
-            "Cabos sem isolação",
-            "Disjuntor desarmado"
-          ]
-        },
         "Conexões gabinetes/cabos de fibra óptica": {
           "classificacoes": [],
           "falhas": [
             "Cabos desconectados",
             "Cabos rompidos"
-          ]
-        },
-        "Proteção contra interrupção de corrente": {
-          "classificacoes": [],
-          "falhas": [
-            "Disjuntor desarmado"
           ]
         },
         "Cabos de potência": {
@@ -1662,6 +1683,14 @@ const ESTRUTURA = {
             "Bacia de contenção danificada",
             "Bacia de contenção ausente"
           ]
+        },
+        "Limpeza": {
+          "classificacoes": [],
+          "falhas": [
+            "Sujeira excessiva",
+            "Presença de óleo ou graxa",
+            "Obstrução de passagem"
+          ]
         }
       },
       "Elétrico": {
@@ -1680,20 +1709,6 @@ const ESTRUTURA = {
           ]
         },
         "Armário de controle das luzes de navegação": {
-          "classificacoes": [],
-          "falhas": [
-            "Cabo solto",
-            "Cabo danificado",
-            "Fixação inadequada",
-            "Entrada de ar obstruída",
-            "Filtro sujo",
-            "Filtro danificado",
-            "Filtro ausente",
-            "Sinal de aquecimento",
-            "Sinal de arco elétrico"
-          ]
-        },
-        "Inversor de Yaw": {
           "classificacoes": [],
           "falhas": [
             "Cabo solto",
@@ -1758,6 +1773,59 @@ const ESTRUTURA = {
             "Vedação danificada",
             "Danos mecânicos"
           ]
+        },
+        "Painéis U48": {
+          "classificacoes": [],
+          "falhas": [
+            "Disjuntor desarmado",
+            "Conexões soltas",
+            "Aquecimento anormal",
+            "Umidade"
+          ]
+        },
+        "Painéis U20": {
+          "classificacoes": [],
+          "falhas": [
+            "Disjuntor desarmado",
+            "Conexões soltas",
+            "Aquecimento anormal",
+            "Umidade"
+          ]
+        },
+        "Painéis U50": {
+          "classificacoes": [],
+          "falhas": [
+            "Disjuntor desarmado",
+            "Conexões soltas",
+            "Aquecimento anormal",
+            "Umidade"
+          ]
+        },
+        "Painéis U06": {
+          "classificacoes": [],
+          "falhas": [
+            "Disjuntor desarmado",
+            "Conexões soltas",
+            "Aquecimento anormal",
+            "Umidade"
+          ]
+        },
+        "Proteção contra interrupção de corrente": {
+          "classificacoes": [],
+          "falhas": [
+            "Dispositivo inoperante",
+            "Disparo indevido",
+            "Conexões soltas"
+          ]
+        },
+        "Painel U80": {
+          "classificacoes": [],
+          "falhas": [
+            "Disjuntor desarmado",
+            "Conexões soltas",
+            "Aquecimento anormal",
+            "Umidade"
+          ]
         }
       },
       "Saúde e segurança": {
@@ -1768,7 +1836,7 @@ const ESTRUTURA = {
             "Placa danificada"
           ]
         },
-        "Iluminação e iluminação de emergencia": {
+        "Iluminação": {
           "classificacoes": [],
           "falhas": [
             "Fora de operação"
@@ -1780,12 +1848,6 @@ const ESTRUTURA = {
             "Fora de operação",
             "Fixação inadequada",
             "Sinais de arco elétrico"
-          ]
-        },
-        "Teste funcional Parada de emergência": {
-          "classificacoes": [],
-          "falhas": [
-            "Fora de operação"
           ]
         },
         "Kit resgate": {
@@ -1825,7 +1887,7 @@ const ESTRUTURA = {
             "Entrada de ar obstruída"
           ]
         },
-        "Escotilha de acesso e manobra": {
+        "Escotilha de acesso": {
           "classificacoes": [],
           "falhas": [
             "Oxidação",
@@ -1991,14 +2053,6 @@ const ESTRUTURA = {
             "Danos estruturais"
           ]
         },
-        "Caixa de pitch": {
-          "classificacoes": [],
-          "falhas": [
-            "Vazamentos",
-            "Oxidação",
-            "Danos estruturais"
-          ]
-        },
         "Rolamentos de pitch": {
           "classificacoes": [],
           "falhas": [
@@ -2014,6 +2068,14 @@ const ESTRUTURA = {
           "falhas": [
             "Aterramento ausente",
             "Danos estruturais"
+          ]
+        },
+        "Tampas do close out": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa solta",
+            "Tampa danificada",
+            "Vedação comprometida"
           ]
         }
       },
@@ -2032,14 +2094,6 @@ const ESTRUTURA = {
             "Sensor ausente",
             "Sensor danificado",
             "Sensor inoperante"
-          ]
-        },
-        "Caixas de relés e controle do pitch": {
-          "classificacoes": [],
-          "falhas": [
-            "Cabos desconectados",
-            "Cabos rompidos",
-            "Danos estruturais"
           ]
         },
         "Sub-distribuição do rotor/Center box": {
@@ -2069,6 +2123,47 @@ const ESTRUTURA = {
             "Contaminação por graxa",
             "Danos estruturais",
             "Fixação inadequada"
+          ]
+        },
+        "H0": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor sem comunicação",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "H1": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor sem comunicação",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "H2": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor sem comunicação",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "H3": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor sem comunicação",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "Caixa de baterias": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Vazamento de eletrólito",
+            "Terminais oxidados",
+            "Bateria descarregada"
           ]
         }
       }
@@ -4394,6 +4489,42 @@ const AEROGERADORES = [
         /**
          * Restaura dados de um arquivo de backup
          */
+        // Mapeamento de nomes antigos para novos (migração)
+        const MIGRATION_MAP = {
+            // Componentes renomeados
+            'Eixo principal': 'Eixo Oco',
+            'Rolamento principal': 'Rolamento Downwind',
+            'Rolamento frontal': 'Rolamento Upwind',
+            'Escotilha de acesso e manobra': 'Escotilha de acesso',
+            'Iluminação e iluminação de emergencia': 'Iluminação',
+            // Subcategorias renomeadas
+            'Sistema hidráulico/Freio': 'Freio do rotor',
+            'Retificadores e Conversores': 'Conversores'
+        };
+
+        function migrateKey(key) {
+            let newKey = key;
+            for (const [oldName, newName] of Object.entries(MIGRATION_MAP)) {
+                if (newKey.includes(oldName)) {
+                    newKey = newKey.replace(oldName, newName);
+                }
+            }
+            return newKey;
+        }
+
+        function migrateData(data) {
+            const migrated = { ...data };
+            for (const [oldName, newName] of Object.entries(MIGRATION_MAP)) {
+                if (migrated.componente === oldName) {
+                    migrated.componente = newName;
+                }
+                if (migrated.subcategoria === oldName) {
+                    migrated.subcategoria = newName;
+                }
+            }
+            return migrated;
+        }
+
         async function restoreBackup(file) {
             console.log('=== RESTAURANDO BACKUP ===');
             
@@ -4445,19 +4576,29 @@ const AEROGERADORES = [
                         console.warn('Erro ao limpar IndexedDB:', e);
                     }
 
-                    // Restaurar dados de inspeção no IndexedDB
+                    // Restaurar dados de inspeção no IndexedDB (com migração)
+                    let migratedCount = 0;
                     if (backup.data.inspectionData && Object.keys(backup.data.inspectionData).length > 0) {
+                        const migratedInspectionData = {};
                         for (const [key, data] of Object.entries(backup.data.inspectionData)) {
-                            await saveInspectionToDB(key, data);
+                            const newKey = migrateKey(key);
+                            const newData = migrateData(data);
+                            if (newKey !== key) {
+                                migratedCount++;
+                                console.log(`Migrado: ${key} → ${newKey}`);
+                            }
+                            await saveInspectionToDB(newKey, newData);
+                            migratedInspectionData[newKey] = newData;
                         }
-                        inspectionData = backup.data.inspectionData;
+                        inspectionData = migratedInspectionData;
                     }
 
-                    // Restaurar fotos no IndexedDB
+                    // Restaurar fotos no IndexedDB (com migração de chaves)
                     if (backup.data.photos) {
                         for (const [key, photos] of Object.entries(backup.data.photos)) {
                             if (Array.isArray(photos) && photos.length > 0) {
-                                await savePhotosToDB(key, photos);
+                                const newKey = migrateKey(key);
+                                await savePhotosToDB(newKey, photos);
                             }
                         }
                     }
@@ -4467,6 +4608,10 @@ const AEROGERADORES = [
                     buildTree();
                     updateProgress();
                     updateParqueProgress();
+
+                    if (migratedCount > 0) {
+                        console.log(`Total de registros migrados: ${migratedCount}`);
+                    }
 
                     // Recarregar lista de aerogeradores
                     const selectAero = document.getElementById('aerogerador');
@@ -4547,15 +4692,23 @@ const AEROGERADORES = [
                     let inspecoesAdicionadas = 0;
                     let inspecoesAtualizadas = 0;
                     let fotosAdicionadas = 0;
+                    let migratedCount = 0;
 
-                    // Mesclar dados de inspeção
-                    for (const [key, newData] of Object.entries(backupInspections)) {
-                        const existingData = inspectionData[key];
+                    // Mesclar dados de inspeção (com migração)
+                    for (const [key, data] of Object.entries(backupInspections)) {
+                        const newKey = migrateKey(key);
+                        const newData = migrateData(data);
+                        if (newKey !== key) {
+                            migratedCount++;
+                            console.log(`Migrado: ${key} → ${newKey}`);
+                        }
+                        
+                        const existingData = inspectionData[newKey];
                         
                         if (!existingData) {
                             // Dado não existe, adicionar
-                            inspectionData[key] = newData;
-                            await saveInspectionToDB(key, newData);
+                            inspectionData[newKey] = newData;
+                            await saveInspectionToDB(newKey, newData);
                             inspecoesAdicionadas++;
                         } else {
                             // Dado existe, comparar timestamps se disponíveis
@@ -4564,8 +4717,8 @@ const AEROGERADORES = [
                             
                             if (newTime > existingTime) {
                                 // Dado do backup é mais recente, atualizar
-                                inspectionData[key] = newData;
-                                await saveInspectionToDB(key, newData);
+                                inspectionData[newKey] = newData;
+                                await saveInspectionToDB(newKey, newData);
                                 inspecoesAtualizadas++;
                             }
                             // Se o dado atual é mais recente ou igual, manter o atual
@@ -4575,8 +4728,11 @@ const AEROGERADORES = [
                     // Mesclar fotos
                     for (const [key, newPhotos] of Object.entries(backupPhotos)) {
                         if (Array.isArray(newPhotos) && newPhotos.length > 0) {
+                            // Migrar chave da foto
+                            const migratedKey = migrateKey(key);
+                            
                             // Carregar fotos existentes
-                            let existingPhotos = await loadPhotosFromDB(key) || [];
+                            let existingPhotos = await loadPhotosFromDB(migratedKey) || [];
                             
                             // Adicionar fotos que não existem (comparar por conteúdo)
                             for (const newPhoto of newPhotos) {
@@ -4587,7 +4743,7 @@ const AEROGERADORES = [
                             }
                             
                             // Salvar fotos mescladas
-                            await savePhotosToDB(key, existingPhotos);
+                            await savePhotosToDB(migratedKey, existingPhotos);
                         }
                     }
 
@@ -4600,6 +4756,7 @@ const AEROGERADORES = [
                     if (inspecoesAdicionadas > 0) resumo.push(`${inspecoesAdicionadas} novas`);
                     if (inspecoesAtualizadas > 0) resumo.push(`${inspecoesAtualizadas} atualizadas`);
                     if (fotosAdicionadas > 0) resumo.push(`${fotosAdicionadas} fotos`);
+                    if (migratedCount > 0) resumo.push(`${migratedCount} migradas`);
 
                     showToast(`✅ Mesclagem concluída! ${resumo.join(', ') || 'Nenhuma alteração'}`, 'success');
                     console.log('Backup mesclado com sucesso');
