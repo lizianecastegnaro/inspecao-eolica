@@ -705,7 +705,7 @@
                     <label>Parque Eólico <span class="required">*</span></label>
                     <select id="parque" required>
                         <option value="coxilha_negra" selected>Parque Eólico Coxilha Negra</option>
-                        <option value="entorno_2" disabled style="color:#999;">Parque Eólico Entorno 2 (em breve)</option>
+                        <option value="entorno_2">Parque Eólico Entorno 2</option>
                         <option value="cerro_chato" disabled style="color:#999;">Parque Eólico Cerro Chato (em breve)</option>
                         <option value="ibirapuita" disabled style="color:#999;">Parque Eólico Ibirapuitã (em breve)</option>
                         <option value="pindai" disabled style="color:#999;">Parque Eólico Pindaí (em breve)</option>
@@ -2171,6 +2171,1640 @@ const ESTRUTURA = {
   }
 };
 
+// Estrutura de inspeção — Entorno 2
+const ESTRUTURA_ENTORNO2 = {
+  "classificacoes": [
+    "Verificado",
+    "Defeito Ligeiro",
+    "Defeito Grave",
+    "Ação Imediata"
+  ],
+  "categorias": {
+    "Exterior e Acesso": {
+      "Virola Externa": {
+        "Proteção plástica dos parafusos [bolt caps]": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa ausente",
+            "Tampa danificada",
+            "Fixação solta"
+          ]
+        },
+        "Parafusos [anchor bolts]": {
+          "classificacoes": [],
+          "falhas": [
+            "Parafuso solto",
+            "Corrosão",
+            "Rosca danificada",
+            "Parafuso ausente"
+          ]
+        },
+        "Fundação": {
+          "classificacoes": [],
+          "falhas": [
+            "Trinca no concreto",
+            "Afundamento",
+            "Exposição de armadura",
+            "Infiltração"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Tampas de inspeção de aterramento": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa ausente",
+            "Tampa danificada",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Carenagem": {
+        "PAD e acesso ao aerogerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Desnível do piso",
+            "Trinca",
+            "Obstáculo no acesso"
+          ]
+        },
+        "Escada externa": {
+          "classificacoes": [],
+          "falhas": [
+            "Degrau danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Porta lado externo": {
+          "classificacoes": [],
+          "falhas": [
+            "Dobradiça danificada",
+            "Fechamento inadequado",
+            "Vedação comprometida"
+          ]
+        },
+        "Porta lado interno": {
+          "classificacoes": [],
+          "falhas": [
+            "Dobradiça danificada",
+            "Fechamento inadequado",
+            "Vedação comprometida"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Sinalizações/identificação da turbina": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinalização ausente",
+            "Sinalização ilegível",
+            "Fixação solta"
+          ]
+        }
+      }
+    },
+    "Ground e Virola Interna": {
+      "Torre Interior": {
+        "Interior da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Sujeira excessiva",
+            "Componentes soltos"
+          ]
+        },
+        "Fundação interior": {
+          "classificacoes": [],
+          "falhas": [
+            "Trinca",
+            "Infiltração",
+            "Acúmulo de água"
+          ]
+        },
+        "Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação estrutural"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolamento danificado",
+            "Conexão solta",
+            "Aquecimento anormal",
+            "Cabo rompido"
+          ]
+        },
+        "Gabinetes": {
+          "classificacoes": [],
+          "falhas": [
+            "Gabinete danificado",
+            "Porta sem vedação",
+            "Fixação solta"
+          ]
+        },
+        "Cubículo switchgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Vazamento de gás",
+            "Indicador de pressão com falha"
+          ]
+        },
+        "Tomadas auxiliares da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Aterramentos": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      },
+      "Elevador": {
+        "Elevador de serviço": {
+          "classificacoes": [],
+          "falhas": [
+            "Estrutura danificada",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Funcionamento do elevador": {
+          "classificacoes": [],
+          "falhas": [
+            "Funcionamento irregular",
+            "Ruído anormal",
+            "Parada inesperada"
+          ]
+        },
+        "Painel elétrico do elevador": {
+          "classificacoes": [],
+          "falhas": [
+            "Componentes danificados",
+            "Conexões soltas",
+            "Aquecimento anormal"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Iluminação convencional e de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta"
+          ]
+        },
+        "Linha de vida": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Degrau danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        }
+      }
+    },
+    "Plataforma 2": {
+      "Carenagem": {
+        "Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        },
+        "Escotilha de acesso e manobra": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Dobradiça com falha",
+            "Travamento inadequado"
+          ]
+        },
+        "Guarda-corpo": {
+          "classificacoes": [],
+          "falhas": [
+            "Guarda-corpo danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        }
+      },
+      "Torre": {
+        "Interior da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Sujeira excessiva",
+            "Componentes soltos"
+          ]
+        },
+        "Flange": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Desalinhamento",
+            "Danos estruturais"
+          ]
+        },
+        "Parafusos do flange": {
+          "classificacoes": [],
+          "falhas": [
+            "Parafuso solto",
+            "Corrosão",
+            "Parafuso ausente"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolamento danificado",
+            "Conexão solta",
+            "Aquecimento anormal",
+            "Cabo rompido"
+          ]
+        },
+        "Tomadas auxiliares": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do flange": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Iluminação convencional e de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta"
+          ]
+        },
+        "Linha de vida": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Degrau danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        }
+      }
+    },
+    "Plataforma 3": {
+      "Carenagem": {
+        "Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        },
+        "Escotilha de acesso e manobra": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Dobradiça com falha",
+            "Travamento inadequado"
+          ]
+        }
+      },
+      "Torre": {
+        "Interior da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Sujeira excessiva",
+            "Componentes soltos"
+          ]
+        },
+        "Flange": {
+          "classificacoes": [],
+          "falhas": [
+            "Corrosão",
+            "Desalinhamento",
+            "Danos estruturais"
+          ]
+        },
+        "Parafusos do flange": {
+          "classificacoes": [],
+          "falhas": [
+            "Parafuso solto",
+            "Corrosão",
+            "Parafuso ausente"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolamento danificado",
+            "Conexão solta",
+            "Aquecimento anormal",
+            "Cabo rompido"
+          ]
+        },
+        "Tomadas auxiliares": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do flange": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Iluminação convencional e de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta"
+          ]
+        },
+        "Linha de vida": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Degrau danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        }
+      }
+    },
+    "Plataforma do Elevador": {
+      "Carenagem": {
+        "Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        },
+        "Escotilha de acesso e manobra": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Dobradiça com falha",
+            "Travamento inadequado"
+          ]
+        },
+        "Viga de sustentação do elevador": {
+          "classificacoes": [],
+          "falhas": [
+            "Estrutura deformada",
+            "Trinca",
+            "Corrosão"
+          ]
+        },
+        "Cabos guia e de tração do elevador": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo desgastado",
+            "Cabo desalinhado",
+            "Fixação solta"
+          ]
+        },
+        "Slingas de backup": {
+          "classificacoes": [],
+          "falhas": [
+            "Slinga danificada",
+            "Desgaste",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolamento danificado",
+            "Conexão solta",
+            "Aquecimento anormal",
+            "Cabo rompido"
+          ]
+        },
+        "Tomadas auxiliares": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        }
+      }
+    },
+    "Torre Seção do Yaw / Yaw Deck": {
+      "Carenagem": {
+        "Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Estrutura deformada",
+            "Corrosão",
+            "Fixação solta"
+          ]
+        },
+        "Escotilha de acesso e manobra": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Dobradiça com falha",
+            "Travamento inadequado"
+          ]
+        },
+        "Guarda-corpo": {
+          "classificacoes": [],
+          "falhas": [
+            "Guarda-corpo danificado",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolamento danificado",
+            "Conexão solta",
+            "Aquecimento anormal",
+            "Cabo rompido"
+          ]
+        },
+        "Tomadas auxiliares": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        }
+      },
+      "Yaw": {
+        "Mordaças": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste excessivo",
+            "Fixação solta",
+            "Contaminação por graxa"
+          ]
+        },
+        "Pista deslizante": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste da pista",
+            "Contaminação por óleo",
+            "Danos mecânicos"
+          ]
+        },
+        "Anel de engrenagens e pinhões": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste de engrenagem",
+            "Falta de lubrificação",
+            "Danos mecânicos"
+          ]
+        },
+        "Sensor de conta-giros": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor sem sinal",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "Tramo de aço": {
+          "classificacoes": [],
+          "falhas": [
+            "Deformação estrutural",
+            "Corrosão",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Motor-Redutor Yaw": {
+        "Placa de identificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ilegível",
+            "Placa ausente",
+            "Fixação solta"
+          ]
+        },
+        "Conjunto frontal esquerdo": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vazamento de óleo",
+            "Fixação solta"
+          ]
+        },
+        "Conjunto frontal direito": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vazamento de óleo",
+            "Fixação solta"
+          ]
+        },
+        "Conjunto traseiro esquerdo": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vazamento de óleo",
+            "Fixação solta"
+          ]
+        },
+        "Conjunto traseiro direito": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vazamento de óleo",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Iluminação e iluminação de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta"
+          ]
+        }
+      }
+    },
+    "Drive-Train": {
+      "Mancal Principal": {
+        "Placa de identificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ausente",
+            "Placa ilegível",
+            "Fixação solta"
+          ]
+        },
+        "Rotor [mainshaft]": {
+          "classificacoes": [],
+          "falhas": [
+            "Vibração anormal",
+            "Ruído anormal",
+            "Desalinhamento"
+          ]
+        },
+        "Inspeção auditiva rotor 500rpm": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Eixo lento": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Mancal dianteiro": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Mancal traseiro": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de graxa",
+            "Nível baixo de óleo",
+            "Contaminação"
+          ]
+        },
+        "Coletores de óleo e graxa": {
+          "classificacoes": [],
+          "falhas": [
+            "Óleo ou graxa em excesso",
+            "Coletor danificado",
+            "Obstrução",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Acoplamento": {
+        "Placa de identificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ausente",
+            "Placa ilegível",
+            "Fixação solta"
+          ]
+        },
+        "Acoplamento": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste",
+            "Desalinhamento",
+            "Sinais de deslizamento",
+            "Rachaduras",
+            "Folgas",
+            "Fixação solta"
+          ]
+        },
+        "Parafusos e cobertura elementos rotativos": {
+          "classificacoes": [],
+          "falhas": [
+            "Parafusos soltos",
+            "Proteção ausente",
+            "Fixação solta"
+          ]
+        },
+        "Chapas [pack plates]": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste das chapas",
+            "Desalinhamento",
+            "Vibração"
+          ]
+        }
+      },
+      "Freio Hidráulico": {
+        "Freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Pressão insuficiente",
+            "Funcionamento irregular"
+          ]
+        },
+        "Disco de alta velocidade HSS": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste do disco",
+            "Contaminação por óleo",
+            "Danos mecânicos"
+          ]
+        }
+      }
+    },
+    "Grupo Hidráulico": {
+      "Mangueiras e Conexões": {
+        "Óleo hidráulico": {
+          "classificacoes": [],
+          "falhas": [
+            "Nível baixo de óleo",
+            "Contaminação",
+            "Vazamento"
+          ]
+        },
+        "Conexões das mangueiras e válvulas": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento hidráulico",
+            "Conexões soltas",
+            "Mangueira danificada"
+          ]
+        },
+        "Acumuladores": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressão inadequada",
+            "Vazamento",
+            "Fixação solta"
+          ]
+        },
+        "Filtros": {
+          "classificacoes": [],
+          "falhas": [
+            "Filtro saturado",
+            "Contaminação",
+            "Fixação solta"
+          ]
+        },
+        "Radiadores": {
+          "classificacoes": [],
+          "falhas": [
+            "Ventilação insuficiente",
+            "Sujeira excessiva",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Elétrico e Instrumentação": {
+        "Motor elétrico": {
+          "classificacoes": [],
+          "falhas": [
+            "Motor inoperante",
+            "Ruído anormal",
+            "Aquecimento"
+          ]
+        },
+        "Caixa de borner": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexões soltas",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        },
+        "Pressostatos": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressostato com falha",
+            "Indicação incorreta",
+            "Fixação solta"
+          ]
+        },
+        "Conexões elétricas": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexões soltas",
+            "Cabo danificado",
+            "Aquecimento"
+          ]
+        }
+      }
+    },
+    "Gerador": {
+      "Gerador": {
+        "Placa de identificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ausente",
+            "Placa ilegível",
+            "Fixação solta"
+          ]
+        },
+        "Carcaça do gerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Carcaça danificada",
+            "Corrosão",
+            "Fixação solta"
+          ]
+        },
+        "Rolamentos do gerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Aquecimento",
+            "Lubrificação insuficiente",
+            "Vazamento",
+            "Coletor de graxa sujo"
+          ]
+        },
+        "Sistema de ventilação": {
+          "classificacoes": [],
+          "falhas": [
+            "Ventilação obstruída",
+            "Ventilador com falha",
+            "Sujeira excessiva"
+          ]
+        },
+        "Cabos do estator": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Isolamento comprometido",
+            "Conexões soltas"
+          ]
+        },
+        "Cabos do rotor": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Isolamento comprometido",
+            "Conexões soltas"
+          ]
+        },
+        "Coxins e suportes de fixação": {
+          "classificacoes": [],
+          "falhas": [
+            "Coxim danificado",
+            "Fixação solta",
+            "Desgaste"
+          ]
+        }
+      },
+      "Corpo de Anilhos": {
+        "Pastilhas e porta-escovas": {
+          "classificacoes": [],
+          "falhas": [
+            "Escovas desgastadas",
+            "Porta-escovas danificado",
+            "Faíscamento"
+          ]
+        },
+        "Compartimento interno/trilho": {
+          "classificacoes": [],
+          "falhas": [
+            "Sujeira excessiva",
+            "Componentes soltos",
+            "Corrosão"
+          ]
+        },
+        "Compartimento externo/sinalização": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa danificada",
+            "Sinalização ilegível",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do gerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      }
+    },
+    "Multiplicadora (Gearbox)": {
+      "Multiplicador": {
+        "Placa de identificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Placa ausente",
+            "Placa ilegível",
+            "Fixação solta"
+          ]
+        },
+        "Condições gerais da multiplicadora": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Ruído anormal",
+            "Vibração"
+          ]
+        },
+        "Mancais do gearbox": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Desgaste",
+            "Aquecimento"
+          ]
+        },
+        "Óleo": {
+          "classificacoes": [],
+          "falhas": [
+            "Nível baixo de óleo",
+            "Contaminação",
+            "Vazamento"
+          ]
+        },
+        "Sistema de bombeamento e filtragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Bomba inoperante",
+            "Vazamento",
+            "Pressão insuficiente"
+          ]
+        },
+        "Radiadores de resfriamento": {
+          "classificacoes": [],
+          "falhas": [
+            "Ventilação insuficiente",
+            "Radiador obstruído",
+            "Vazamento"
+          ]
+        },
+        "Filtro dessecante/sílica gel": {
+          "classificacoes": [],
+          "falhas": [
+            "Filtro saturado",
+            "Umidade excessiva",
+            "Fixação solta"
+          ]
+        },
+        "Tampa de inspeção": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa danificada",
+            "Vedação comprometida",
+            "Fixação solta"
+          ]
+        },
+        "Rolamento dianteiro LSS": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Rolamento traseiro HSS": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Sensores de condição": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor com falha",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "Vareta magnética": {
+          "classificacoes": [],
+          "falhas": [
+            "Partículas metálicas excessivas",
+            "Ímã saturado",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Junta Rotativa": {
+        "Conexões hidráulicas": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento hidráulico",
+            "Conexões soltas",
+            "Mangueira danificada"
+          ]
+        },
+        "Compartimento elétrico": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexões soltas",
+            "Cabo danificado",
+            "Aquecimento"
+          ]
+        }
+      }
+    },
+    "Sala do Trafo": {
+      "Carenagem": {
+        "Porta de acesso": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Fechamento inadequado",
+            "Corrosão"
+          ]
+        },
+        "Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Estrutura danificada",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Ventiladores": {
+          "classificacoes": [],
+          "falhas": [
+            "Ventilador com falha",
+            "Ruído anormal",
+            "Fixação solta"
+          ]
+        },
+        "Braço de sustentação": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        },
+        "Manta antichama": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano ou desgaste",
+            "Fixação solta",
+            "Contaminação"
+          ]
+        },
+        "Filtro de entrada de ar": {
+          "classificacoes": [],
+          "falhas": [
+            "Filtro saturado",
+            "Obstrução",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Circuitos de potência": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo danificado",
+            "Conexões soltas",
+            "Aquecimento"
+          ]
+        },
+        "Muflas e buchas": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolação comprometida",
+            "Vazamento",
+            "Danos mecânicos"
+          ]
+        },
+        "Trafo auxiliar": {
+          "classificacoes": [],
+          "falhas": [
+            "Funcionamento irregular",
+            "Ruído anormal",
+            "Aquecimento"
+          ]
+        },
+        "Fusíveis": {
+          "classificacoes": [],
+          "falhas": [
+            "Fusível queimado",
+            "Fixação solta",
+            "Contato ruim"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Sinalizações de advertência e segurança": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinalização ausente",
+            "Sinalização ilegível",
+            "Fixação solta"
+          ]
+        }
+      }
+    },
+    "Nacelle Interior": {
+      "Carenagem": {
+        "Carenagem interior": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano estrutural",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Chassis": {
+          "classificacoes": [],
+          "falhas": [
+            "Deformação",
+            "Trincas",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Top box": {
+          "classificacoes": [],
+          "falhas": [
+            "Gabinete danificado",
+            "Porta sem vedação",
+            "Fixação solta"
+          ]
+        },
+        "Painel do conversor": {
+          "classificacoes": [],
+          "falhas": [
+            "Componentes queimados",
+            "Conexões soltas",
+            "Aquecimento anormal"
+          ]
+        },
+        "Tomadas auxiliares da nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        }
+      },
+      "Slip de Comunicação": {
+        "Junta rotativa": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão rotativa com falha",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Testes Funcionais": {
+        "Ventilador do aerogerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Funcionamento irregular",
+            "Ruído anormal",
+            "Vibração"
+          ]
+        },
+        "Ventiladores arrefecimento gearbox e conversor": {
+          "classificacoes": [],
+          "falhas": [
+            "Ventilador com falha",
+            "Sujeira excessiva",
+            "Ruído anormal"
+          ]
+        },
+        "Bomba de óleo do gearbox": {
+          "classificacoes": [],
+          "falhas": [
+            "Bomba inoperante",
+            "Vazamento",
+            "Ruído anormal"
+          ]
+        },
+        "Sistema de pitch pás 1, 2 e 3": {
+          "classificacoes": [],
+          "falhas": [
+            "Falha de acionamento",
+            "Sensor com falha",
+            "Funcionamento irregular"
+          ]
+        },
+        "Giro do aerogerador 500rpm": {
+          "classificacoes": [],
+          "falhas": [
+            "Vibração anormal",
+            "Ruído anormal",
+            "Funcionamento irregular"
+          ]
+        }
+      },
+      "Sistema de Elevação de Cargas": {
+        "Guincho": {
+          "classificacoes": [],
+          "falhas": [
+            "Guincho danificado",
+            "Cabo desgastado",
+            "Fixação solta"
+          ]
+        },
+        "Escotilha de manobra da nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Travamento inadequado",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Sinalizações de advertência e segurança": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinalização ausente",
+            "Sinalização ilegível",
+            "Fixação solta"
+          ]
+        },
+        "Iluminação e iluminação de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Corrosão",
+            "Deformação"
+          ]
+        },
+        "Kit resgate/evacuação": {
+          "classificacoes": [],
+          "falhas": [
+            "Equipamento ausente",
+            "Validade vencida",
+            "Fixação solta"
+          ]
+        },
+        "Extintores de incêndio": {
+          "classificacoes": [],
+          "falhas": [
+            "Extintor vencido",
+            "Pressão baixa",
+            "Fixação solta"
+          ]
+        },
+        "Sensor de fumaça da nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor com falha",
+            "Sujeira excessiva",
+            "Fixação solta"
+          ]
+        }
+      }
+    },
+    "Nacelle Exterior": {
+      "Carenagem": {
+        "Carenagem externa": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano estrutural",
+            "Corrosão",
+            "Fixação solta"
+          ]
+        },
+        "Escotilha de acesso e ventilação": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Vedação comprometida",
+            "Fixação solta"
+          ]
+        },
+        "Sensores meteorológicos": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor danificado",
+            "Fixação solta",
+            "Cabo danificado"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Luzes de sinalização/aviação": {
+          "classificacoes": [],
+          "falhas": [
+            "Luz inoperante",
+            "Fixação solta",
+            "Vedação comprometida"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Corrosão",
+            "Deformação"
+          ]
+        }
+      }
+    },
+    "Hub Externo e Pás": {
+      "Carenagem": {
+        "Carenagem": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano estrutural",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Suporte": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Corrosão",
+            "Deformação"
+          ]
+        },
+        "Martelinhos": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste",
+            "Fixação solta",
+            "Danos mecânicos"
+          ]
+        },
+        "Plataforma Nose Cone": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano estrutural",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Gabinetes do hub": {
+          "classificacoes": [],
+          "falhas": [
+            "Gabinete danificado",
+            "Porta sem vedação",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do hub externo": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Corrosão",
+            "Deformação"
+          ]
+        }
+      },
+      "Pás - Lado Interno": {
+        "Condição geral das pás": {
+          "classificacoes": [],
+          "falhas": [
+            "Delaminação",
+            "Trinca",
+            "Danos estruturais"
+          ]
+        },
+        "Redutora do pitch": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vazamento",
+            "Fixação solta"
+          ]
+        },
+        "Caixa do pitch": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Desgaste",
+            "Danos mecânicos"
+          ]
+        },
+        "Rolamentos do pitch": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Conexão de aterramento da pá": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        },
+        "Conexão pá-adaptador": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Desalinhamento",
+            "Danos mecânicos"
+          ]
+        },
+        "Conexão adaptador-rotor": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação solta",
+            "Desalinhamento",
+            "Danos mecânicos"
+          ]
+        }
+      }
+    },
+    "Hub Interno": {
+      "Carenagem": {
+        "Carenagem interna": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano estrutural",
+            "Fixação solta",
+            "Corrosão"
+          ]
+        },
+        "Tampa de PIN": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa danificada",
+            "Fixação solta",
+            "Vedação comprometida"
+          ]
+        },
+        "Escotilha de acesso às pás": {
+          "classificacoes": [],
+          "falhas": [
+            "Escotilha danificada",
+            "Travamento inadequado",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Sensor de Balluf": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor com falha",
+            "Cabo danificado",
+            "Fixação solta"
+          ]
+        },
+        "Tomadas auxiliares": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Fixação solta",
+            "Falta de energia"
+          ]
+        },
+        "Gabinetes do hub": {
+          "classificacoes": [],
+          "falhas": [
+            "Gabinete danificado",
+            "Porta sem vedação",
+            "Fixação solta"
+          ]
+        }
+      },
+      "Pitch": {
+        "Rolamentos do pitch externo e interno": {
+          "classificacoes": [],
+          "falhas": [
+            "Ruído anormal",
+            "Vibração",
+            "Desgaste"
+          ]
+        },
+        "Cilindros de acionamento do pitch": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento hidráulico",
+            "Fixação solta",
+            "Funcionamento irregular"
+          ]
+        },
+        "Rótula": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste",
+            "Folga excessiva",
+            "Danos mecânicos"
+          ]
+        },
+        "Acumuladores": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressão inadequada",
+            "Vazamento",
+            "Fixação solta"
+          ]
+        },
+        "Conexões hidráulicas": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento hidráulico",
+            "Conexões soltas",
+            "Mangueira danificada"
+          ]
+        },
+        "Bloco de válvulas e atuadores": {
+          "classificacoes": [],
+          "falhas": [
+            "Válvula com falha",
+            "Vazamento",
+            "Funcionamento irregular"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Iluminação e iluminação de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Lâmpada queimada",
+            "Luminária danificada",
+            "Fiação exposta"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Corrosão",
+            "Deformação"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do hub interno": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Corrosão",
+            "Cabo danificado"
+          ]
+        }
+      }
+    }
+  }
+};
+
 // Lista de aerogeradores
 const AEROGERADORES = [
   {
@@ -2532,7 +4166,35 @@ const AEROGERADORES = [
     "parque": "Coxilha Negra",
     "sub_parque": "Coxilha Negra 4",
     "codigo": "ECN4-23"
-  }
+  },
+
+  // Entorno 2 — Coxilha Seca (15 aeros)
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-01" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-02" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-03" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-04" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-05" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-06" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-07" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-08" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-09" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-10" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-11" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-12" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-13" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-14" },
+  { "parque": "Entorno 2", "sub_parque": "Coxilha Seca", "codigo": "ECSE-15" },
+  // Entorno 2 — Galpões (4 aeros)
+  { "parque": "Entorno 2", "sub_parque": "Galpões", "codigo": "EGAL-01" },
+  { "parque": "Entorno 2", "sub_parque": "Galpões", "codigo": "EGAL-02" },
+  { "parque": "Entorno 2", "sub_parque": "Galpões", "codigo": "EGAL-03" },
+  { "parque": "Entorno 2", "sub_parque": "Galpões", "codigo": "EGAL-04" },
+  // Entorno 2 — Capão do Inglês (5 aeros)
+  { "parque": "Entorno 2", "sub_parque": "Capão do Inglês", "codigo": "ECIN-01" },
+  { "parque": "Entorno 2", "sub_parque": "Capão do Inglês", "codigo": "ECIN-02" },
+  { "parque": "Entorno 2", "sub_parque": "Capão do Inglês", "codigo": "ECIN-03" },
+  { "parque": "Entorno 2", "sub_parque": "Capão do Inglês", "codigo": "ECIN-04" },
+  { "parque": "Entorno 2", "sub_parque": "Capão do Inglês", "codigo": "ECIN-05" }
 ];
 
         // Estado da aplicação
@@ -2814,8 +4476,12 @@ const AEROGERADORES = [
         }
 
         function loadAerogeradores() {
+            const parque = document.getElementById('parque').value;
+            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2' };
+            const parqueNome = parqueMap[parque] || 'Coxilha Negra';
             const select = document.getElementById('aerogerador');
-            AEROGERADORES.forEach(aero => {
+            select.innerHTML = '<option value="">Selecione o aerogerador...</option>';
+            AEROGERADORES.filter(a => a.parque === parqueNome).forEach(aero => {
                 const option = document.createElement('option');
                 option.value = aero.codigo;
                 option.textContent = `${aero.codigo} - ${aero.sub_parque}`;
@@ -2848,7 +4514,7 @@ const AEROGERADORES = [
 
         function countTotalComponents() {
             let count = 0;
-            const categorias = ESTRUTURA.categorias;
+            const categorias = getEstruturaAtual().categorias;
             for (const subcategorias of Object.values(categorias)) {
                 for (const componentes of Object.values(subcategorias)) {
                     count += Object.keys(componentes).length;
@@ -2935,9 +4601,14 @@ const AEROGERADORES = [
             });
         }
         
+        function getEstruturaAtual() {
+            const parque = document.getElementById('parque').value;
+            return parque === 'entorno_2' ? ESTRUTURA_ENTORNO2 : ESTRUTURA;
+        }
+
         function buildTree() {
             const treeNav = document.getElementById('treeNav');
-            const categorias = ESTRUTURA.categorias;
+            const categorias = getEstruturaAtual().categorias;
             const aero = document.getElementById('aerogerador').value;
 
             // Salvar estado atual da árvore (quais estão abertos)
@@ -3177,6 +4848,11 @@ const AEROGERADORES = [
                 const parqueSelect = this;
                 const parqueNome = parqueSelect.options[parqueSelect.selectedIndex].text;
                 document.getElementById('parqueNome').innerHTML = `<strong>${parqueNome}</strong>`;
+                // Recarregar aerogeradores e árvore para o novo parque
+                loadAerogeradores();
+                countTotalComponents();
+                buildTree();
+                updateProgress();
             });
             
             document.getElementById('classificacao').addEventListener('change', updateFalhaDropdown);
@@ -3874,10 +5550,14 @@ const AEROGERADORES = [
         }
         
         function updateParqueProgress() {
-            let totalAeros = AEROGERADORES.length;
+            const parque = document.getElementById('parque').value;
+            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2' };
+            const parqueNome = parqueMap[parque] || 'Coxilha Negra';
+            const aerosFiltrados = AEROGERADORES.filter(a => a.parque === parqueNome);
+            let totalAeros = aerosFiltrados.length;
             let completosAeros = 0;
             
-            AEROGERADORES.forEach(aero => {
+            aerosFiltrados.forEach(aero => {
                 const progresso = getAerogeradorProgress(aero.codigo);
                 if (progresso.percentual === 100) {
                     completosAeros++;
