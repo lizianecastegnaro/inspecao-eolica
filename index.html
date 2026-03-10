@@ -10,6 +10,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>Inspeções Eletromecânicas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -806,6 +807,9 @@
                 <div class="buttons-row" style="margin-top: 10px;">
                     <button class="btn btn-warning" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Mesclar Backups</button>
                     <input type="file" id="mergeFileInput" accept=".json" style="display: none;">
+                </div>
+                <div class="buttons-row" style="margin-top: 10px;">
+                    <button class="btn" id="openDashboardBI" onclick="biToggle()" style="background:linear-gradient(135deg,#0A1628,#0047CC);color:white;width:100%;font-size:18px;padding:16px;border:1px solid rgba(0,102,255,0.4);box-shadow:0 4px 20px rgba(0,102,255,0.3);">📊 Dashboard BI</button>
                 </div>
             </div>
         </div>
@@ -5182,6 +5186,7 @@ const AEROGERADORES = [
             });
 
             showToast('✅ Componente salvo com sucesso!');
+            if (typeof biVisible !== 'undefined' && biVisible) { biRefresh(); }
             
             // Limpar formulário e preparar para próximo componente
             clearForm();
@@ -6091,8 +6096,10 @@ const AEROGERADORES = [
             const link = document.createElement('a');
             link.href = url;
             link.download = fileName;
+            document.body.appendChild(link);
             link.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
             showToast('✅ Arquivo salvo em Downloads!', 'success');
         }
 
@@ -6159,9 +6166,12 @@ const AEROGERADORES = [
             const link = document.createElement('a');
             link.href = url;
             link.download = filename;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
             
-            URL.revokeObjectURL(url);
+            // Aguardar antes de revogar a URL para o download completar
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
 
             showToast(`✅ Backup criado! ${numInspecoes} inspeções, ${numFotosTotal} fotos`, 'success');
         }
@@ -6790,19 +6800,52 @@ const AEROGERADORES = [
                 
                 <!-- Botão Limpar Dados -->
                 <div class="diag-card" style="background: #fff5f5; border: 2px solid #dc3545;">
-                    <h3 style="color: #dc3545;">🗑️ Limpar Todos os Dados</h3>
-                    <p style="margin: 10px 0; color: #666;">Apaga todas as inspeções e fotos. Esta ação não pode ser desfeita!</p>
-                    <button onclick="confirmarLimpeza()" style="
-                        background: #dc3545;
-                        color: white;
-                        border: none;
-                        padding: 12px 25px;
-                        border-radius: 8px;
-                        font-size: 16px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        margin-top: 10px;
-                    ">🗑️ APAGAR TUDO</button>
+                    <h3 style="color: #dc3545;">🗑️ Limpar Dados por Aerogerador</h3>
+                    <p style="margin: 10px 0; color: #666;">Selecione os aerogeradores que deseja limpar (inspeções e fotos).</p>
+                    
+                    <div style="margin: 12px 0;">
+                        <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+                            <button onclick="diagSelectAll(true)" style="background:#6c757d;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">Selecionar Todos</button>
+                            <button onclick="diagSelectAll(false)" style="background:#6c757d;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">Desmarcar Todos</button>
+                        </div>
+                        <div id="diagAeroList" style="max-height:250px; overflow-y:auto; background:white; border:1px solid #ddd; border-radius:8px; padding:8px;">
+                            ${Object.entries(report.inspectionData.byAerogerador || {}).map(([aero, info]) => {
+                                const verificados = info.classifications['Verificado'] || 0;
+                                const comDefeito = info.count - verificados;
+                                return `<label style="display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; transition:background 0.15s;"
+                                    onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" class="diagAeroCheck" value="${aero}" style="width:18px;height:18px;cursor:pointer;">
+                                    <strong>${aero}</strong>
+                                    <span style="color:#666;font-size:11px;">${info.count} comp.</span>
+                                    ${comDefeito > 0 ? `<span style="color:#dc3545;font-size:11px;font-weight:600;">${comDefeito} defeito${comDefeito>1?'s':''}</span>` : `<span style="color:#28a745;font-size:11px;">✓ OK</span>`}
+                                </label>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                        <button onclick="confirmarLimpezaSeletiva()" style="
+                            background: #dc3545;
+                            color: white;
+                            border: none;
+                            padding: 12px 25px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: bold;
+                            cursor: pointer;
+                        ">🗑️ APAGAR SELECIONADOS</button>
+                        
+                        <button onclick="confirmarLimpeza()" style="
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            padding: 12px 25px;
+                            border-radius: 8px;
+                            font-size: 14px;
+                            font-weight: bold;
+                            cursor: pointer;
+                        ">🗑️ APAGAR TUDO</button>
+                    </div>
                 </div>
             `;
             
@@ -6812,6 +6855,93 @@ const AEROGERADORES = [
             console.log('Relatório de Diagnóstico:', report);
         }
         
+        function diagSelectAll(checked) {
+            document.querySelectorAll('.diagAeroCheck').forEach(cb => cb.checked = checked);
+        }
+
+        async function confirmarLimpezaSeletiva() {
+            const selected = [...document.querySelectorAll('.diagAeroCheck:checked')].map(cb => cb.value);
+            
+            if (!selected.length) {
+                alert('Selecione ao menos um aerogerador.');
+                return;
+            }
+            
+            const lista = selected.length > 5 
+                ? selected.slice(0, 5).join(', ') + ` e mais ${selected.length - 5}...`
+                : selected.join(', ');
+            
+            if (!confirm(`⚠️ ATENÇÃO!\n\nVai apagar todas as inspeções e fotos de:\n${lista}\n\n(${selected.length} aerogerador${selected.length > 1 ? 'es' : ''})\n\nEsta ação NÃO pode ser desfeita!`)) {
+                return;
+            }
+            
+            try {
+                let removedCount = 0;
+                let removedPhotos = 0;
+                
+                for (const aero of selected) {
+                    // Encontrar todas as chaves deste aerogerador
+                    const keysToRemove = Object.keys(inspectionData).filter(key => key.startsWith(aero + '_'));
+                    
+                    for (const key of keysToRemove) {
+                        // Remover inspeção do IndexedDB
+                        try {
+                            if (db) {
+                                await new Promise((resolve, reject) => {
+                                    const tx = db.transaction([STORE_INSPECTIONS], 'readwrite');
+                                    const req = tx.objectStore(STORE_INSPECTIONS).delete(key);
+                                    req.onsuccess = () => resolve();
+                                    req.onerror = (e) => reject(e.target.error);
+                                });
+                            }
+                        } catch (e) { console.warn('Erro ao remover inspeção do IDB:', key, e); }
+                        
+                        // Remover fotos do IndexedDB
+                        const photoKey = 'photos_' + key;
+                        try {
+                            if (db) {
+                                await new Promise((resolve, reject) => {
+                                    const tx = db.transaction([STORE_PHOTOS], 'readwrite');
+                                    const req = tx.objectStore(STORE_PHOTOS).delete(photoKey);
+                                    req.onsuccess = () => resolve();
+                                    req.onerror = (e) => reject(e.target.error);
+                                });
+                                removedPhotos++;
+                            }
+                        } catch (e) { console.warn('Erro ao remover foto do IDB:', photoKey, e); }
+                        
+                        // Remover fotos do localStorage (fallback)
+                        localStorage.removeItem(photoKey);
+                        
+                        // Remover da memória
+                        delete inspectionData[key];
+                        removedCount++;
+                    }
+                }
+                
+                // Atualizar progresso e árvore
+                updateProgress();
+                updateParqueProgress();
+                const aeroSelecionado = document.getElementById('aerogerador').value;
+                if (aeroSelecionado) {
+                    buildTree();
+                }
+                loadAerogeradores();
+                if (aeroSelecionado) {
+                    document.getElementById('aerogerador').value = aeroSelecionado;
+                }
+                
+                closeDiagnosticModal();
+                alert(`✅ Dados removidos!\n\n${removedCount} inspeções de ${selected.length} aerogerador${selected.length > 1 ? 'es' : ''} apagadas.`);
+                
+                console.log(`Limpeza seletiva: ${removedCount} inspeções removidas de ${selected.join(', ')}`);
+                
+            } catch (e) {
+                console.error('Erro na limpeza seletiva:', e);
+                alert('❌ Erro ao apagar dados: ' + e.message);
+            }
+        }
+
         async function confirmarLimpeza() {
             if (confirm('⚠️ TEM CERTEZA?\n\nIsso vai apagar TODAS as inspeções e fotos.\n\nEsta ação NÃO pode ser desfeita!')) {
                 if (confirm('🚨 ÚLTIMA CHANCE!\n\nClique OK para APAGAR TUDO.')) {
@@ -6864,5 +6994,778 @@ const AEROGERADORES = [
             init();
         }
     </script>
+
+<!-- ============================================================
+     DASHBOARD BI INTEGRADO — TEMA DARK — AXIA ENERGIA  
+     Lê dados direto da variável inspectionData em memória
+     Atualiza automaticamente a cada salvamento de componente
+     ============================================================ -->
+<style>
+  /* === BI DASHBOARD OVERLAY === */
+  #biOverlay { display:none; position:fixed; inset:0; z-index:9000; background:#0A1628; overflow-y:auto; }
+  #biOverlay.active { display:block; }
+  #biOverlay * { box-sizing:border-box; }
+
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+  #biOverlay { font-family:'DM Sans',sans-serif; color:#E8EDF5; }
+
+  /* Grid background */
+  #biOverlay::before {
+    content:''; position:fixed; inset:0;
+    background-image: linear-gradient(rgba(0,102,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,102,255,0.04) 1px, transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+  #biOverlay > * { position:relative; z-index:1; }
+
+  /* Header */
+  .bi-hdr { background:linear-gradient(135deg,#0D2145,#0A1E40); border-bottom:1px solid rgba(0,102,255,0.45);
+    padding:16px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    position:sticky; top:0; z-index:50; backdrop-filter:blur(12px); box-shadow:0 4px 32px rgba(0,0,0,0.4); }
+  .bi-hdr-left { display:flex; align-items:center; gap:14px; }
+  .bi-logo { width:42px;height:42px; background:linear-gradient(135deg,#0066FF,#00CFFF); border-radius:10px;
+    display:flex;align-items:center;justify-content:center; font-family:'Syne',sans-serif;
+    font-weight:800;font-size:17px;color:#fff; box-shadow:0 0 20px rgba(0,102,255,0.5); }
+  .bi-hdr h2 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:#fff; margin:0; }
+  .bi-hdr .sub { font-size:11px; color:#8BA3C7; font-weight:300; letter-spacing:0.8px; text-transform:uppercase; margin-top:2px; }
+  .bi-hdr-acts { display:flex; gap:8px; flex-wrap:wrap; }
+  .bi-hb { padding:8px 16px; border-radius:8px; font-size:12px; font-weight:500; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:all 0.2s; border:1px solid rgba(0,102,255,0.18); }
+  .bi-hb-back { background:transparent; color:#8BA3C7; border-color:rgba(0,102,255,0.18); }
+  .bi-hb-back:hover { border-color:#8BA3C7; color:#E8EDF5; }
+  .bi-hb-ref { background:linear-gradient(135deg,#0047CC,#0066FF); color:#fff; border:none;
+    box-shadow:0 4px 20px rgba(0,102,255,0.4); }
+  .bi-hb-ref:hover { transform:translateY(-1px); }
+  .bi-hb-pr { background:transparent; color:#8BA3C7; }
+  .bi-hb-pr:hover { border-color:#00CFFF; color:#00CFFF; }
+
+  /* Status */
+  .bi-status { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500;
+    background:rgba(0,229,160,0.12); color:#00E5A0; border:1px solid rgba(0,229,160,0.3); display:inline-block; }
+
+  /* Filters */
+  .bi-flt { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:14px;
+    padding:16px 20px; margin-bottom:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+  .bi-fg { display:flex; flex-direction:column; gap:5px; min-width:130px; }
+  .bi-fg label { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; font-weight:500; }
+  .bi-fg select, .bi-fg input[type=date] { background:#152640; border:1px solid rgba(0,102,255,0.18);
+    color:#E8EDF5; border-radius:8px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif;
+    cursor:pointer; outline:none; min-width:130px; }
+  .bi-fg select:focus, .bi-fg input:focus { border-color:#0066FF; }
+  .bi-fg select option { background:#152640; }
+  .bi-fa { display:flex; gap:8px; align-items:flex-end; }
+  .bi-ba { background:#0047CC; color:#fff; border:none; border-radius:8px; padding:9px 20px;
+    font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; }
+  .bi-ba:hover { background:#0066FF; }
+  .bi-br { background:transparent; color:#8BA3C7; border:1px solid rgba(0,102,255,0.18);
+    border-radius:8px; padding:9px 16px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .bi-br:hover { border-color:#8BA3C7; color:#E8EDF5; }
+  .bi-bp { background:transparent; color:#8BA3C7; border:1px solid rgba(0,102,255,0.18);
+    border-radius:8px; padding:9px 16px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; margin-left:auto; }
+  .bi-bp:hover { border-color:#00CFFF; color:#00CFFF; }
+
+  /* Main */
+  .bi-main { padding:24px 28px 48px; }
+
+  /* KPI */
+  .bi-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-bottom:24px; }
+  .bi-kpi { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:14px;
+    padding:20px 22px; position:relative; overflow:hidden; transition:transform 0.2s,box-shadow 0.2s; }
+  .bi-kpi:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+  .bi-kpi::after { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:var(--kc,#0066FF); }
+  .bi-kpi-icon { position:absolute; right:18px; top:18px; font-size:24px; opacity:0.3; }
+  .bi-kpi-label { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; font-weight:500; margin-bottom:10px; }
+  .bi-kpi-val { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; line-height:1; color:var(--kc,#E8EDF5); margin-bottom:6px; }
+  .bi-kpi-sub { font-size:12px; color:#8BA3C7; }
+
+  /* Section titles */
+  .bi-sec { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:1.5px; color:#8BA3C7; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .bi-sec::before { content:''; display:inline-block; width:3px; height:14px; background:#0066FF; border-radius:2px; }
+
+  /* Chart grid */
+  .bi-cg { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin-bottom:24px; }
+  .bi-card { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:14px; padding:20px 22px; }
+  .bi-c4 { grid-column:span 4; } .bi-c5 { grid-column:span 5; } .bi-c6 { grid-column:span 6; }
+  .bi-c7 { grid-column:span 7; } .bi-c8 { grid-column:span 8; } .bi-c12 { grid-column:span 12; }
+  .bi-card-t { font-size:13px; font-weight:500; color:#8BA3C7; margin-bottom:16px; letter-spacing:0.2px; }
+
+  /* Critical tables grid */
+  .bi-crit-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+  .bi-tcard { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:14px; padding:20px 22px; overflow:hidden; }
+  .bi-tcard.crit-brd { border-color:rgba(255,61,61,0.3); }
+  .bi-tcard.warn-brd { border-color:rgba(255,157,0,0.3); }
+  .bi-tbl { width:100%; border-collapse:collapse; margin-top:4px; }
+  .bi-tbl th { text-align:left; padding:8px 10px; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.8px; color:#4A6280; font-weight:500; border-bottom:1px solid rgba(0,102,255,0.18); }
+  .bi-tbl td { padding:9px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+  .bi-tbl tr:last-child td { border-bottom:none; }
+  .bi-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+  .bi-tscroll { max-height:320px; overflow-y:auto; }
+  .bi-tscroll::-webkit-scrollbar { width:4px; }
+  .bi-tscroll::-webkit-scrollbar-track { background:transparent; }
+  .bi-tscroll::-webkit-scrollbar-thumb { background:rgba(0,102,255,0.45); border-radius:2px; }
+
+  /* Badges */
+  .bi-bdg { display:inline-block; border-radius:5px; padding:2px 8px; font-size:11px; font-weight:500; }
+  .bi-bdg-ok { background:rgba(0,229,160,0.15); color:#00E5A0; }
+  .bi-bdg-lt { background:rgba(51,133,255,0.15); color:#3385FF; }
+  .bi-bdg-wr { background:rgba(255,157,0,0.15); color:#FFB340; }
+  .bi-bdg-dg { background:rgba(255,61,61,0.15); color:#FF6B6B; }
+
+  /* Ranking */
+  .bi-rank { list-style:none; margin-top:4px; padding:0; }
+  .bi-rank-item { display:flex; align-items:center; gap:10px; padding:8px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04); }
+  .bi-rank-item:last-child { border-bottom:none; }
+  .bi-rank-num { font-family:'Syne',sans-serif; font-weight:800; font-size:12px; color:#4A6280; width:20px; text-align:right; flex-shrink:0; }
+  .bi-rank-bar { flex:1; }
+  .bi-rank-lbl { font-size:12px; color:#8BA3C7; margin-bottom:4px; }
+  .bi-rank-bg { background:#1C3050; border-radius:3px; height:5px; overflow:hidden; }
+  .bi-rank-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#0047CC,#3385FF); transition:width 0.8s ease; }
+  .bi-rank-cnt { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:#E8EDF5; width:32px; text-align:right; flex-shrink:0; }
+
+  /* Progress */
+  .bi-prog-item { margin-bottom:14px; }
+  .bi-prog-hdr { display:flex; justify-content:space-between; margin-bottom:5px; }
+  .bi-prog-lbl { font-size:13px; color:#8BA3C7; }
+  .bi-prog-val { font-size:13px; font-weight:600; color:#E8EDF5; }
+  .bi-prog-bg { background:#1C3050; border-radius:4px; height:7px; }
+  .bi-prog-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
+
+  /* Turbine map */
+  .bi-turb-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); gap:6px; margin-top:4px; }
+  .bi-turb-cell { aspect-ratio:1; border-radius:8px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; font-size:10px; font-weight:600;
+    cursor:pointer; transition:transform 0.15s; border:1.5px solid transparent; }
+  .bi-turb-cell:hover { transform:scale(1.08); }
+  .bi-turb-cell .tc-n { font-size:9px; opacity:0.7; margin-top:2px; }
+  .bi-turb-cell .tc-c { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; }
+  .tc-ok { background:rgba(0,229,160,0.1); border-color:rgba(0,229,160,0.3); color:#00E5A0; }
+  .tc-lt { background:rgba(51,133,255,0.1); border-color:rgba(51,133,255,0.3); color:#3385FF; }
+  .tc-wr { background:rgba(255,157,0,0.1); border-color:rgba(255,157,0,0.3); color:#FF9D00; }
+  .tc-dg { background:rgba(255,61,61,0.12); border-color:rgba(255,61,61,0.4); color:#FF6B6B; }
+  .tc-em { background:#152640; border-color:rgba(0,102,255,0.18); color:#4A6280; }
+
+  .bi-legend { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:10px; }
+  .bi-legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#8BA3C7; }
+  .bi-legend-dot { width:10px; height:10px; border-radius:3px; }
+
+  /* Empty */
+  .bi-empty { text-align:center; padding:60px 20px; color:#4A6280; }
+  .bi-empty h3 { font-family:'Syne',sans-serif; font-size:20px; color:#8BA3C7; margin-bottom:8px; }
+
+  /* Full table */
+  .bi-full-tbl { width:100%; border-collapse:collapse; }
+  .bi-full-tbl th { text-align:left; padding:8px 10px; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.8px; color:#4A6280; font-weight:500; border-bottom:1px solid rgba(0,102,255,0.18); }
+  .bi-full-tbl td { padding:8px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .bi-full-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+
+  /* Pareto buttons */
+  .bi-pareto-btn { background:#152640; border:1px solid rgba(0,102,255,0.18); color:#4A6280;
+    border-radius:7px; padding:6px 14px; font-size:12px; font-weight:500; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:all 0.18s; }
+  .bi-pareto-btn:hover { border-color:#0066FF; color:#8BA3C7; }
+  .bi-pareto-btn.active { background:rgba(0,102,255,0.18); border-color:rgba(0,102,255,0.6); color:#7FB3FF; }
+
+  /* Classification toggle buttons */
+  .bi-cls-btn { background:#152640; border:1px solid rgba(0,102,255,0.18); color:#4A6280;
+    border-radius:7px; padding:6px 11px; font-size:12px; font-weight:500; cursor:pointer;
+    font-family:'DM Sans',sans-serif; transition:all 0.18s; white-space:nowrap; }
+  .bi-cls-btn:hover { border-color:#0066FF; color:#8BA3C7; }
+  .bi-cls-btn.active-Verificado { background:rgba(0,229,160,0.15); border-color:rgba(0,229,160,0.6); color:#00E5A0; }
+  .bi-cls-btn.active-Ligeiro { background:rgba(51,133,255,0.15); border-color:rgba(51,133,255,0.6); color:#3385FF; }
+  .bi-cls-btn.active-Grave { background:rgba(255,157,0,0.15); border-color:rgba(255,157,0,0.6); color:#FF9D00; }
+  .bi-cls-btn.active-Imediata { background:rgba(255,61,61,0.15); border-color:rgba(255,61,61,0.6); color:#FF6B6B; }
+
+  /* Responsive */
+  @media(max-width:900px) {
+    .bi-main { padding:16px; }
+    .bi-c4,.bi-c5,.bi-c6,.bi-c7,.bi-c8 { grid-column:span 12; }
+    .bi-crit-grid { grid-template-columns:1fr; }
+    .bi-hdr { padding:14px 16px; }
+  }
+  @media print {
+    #biOverlay { background:white; color:#000; }
+    #biOverlay::before { display:none; }
+    .bi-hdr { position:static; }
+    .bi-flt,.bi-hdr-acts { display:none!important; }
+    .bi-kpi,.bi-card,.bi-tcard { break-inside:avoid; }
+  }
+</style>
+
+<div id="biOverlay">
+  <!-- Header -->
+  <div class="bi-hdr">
+    <div class="bi-hdr-left">
+      <div class="bi-logo">AX</div>
+      <div><h2>AXIA Energia</h2><div class="sub" id="biHeaderSub">BI — Inspeções Eletromecânicas</div></div>
+    </div>
+    <div class="bi-hdr-acts">
+      <span class="bi-status" id="biStatusBadge" style="display:none">✓ Dados carregados</span>
+      <button class="bi-hb bi-hb-ref" onclick="biRefresh()">🔄 Atualizar Dados</button>
+      <button class="bi-hb bi-hb-pr" onclick="window.print()">🖨 Imprimir</button>
+      <button class="bi-hb bi-hb-back" onclick="biToggle()">← Voltar ao App</button>
+    </div>
+  </div>
+
+  <div class="bi-main">
+
+    <!-- Photo Tooltip -->
+    <div id="bi-photo-tip" style="display:none;position:fixed;z-index:9999;background:#0F1E35;
+      border:1px solid rgba(0,102,255,0.45);border-radius:14px;padding:10px;pointer-events:none;
+      box-shadow:0 12px 40px rgba(0,0,0,0.6);max-width:260px;transition:opacity 0.15s">
+      <div id="bi-photo-tip-lbl" style="font-size:11px;color:#4A6280;margin-bottom:7px;text-transform:uppercase;letter-spacing:0.6px"></div>
+      <img id="bi-photo-tip-img" src="" style="width:240px;height:160px;object-fit:cover;border-radius:8px;display:block">
+      <div id="bi-photo-tip-info" style="font-size:11px;color:#8BA3C7;margin-top:7px"></div>
+    </div>
+
+    <!-- Carousel Modal -->
+    <div id="bi-carousel" style="display:none;position:fixed;inset:0;z-index:10000;
+      background:rgba(5,12,25,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center">
+      <div style="background:#0F1E35;border:1px solid rgba(0,102,255,0.45);border-radius:20px;padding:28px;max-width:600px;width:90%;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.7)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <div id="bi-car-name" style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px"></div>
+            <div id="bi-car-sub" style="font-size:12px;color:#4A6280"></div>
+          </div>
+          <button onclick="biCloseCar()" style="background:#1C3050;border:1px solid rgba(0,102,255,0.18);color:#8BA3C7;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:18px;line-height:1;font-family:'DM Sans',sans-serif">×</button>
+        </div>
+        <div style="position:relative;background:#152640;border-radius:12px;overflow:hidden;margin-bottom:14px">
+          <img id="bi-car-img" src="" style="width:100%;max-height:360px;object-fit:contain;display:block">
+          <button id="bi-car-prev" onclick="biCarNav(-1)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+          <button id="bi-car-next" onclick="biCarNav(1)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>
+        </div>
+        <div id="bi-car-info" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+        <div id="bi-car-thumbs" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px"></div>
+        <div id="bi-car-counter" style="text-align:center;font-size:12px;color:#4A6280;margin-top:12px"></div>
+      </div>
+    </div>
+    <!-- Filters -->
+    <div class="bi-flt">
+      <div class="bi-fg"><label>Data inicial</label><input type="date" id="biDF"></div>
+      <div class="bi-fg"><label>Data final</label><input type="date" id="biDT"></div>
+      <div class="bi-fg"><label>Parque Eólico</label><select id="biPQ" onchange="biOnParqueChange()"><option value="">Todos</option></select></div>
+      <div class="bi-fg"><label>Sub-parque</label><select id="biSP" onchange="biOnSubparqueChange()"><option value="">Todos</option></select></div>
+      <div class="bi-fg"><label>Categoria</label><select id="biCA"><option value="">Todas</option></select></div>
+      <div class="bi-fg"><label>Classificação</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:2px">
+          <button class="bi-cls-btn" data-cls="Verificado" onclick="biToggleCls(this)">✓ Verificado</button>
+          <button class="bi-cls-btn" data-cls="Defeito Ligeiro" onclick="biToggleCls(this)">◑ Ligeiro</button>
+          <button class="bi-cls-btn" data-cls="Defeito Grave" onclick="biToggleCls(this)">▲ Grave</button>
+          <button class="bi-cls-btn" data-cls="Ação Imediata" onclick="biToggleCls(this)">🚨 Imediata</button>
+        </div>
+      </div>
+      <div class="bi-fg"><label>Aerogerador</label><select id="biTU"><option value="">Todos</option></select></div>
+      <div class="bi-fa">
+        <button class="bi-ba" onclick="biApply()">Aplicar</button>
+        <button class="bi-br" onclick="biReset()">Limpar</button>
+        <button class="bi-bp" onclick="biExportCSV()">⬇ Exportar</button>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div id="biEmptyState" class="bi-empty" style="display:none">
+      <h3>📭 Sem Dados de Inspeção</h3>
+      <p style="font-size:14px;color:#4A6280;max-width:420px;margin:0 auto;line-height:1.6">
+        Realize inspeções no aplicativo e clique em "Salvar Componente".<br>
+        Os dados aparecem aqui automaticamente.</p>
+    </div>
+
+    <!-- Dashboard content -->
+    <div id="biDash" style="display:none">
+
+      <!-- KPIs -->
+      <div class="bi-kpis">
+        <div class="bi-kpi" style="--kc:#0066FF"><div class="bi-kpi-icon">🔍</div><div class="bi-kpi-label">Total de Registros</div><div class="bi-kpi-val" id="bK1">0</div><div class="bi-kpi-sub">componentes inspecionados</div></div>
+        <div class="bi-kpi" style="--kc:#00CFFF"><div class="bi-kpi-icon">💨</div><div class="bi-kpi-label">Aerogeradores</div><div class="bi-kpi-val" id="bK2">0</div><div class="bi-kpi-sub" id="bK2s">com ao menos 1 registro</div></div>
+        <div class="bi-kpi" style="--kc:#FF9D00"><div class="bi-kpi-icon">⚠️</div><div class="bi-kpi-label">Defeitos Graves</div><div class="bi-kpi-val" id="bK3">0</div><div class="bi-kpi-sub">requerem atenção</div></div>
+        <div class="bi-kpi" style="--kc:#FF3D3D"><div class="bi-kpi-icon">🚨</div><div class="bi-kpi-label">Ação Imediata</div><div class="bi-kpi-val" id="bK4">0</div><div class="bi-kpi-sub">intervenção urgente</div></div>
+        <div class="bi-kpi" style="--kc:#00E5A0"><div class="bi-kpi-icon">✅</div><div class="bi-kpi-label">Taxa de Conformidade</div><div class="bi-kpi-val" id="bK5">0%</div><div class="bi-kpi-sub">componentes verificados</div></div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="bi-sec">Análise de Defeitos</div>
+      <div class="bi-cg">
+        <div class="bi-card bi-c4"><div class="bi-card-t">Distribuição por Classificação</div><div style="height:220px"><canvas id="bChCls"></canvas></div></div>
+        <div class="bi-card bi-c8"><div class="bi-card-t">Top 10 Categorias com Mais Defeitos</div><div style="height:220px"><canvas id="bChCat"></canvas></div></div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="bi-cg">
+        <div class="bi-card bi-c6"><div class="bi-card-t">Comparativo por Sub-parque</div><div style="height:200px"><canvas id="bChSP"></canvas></div></div>
+        <div class="bi-card bi-c6"><div class="bi-card-t">Tipos de Falha Mais Frequentes</div><div style="height:200px"><canvas id="bChFl"></canvas></div></div>
+      </div>
+
+      <!-- Turbine Map -->
+      <div class="bi-sec">Mapa de Saúde dos Aerogeradores</div>
+      <div class="bi-card bi-c12" style="margin-bottom:24px">
+        <div class="bi-card-t">Status por aerogerador — cor indica pior classificação registrada</div>
+        <div class="bi-legend">
+          <div class="bi-legend-item"><div class="bi-legend-dot" style="background:rgba(0,229,160,0.5)"></div>Verificado</div>
+          <div class="bi-legend-item"><div class="bi-legend-dot" style="background:rgba(51,133,255,0.5)"></div>Defeito Ligeiro</div>
+          <div class="bi-legend-item"><div class="bi-legend-dot" style="background:rgba(255,157,0,0.5)"></div>Defeito Grave</div>
+          <div class="bi-legend-item"><div class="bi-legend-dot" style="background:rgba(255,61,61,0.5)"></div>Ação Imediata</div>
+          <div class="bi-legend-item"><div class="bi-legend-dot" style="background:#152640"></div>Não inspecionado</div>
+        </div>
+        <div class="bi-turb-grid" id="bTurbMap"></div>
+      </div>
+
+      <!-- Pareto -->
+      <div class="bi-sec">Análise de Pareto</div>
+      <div class="bi-card" style="margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div>
+            <div class="bi-card-t" style="margin-bottom:4px">Quais itens concentram 80% dos defeitos?</div>
+            <div style="font-size:12px;color:#4A6280">Linha laranja = acumulado · Área sombreada = zona dos 80%</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="bi-pareto-btn active" data-lv="componente" onclick="biSetPareto(this)">Componente</button>
+            <button class="bi-pareto-btn" data-lv="subcategoria" onclick="biSetPareto(this)">Subcategoria</button>
+            <button class="bi-pareto-btn" data-lv="categoria" onclick="biSetPareto(this)">Categoria</button>
+          </div>
+        </div>
+        <div id="bParetoSum" style="margin-bottom:12px;font-size:13px;color:#8BA3C7"></div>
+        <div style="height:320px"><canvas id="bChPareto"></canvas></div>
+      </div>
+
+      <!-- Rankings -->
+      <div class="bi-sec">Rankings</div>
+      <div class="bi-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+          <div>
+            <div class="bi-card-t" style="margin-bottom:3px">Ranking de Piores Aerogeradores</div>
+            <div style="font-size:12px;color:#4A6280">Score = Imediata×4 + Grave×3 + Ligeiro×1</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:#4A6280">Mostrar:</span>
+            <button class="bi-pareto-btn active" data-rn="10" onclick="biSetRankN(this)">Top 10</button>
+            <button class="bi-pareto-btn" data-rn="20" onclick="biSetRankN(this)">Top 20</button>
+            <button class="bi-pareto-btn" data-rn="72" onclick="biSetRankN(this)">Todas</button>
+          </div>
+        </div>
+        <div id="bRankSum" style="margin-bottom:12px;font-size:13px;color:#8BA3C7"></div>
+        <div style="height:320px"><canvas id="bChRank"></canvas></div>
+      </div>
+
+      <div class="bi-cg">
+        <div class="bi-card bi-c12">
+          <div class="bi-card-t">Top 10 Componentes que Mais Falham</div>
+          <ul class="bi-rank" id="bRankComp"></ul>
+        </div>
+      </div>
+
+      <!-- Completion -->
+      <div class="bi-sec">Progresso por Sub-parque</div>
+      <div class="bi-card" style="margin-bottom:24px"><div id="bCompletion"></div></div>
+
+      <!-- Critical Tables -->
+      <div class="bi-sec">Pendências Críticas</div>
+      <div class="bi-crit-grid">
+        <div class="bi-tcard crit-brd"><div class="bi-card-t">🚨 Ação Imediata</div>
+          <div class="bi-tscroll"><table class="bi-tbl"><thead><tr><th>Aerogerador</th><th>Componente</th><th>Falha</th><th>Data</th></tr></thead><tbody id="bTblImm"></tbody></table></div></div>
+        <div class="bi-tcard warn-brd"><div class="bi-card-t">⚠️ Defeito Grave</div>
+          <div class="bi-tscroll"><table class="bi-tbl"><thead><tr><th>Aerogerador</th><th>Componente</th><th>Falha</th><th>Data</th></tr></thead><tbody id="bTblGrv"></tbody></table></div></div>
+      </div>
+
+      <!-- Full Table -->
+      <div class="bi-sec">Todos os Registros Filtrados</div>
+      <div class="bi-tcard" style="margin-bottom:24px">
+        <div class="bi-tscroll" style="max-height:400px">
+          <table class="bi-full-tbl"><thead><tr><th>Aerogerador</th><th>Data</th><th>Categoria</th><th>Componente</th><th>Classificação</th><th>Falha</th><th>Obs.</th></tr></thead>
+          <tbody id="bTblFull"></tbody></table>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:#4A6280" id="bTblCount"></div>
+      </div>
+
+    </div><!-- /biDash -->
+  </div><!-- /bi-main -->
+</div><!-- /biOverlay -->
+
+<script>
+// ================================================================
+// BI DASHBOARD ENGINE — reads from inspectionData variable
+// ================================================================
+let biVisible=false, biCharts={}, biFD=[], biParetoLv='componente', biRankN=10;
+let biPhotoMap={}, biCompPhotosMap={}, biCarPhotos=[], biCarIdx=0;
+const BI_SEV={'Ação Imediata':4,'Defeito Grave':3,'Defeito Ligeiro':2,'Verificado':1};
+const BI_COL={'Verificado':'rgba(0,229,160,0.8)','Defeito Ligeiro':'rgba(51,133,255,0.8)','Defeito Grave':'rgba(255,157,0,0.8)','Ação Imediata':'rgba(255,61,61,0.85)'};
+const BI_CLS=['Ação Imediata','Defeito Grave','Defeito Ligeiro','Verificado'];
+
+function biToggle(){
+  biVisible=!biVisible;
+  const o=document.getElementById('biOverlay');
+  if(biVisible){o.classList.add('active');document.body.style.overflow='hidden';biRefresh();o.scrollTop=0;}
+  else{o.classList.remove('active');document.body.style.overflow='';}
+}
+
+function biGetAll(){
+  const d=[];
+  for(const k in inspectionData){
+    const r=inspectionData[k];if(!r||!r.aerogerador)continue;
+    d.push({aerogerador:r.aerogerador,data:r.mesAno||'',categoria:r.categoria||'',subcategoria:r.subcategoria||'',componente:r.componente||'',classificacao:r.classificacao||'',falha:r.falha||'',observacoes:r.observacoes||'',timestamp:r.timestamp||''});
+  }
+  return d;
+}
+
+function biRefresh(){
+  const all=biGetAll();
+  // Load photos from IndexedDB
+  biLoadPhotos();
+  // Populate parque filter from AEROGERADORES
+  const parques=[...new Set(AEROGERADORES.map(a=>a.parque))].sort();
+  const pqSel=document.getElementById('biPQ');
+  const pqVal=pqSel.value;
+  pqSel.innerHTML='<option value="">Todos</option>'+parques.map(p=>`<option value="${p}">${p}</option>`).join('');
+  pqSel.value=pqVal;
+  // Cascade sub-parques and turbines
+  biPopulateSubparques();
+  // Populate categories
+  const cats=[...new Set(all.map(r=>r.categoria).filter(Boolean))].sort();
+  const caSel=document.getElementById('biCA');const caVal=caSel.value;
+  caSel.innerHTML='<option value="">Todas</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  caSel.value=caVal;
+  biApply(all);
+  document.getElementById('biStatusBadge').style.display=all.length?'inline-block':'none';
+}
+
+function biPopulateSubparques(){
+  const pq=document.getElementById('biPQ').value;
+  // Filter AEROGERADORES by selected parque
+  const aeros=pq?AEROGERADORES.filter(a=>a.parque===pq):AEROGERADORES;
+  const subparques=[...new Set(aeros.map(a=>a.sub_parque))].sort();
+  const spSel=document.getElementById('biSP');const spVal=spSel.value;
+  spSel.innerHTML='<option value="">Todos</option>'+subparques.map(s=>`<option value="${s}">${s}</option>`).join('');
+  // Keep selection if still valid
+  if(subparques.includes(spVal))spSel.value=spVal; else spSel.value='';
+  biPopulateTurbines();
+}
+
+function biPopulateTurbines(){
+  const pq=document.getElementById('biPQ').value;
+  const sp=document.getElementById('biSP').value;
+  let aeros=AEROGERADORES;
+  if(pq)aeros=aeros.filter(a=>a.parque===pq);
+  if(sp)aeros=aeros.filter(a=>a.sub_parque===sp);
+  const codigos=aeros.map(a=>a.codigo).sort();
+  const tuSel=document.getElementById('biTU');const tuVal=tuSel.value;
+  tuSel.innerHTML='<option value="">Todos</option>'+codigos.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(codigos.includes(tuVal))tuSel.value=tuVal; else tuSel.value='';
+}
+
+function biOnParqueChange(){
+  biPopulateSubparques();
+}
+
+function biOnSubparqueChange(){
+  biPopulateTurbines();
+}
+
+function biToggleCls(btn){
+  const map={'Verificado':'Verificado','Defeito Ligeiro':'Ligeiro','Defeito Grave':'Grave','Ação Imediata':'Imediata'};
+  const key=map[btn.dataset.cls];
+  btn.classList.toggle('active-'+key);
+}
+
+function biApply(allOverride){
+  const all=allOverride||biGetAll();
+  const df=document.getElementById('biDF').value,dt=document.getElementById('biDT').value;
+  const pq=document.getElementById('biPQ').value;
+  const sp=document.getElementById('biSP').value,ca=document.getElementById('biCA').value;
+  const tu=document.getElementById('biTU').value;
+  // Get active classification toggle buttons
+  const activeCls=[...document.querySelectorAll('.bi-cls-btn[class*="active-"]')].map(b=>b.dataset.cls);
+  // Build set of valid turbine codes for parque/subparque filter
+  let validTurbines=null;
+  if(pq||sp){
+    let aeros=AEROGERADORES;
+    if(pq)aeros=aeros.filter(a=>a.parque===pq);
+    if(sp)aeros=aeros.filter(a=>a.sub_parque===sp);
+    validTurbines=new Set(aeros.map(a=>a.codigo));
+  }
+  biFD=all.filter(r=>{
+    if(df&&r.data<df)return false;if(dt&&r.data>dt)return false;
+    if(validTurbines&&!validTurbines.has(r.aerogerador))return false;
+    if(ca&&r.categoria!==ca)return false;
+    if(activeCls.length&&!activeCls.includes(r.classificacao))return false;
+    if(tu&&r.aerogerador!==tu)return false;
+    return true;
+  });
+  biRenderAll();
+}
+
+function biReset(){
+  ['biDF','biDT','biPQ','biSP','biCA','biTU'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Clear classification toggle buttons
+  document.querySelectorAll('.bi-cls-btn').forEach(b=>{b.className='bi-cls-btn';});
+  biPopulateSubparques();
+  biApply();
+}
+
+function biRenderAll(){
+  const d=biFD;
+
+  // Update header subtitle based on parque filter
+  const pq=document.getElementById('biPQ').value;
+  const sp=document.getElementById('biSP').value;
+  let headerText='BI — Inspeções Eletromecânicas';
+  if(pq){
+    headerText+=' · '+pq;
+    if(sp)headerText+=' · '+sp;
+  }
+  document.getElementById('biHeaderSub').textContent=headerText;
+
+  if(!d.length){document.getElementById('biEmptyState').style.display='';document.getElementById('biDash').style.display='none';return;}
+  document.getElementById('biEmptyState').style.display='none';document.getElementById('biDash').style.display='';
+
+  // KPIs
+  const g=d.filter(r=>r.classificacao==='Defeito Grave').length;
+  const im=d.filter(r=>r.classificacao==='Ação Imediata').length;
+  const v=d.filter(r=>r.classificacao==='Verificado').length;
+  const turbs=new Set(d.map(r=>r.aerogerador)).size;
+  const conf=d.length?Math.round(v/d.length*100):0;
+  document.getElementById('bK1').textContent=d.length.toLocaleString('pt-BR');
+  document.getElementById('bK2').textContent=turbs;
+  document.getElementById('bK3').textContent=g;
+  document.getElementById('bK4').textContent=im;
+  document.getElementById('bK5').textContent=conf+'%';
+
+  biChartCls(d);biChartCat(d);biChartSP(d);biChartFl(d);
+  biTurbMap(d);biPareto(d);biRankings(d);biCompletion(d);biCritTbls(d);biFullTbl(d);
+}
+
+function biDC(id){if(biCharts[id]){biCharts[id].destroy();delete biCharts[id];}}
+
+function biChartCls(d){
+  biDC('cls');const cn={};BI_CLS.forEach(c=>cn[c]=0);d.forEach(r=>{if(cn[r.classificacao]!==undefined)cn[r.classificacao]++});
+  const lb=BI_CLS.filter(c=>cn[c]>0);if(!lb.length)return;
+  biCharts.cls=new Chart(document.getElementById('bChCls'),{type:'doughnut',data:{labels:lb,datasets:[{data:lb.map(l=>cn[l]),backgroundColor:lb.map(l=>BI_COL[l]),borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#8BA3C7',font:{size:11},padding:12,boxWidth:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/d.length*100)}%)`}}},cutout:'62%'}});
+}
+
+function biChartCat(d){
+  biDC('cat');const def=d.filter(r=>r.classificacao&&r.classificacao!=='Verificado');const cn={};def.forEach(r=>{cn[r.categoria]=(cn[r.categoria]||0)+1});
+  const s=Object.entries(cn).sort((a,b)=>b[1]-a[1]).slice(0,10);if(!s.length)return;
+  biCharts.cat=new Chart(document.getElementById('bChCat'),{type:'bar',data:{labels:s.map(([k])=>k.length>30?k.slice(0,28)+'…':k),datasets:[{data:s.map(([,v])=>v),backgroundColor:'rgba(0,102,255,0.7)',hoverBackgroundColor:'rgba(0,207,255,0.85)',borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}},y:{grid:{display:false},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
+}
+
+function biChartSP(d){
+  biDC('sp');const allT=[...new Set(d.map(r=>r.aerogerador).filter(Boolean))];
+  const parks=[...new Set(allT.map(t=>t.replace(/-\d+$/,'')))].sort();if(!parks.length)return;
+  const cls=['Verificado','Defeito Ligeiro','Defeito Grave','Ação Imediata'];
+  biCharts.sp=new Chart(document.getElementById('bChSP'),{type:'bar',data:{labels:parks,datasets:cls.map(c=>({label:c,data:parks.map(p=>d.filter(r=>r.aerogerador.startsWith(p)&&r.classificacao===c).length),backgroundColor:BI_COL[c],borderRadius:4}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BA3C7'}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
+}
+
+function biChartFl(d){
+  biDC('fl');const def=d.filter(r=>r.falha&&r.classificacao!=='Verificado');const cn={};def.forEach(r=>{cn[r.falha]=(cn[r.falha]||0)+1});
+  const s=Object.entries(cn).sort((a,b)=>b[1]-a[1]).slice(0,12);if(!s.length)return;
+  biCharts.fl=new Chart(document.getElementById('bChFl'),{type:'bar',data:{labels:s.map(([k])=>k.length>28?k.slice(0,26)+'…':k),datasets:[{data:s.map(([,v])=>v),backgroundColor:s.map((_,i)=>`hsla(${210+i*8},80%,60%,0.75)`),borderRadius:5,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}},y:{grid:{display:false},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
+}
+
+function biTurbMap(d){
+  const c=document.getElementById('bTurbMap');c.innerHTML='';
+  const ts={};d.forEach(r=>{const sv=BI_SEV[r.classificacao]||0;if(!ts[r.aerogerador]||sv>ts[r.aerogerador].sv)ts[r.aerogerador]={sv,cls:r.classificacao}});
+  const allT=[...new Set(biGetAll().map(r=>r.aerogerador).filter(Boolean))].sort();
+  // Also add known turbines from AEROGERADORES if available
+  if(typeof AEROGERADORES!=='undefined'){
+    const parque=document.getElementById('parque')?.value;
+    const pMap={'coxilha_negra':'Coxilha Negra','entorno_2':'Entorno 2'};
+    const pn=pMap[parque]||'Coxilha Negra';
+    AEROGERADORES.filter(a=>a.parque===pn).forEach(a=>{if(!allT.includes(a.codigo))allT.push(a.codigo)});
+    allT.sort();
+  }
+  allT.forEach(t=>{
+    const s=ts[t];const dc=d.filter(r=>r.aerogerador===t&&r.classificacao!=='Verificado').length;
+    let cls='tc-em';
+    if(s){if(s.cls==='Ação Imediata')cls='tc-dg';else if(s.cls==='Defeito Grave')cls='tc-wr';else if(s.cls==='Defeito Ligeiro')cls='tc-lt';else cls='tc-ok';}
+    const el=document.createElement('div');el.className=`bi-turb-cell ${cls}`;
+    el.title=s?`${t}\n${s.cls}\n${dc} defeitos`:`${t}\nNão inspecionado`;
+    el.innerHTML=`<span class="tc-c">${s?(dc||'✓'):'–'}</span><span class="tc-n">${t.replace(/ECN|ECSE|EGAL|ECIN/g,'')}</span>`;
+    c.appendChild(el);
+  });
+}
+
+function biSetPareto(btn){document.querySelectorAll('.bi-pareto-btn[data-lv]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');biParetoLv=btn.dataset.lv;biPareto(biFD);}
+
+function biPareto(d){
+  biDC('pareto');const def=d.filter(r=>r.classificacao&&r.classificacao!=='Verificado');
+  if(!def.length){document.getElementById('bParetoSum').textContent='Sem defeitos.';return;}
+  const kf=r=>biParetoLv==='componente'?(r.componente||r.subcategoria||'—'):biParetoLv==='subcategoria'?(r.subcategoria||'—'):(r.categoria||'—');
+  const cn={};def.forEach(r=>{const k=kf(r);cn[k]=(cn[k]||0)+1});
+  const s=Object.entries(cn).sort((a,b)=>b[1]-a[1]);const tot=s.reduce((a,[,v])=>a+v,0);
+  let cum=0;const cp=s.map(([,v])=>{cum+=v;return Math.round(cum/tot*100)});
+  const c80=cp.findIndex(p=>p>=80);const n80=c80===-1?s.length:c80+1;
+  document.getElementById('bParetoSum').innerHTML=`<span style="color:#FF9D00;font-weight:600">${n80} ${biParetoLv}${n80>1?'s':''}</span> concentram <span style="color:#FF9D00;font-weight:600">80% dos defeitos</span>`;
+  const M=30,lb=s.slice(0,M).map(([k])=>k.length>28?k.slice(0,26)+'…':k),vl=s.slice(0,M).map(([,v])=>v),cps=cp.slice(0,M);
+  biCharts.pareto=new Chart(document.getElementById('bChPareto'),{type:'bar',data:{labels:lb,datasets:[{type:'bar',label:'Qtd. Defeitos',data:vl,backgroundColor:vl.map((_,i)=>i<n80?'rgba(0,102,255,0.75)':'rgba(0,102,255,0.25)'),borderRadius:4,borderSkipped:false,yAxisID:'y',order:2},{type:'line',label:'Acumulado %',data:cps,borderColor:'rgba(255,157,0,0.9)',backgroundColor:'rgba(255,157,0,0.08)',borderWidth:2.5,pointBackgroundColor:'rgba(255,157,0,0.9)',pointRadius:3,fill:false,tension:0.35,yAxisID:'y2',order:1}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:14}}},scales:{x:{grid:{display:false},ticks:{color:'#8BA3C7',font:{size:10},maxRotation:35}},y:{position:'left',grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}},title:{display:true,text:'Quantidade',color:'#4A6280',font:{size:11}}},y2:{position:'right',min:0,max:100,grid:{display:false},ticks:{color:'rgba(255,157,0,0.7)',font:{size:11},callback:v=>v+'%'},title:{display:true,text:'Acumulado %',color:'#4A6280',font:{size:11}}}}}});
+}
+
+function biSetRankN(btn){document.querySelectorAll('.bi-pareto-btn[data-rn]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');biRankN=parseInt(btn.dataset.rn);biRankings(biFD);}
+
+function biRankings(d){
+  biDC('rank');const td={};[...new Set(d.map(r=>r.aerogerador).filter(Boolean))].forEach(t=>{td[t]={i:0,g:0,l:0,sc:0}});
+  d.filter(r=>r.classificacao&&r.classificacao!=='Verificado').forEach(r=>{const t=td[r.aerogerador];if(!t)return;if(r.classificacao==='Ação Imediata'){t.i++;t.sc+=4}else if(r.classificacao==='Defeito Grave'){t.g++;t.sc+=3}else if(r.classificacao==='Defeito Ligeiro'){t.l++;t.sc+=1}});
+  const s=Object.entries(td).filter(([,v])=>v.sc>0).sort((a,b)=>b[1].sc-a[1].sc).slice(0,biRankN);
+  if(!s.length){document.getElementById('bRankSum').textContent='Sem defeitos.';return;}
+  const w=s[0];document.getElementById('bRankSum').innerHTML=`Pior: <span style="color:#FF6B6B;font-weight:600">${w[0]}</span> · Score <span style="color:#FF6B6B;font-weight:600">${w[1].sc}</span> · ${w[1].i} imediata, ${w[1].g} grave, ${w[1].l} ligeiro`;
+  biCharts.rank=new Chart(document.getElementById('bChRank'),{type:'bar',data:{labels:s.map(([n])=>n),datasets:[{label:'Ação Imediata',data:s.map(([,v])=>v.i),backgroundColor:'rgba(255,61,61,0.85)',borderRadius:3,borderSkipped:false,stack:'s'},{label:'Defeito Grave',data:s.map(([,v])=>v.g),backgroundColor:'rgba(255,157,0,0.85)',borderRadius:3,borderSkipped:false,stack:'s'},{label:'Defeito Ligeiro',data:s.map(([,v])=>v.l),backgroundColor:'rgba(51,133,255,0.75)',borderRadius:3,borderSkipped:false,stack:'s'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:14}},tooltip:{callbacks:{afterBody:items=>{const idx=items[0].dataIndex;return[`Score: ${s[idx][1].sc}`]}}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BA3C7',font:{size:11},maxRotation:40,minRotation:30}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
+
+  // Component ranking
+  const cc={};d.filter(r=>r.classificacao&&r.classificacao!=='Verificado').forEach(r=>{const k=r.componente||r.subcategoria;if(k)cc[k]=(cc[k]||0)+1});
+  const cs=Object.entries(cc).sort((a,b)=>b[1]-a[1]).slice(0,10);const mx=cs[0]?.[1]||1;
+  document.getElementById('bRankComp').innerHTML=cs.length?cs.map(([n,c],i)=>{
+    const hasPhoto=!!biPhotoMap['comp:'+n];
+    const hasCar=!!(biCompPhotosMap[n]&&biCompPhotosMap[n].length);
+    const esc=n.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return `<li class="bi-rank-item" style="cursor:${hasCar?'pointer':'default'}"
+      ${hasPhoto?`onmouseenter="biShowTip(event,'${esc}')" onmouseleave="biHideTip()" onmousemove="biPosTip(event)"`:''}
+      ${hasCar?`onclick="biOpenCar('${esc}')"`:''}><span class="bi-rank-num">${i+1}</span><div class="bi-rank-bar"><div class="bi-rank-lbl" style="display:flex;align-items:center;gap:6px">${n.length>38?n.slice(0,36)+'…':n}${hasCar?`<span style="font-size:10px;color:#00CFFF;background:rgba(0,207,255,0.1);border:1px solid rgba(0,207,255,0.25);border-radius:4px;padding:1px 5px" title="Clique para ver fotos">📷 ${biCompPhotosMap[n].length}</span>`:''}</div><div class="bi-rank-bg"><div class="bi-rank-fill" style="width:${c/mx*100}%"></div></div></div><span class="bi-rank-cnt">${c}</span></li>`;
+  }).join(''):'<li style="text-align:center;padding:20px;color:#4A6280">Nenhum defeito</li>';
+}
+
+function biCompletion(d){
+  const COMP=121;const allT=[...new Set(biGetAll().map(r=>r.aerogerador).filter(Boolean))];
+  const pids=[...new Set(allT.map(t=>t.replace(/-\d+$/,'')))].sort();
+  document.getElementById('bCompletion').innerHTML=pids.map(p=>{
+    const pd=d.filter(r=>r.aerogerador.startsWith(p));const ti=new Set(pd.map(r=>r.aerogerador)).size;
+    const tot=allT.filter(t=>t.startsWith(p)).length;const tp=tot*COMP;const ins=pd.length;
+    const pct=Math.min(100,Math.round(ins/tp*100));
+    const gr=pct>=80?'linear-gradient(90deg,#0047CC,#00CFFF)':pct>=40?'linear-gradient(90deg,#0047CC,#0066FF)':'linear-gradient(90deg,#1C3050,#0047CC)';
+    return `<div class="bi-prog-item"><div class="bi-prog-hdr"><span class="bi-prog-lbl">${p} <span style="color:#4A6280;font-size:12px">(${ti}/${tot} turbinas · ${ins} registros)</span></span><span class="bi-prog-val">${pct}%</span></div><div class="bi-prog-bg"><div class="bi-prog-fill" style="width:${pct}%;background:${gr}"></div></div></div>`;
+  }).join('');
+}
+
+function biCritTbls(d){
+  function rt(id,cls){const tb=document.getElementById(id);const rows=d.filter(r=>r.classificacao===cls);
+    tb.innerHTML=rows.length?rows.slice(0,50).map(r=>`<tr><td><strong>${r.aerogerador}</strong></td><td style="color:#8BA3C7;font-size:12px">${r.componente||r.subcategoria||'—'}</td><td style="color:#4A6280;font-size:12px">${r.falha||'—'}</td><td style="color:#4A6280;font-size:11px">${r.data||'—'}</td></tr>`).join(''):`<tr><td colspan="4" style="text-align:center;padding:30px;color:#4A6280">Nenhum registro</td></tr>`;}
+  rt('bTblImm','Ação Imediata');rt('bTblGrv','Defeito Grave');
+}
+
+function biFullTbl(d){
+  const BDG={'Verificado':'bi-bdg-ok','Defeito Ligeiro':'bi-bdg-lt','Defeito Grave':'bi-bdg-wr','Ação Imediata':'bi-bdg-dg'};
+  const disp=d.slice(0,200);
+  document.getElementById('bTblFull').innerHTML=disp.map(r=>`<tr><td><strong>${r.aerogerador}</strong></td><td style="font-size:12px;color:#4A6280">${r.data||'—'}</td><td style="font-size:12px;color:#8BA3C7">${r.categoria||'—'}</td><td style="font-size:12px">${r.componente||r.subcategoria||'—'}</td><td><span class="bi-bdg ${BDG[r.classificacao]||''}">${r.classificacao||'—'}</span></td><td style="font-size:12px;color:#4A6280">${r.falha||'—'}</td><td style="font-size:11px;color:#4A6280;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.observacoes||'—'}</td></tr>`).join('');
+  document.getElementById('bTblCount').textContent=d.length>200?`Mostrando 200 de ${d.length} registros.`:`${d.length} registros`;
+}
+
+function biExportCSV(){
+  if(!biFD.length)return;
+  const h=['Aerogerador','Data','Categoria','Subcategoria','Componente','Classificação','Falha','Observações'];
+  const rows=[h.join(','),...biFD.map(r=>[r.aerogerador,r.data,r.categoria,r.subcategoria,r.componente,r.classificacao,r.falha,`"${(r.observacoes||'').replace(/"/g,'""')}"`].join(','))];
+  const blob=new Blob(['\uFEFF'+rows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`bi_inspecoes_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// ============================================================
+// PHOTO SYSTEM — loads from IndexedDB, shows tooltip + carousel
+// ============================================================
+async function biLoadPhotos(){
+  biPhotoMap={};biCompPhotosMap={};
+  try{
+    const allPhotos=await loadAllPhotosFromDB();
+    for(const[photoKey,photos] of Object.entries(allPhotos)){
+      if(!photos||!photos.length)continue;
+      // photoKey format: "photos_ECN2-01_Categoria_Subcategoria_Componente"
+      const inspKey=photoKey.replace('photos_','');
+      const rec=inspectionData[inspKey];
+      if(!rec)continue;
+      const compName=rec.componente||rec.subcategoria||'';
+      if(!compName)continue;
+      const src0=photos[0].startsWith('data:')?photos[0]:'data:image/jpeg;base64,'+photos[0];
+      // First photo by component
+      if(!biPhotoMap['comp:'+compName])biPhotoMap['comp:'+compName]=src0;
+      // All photos for carousel
+      if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
+      photos.forEach(raw=>{
+        const src=raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw;
+        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName});
+      });
+    }
+  }catch(e){console.log('BI: Could not load photos from IndexedDB',e);}
+  // Also try localStorage fallback
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||!key.startsWith('photos_'))continue;
+    try{
+      const photos=JSON.parse(localStorage.getItem(key));
+      if(!photos||!photos.length)continue;
+      const inspKey=key.replace('photos_','');
+      const rec=inspectionData[inspKey];
+      if(!rec)continue;
+      const compName=rec.componente||rec.subcategoria||'';
+      if(!compName)continue;
+      const src0=photos[0].startsWith('data:')?photos[0]:'data:image/jpeg;base64,'+photos[0];
+      if(!biPhotoMap['comp:'+compName])biPhotoMap['comp:'+compName]=src0;
+      if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
+      photos.forEach(raw=>{
+        const src=raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw;
+        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName});
+      });
+    }catch(e){}
+  }
+}
+
+// Photo tooltip
+function biShowTip(evt,compName){
+  const photo=biPhotoMap['comp:'+compName];
+  if(!photo)return;
+  const tip=document.getElementById('bi-photo-tip');
+  document.getElementById('bi-photo-tip-lbl').textContent=compName;
+  document.getElementById('bi-photo-tip-img').src=photo;
+  const sample=biFD.find(r=>(r.componente||r.subcategoria)===compName);
+  document.getElementById('bi-photo-tip-info').textContent=sample?`${sample.aerogerador} · ${sample.componente||''}`:''  ;
+  tip.style.display='block';
+  biPosTip(evt);
+}
+function biPosTip(evt){
+  const tip=document.getElementById('bi-photo-tip');
+  if(tip.style.display==='none')return;
+  const tw=260,th=220,vw=window.innerWidth,vh=window.innerHeight;
+  let x=evt.clientX+18,y=evt.clientY-60;
+  if(x+tw>vw-10)x=evt.clientX-tw-18;
+  if(y+th>vh-10)y=vh-th-10;
+  if(y<10)y=10;
+  tip.style.left=x+'px';tip.style.top=y+'px';
+}
+function biHideTip(){document.getElementById('bi-photo-tip').style.display='none';}
+document.addEventListener('mousemove',e=>{const t=document.getElementById('bi-photo-tip');if(t&&t.style.display!=='none')biPosTip(e);});
+
+// Carousel
+function biOpenCar(compName){
+  biHideTip();
+  const photos=biCompPhotosMap[compName];
+  if(!photos||!photos.length)return;
+  biCarPhotos=photos;biCarIdx=0;
+  document.getElementById('bi-car-name').textContent=compName;
+  document.getElementById('bi-car-sub').textContent=photos.length+' foto'+(photos.length>1?'s':'')+' · '+[...new Set(photos.map(p=>p.aerogerador))].join(', ');
+  document.getElementById('bi-carousel').style.display='flex';
+  biUpdateCar();
+}
+function biCloseCar(){document.getElementById('bi-carousel').style.display='none';}
+function biCarNav(dir){biCarIdx=(biCarIdx+dir+biCarPhotos.length)%biCarPhotos.length;biUpdateCar();}
+function biUpdateCar(){
+  const p=biCarPhotos[biCarIdx];
+  document.getElementById('bi-car-img').src=p.src;
+  const BADGE={'Ação Imediata':'background:rgba(255,61,61,0.2);color:#FF6B6B;border:1px solid rgba(255,61,61,0.4)','Defeito Grave':'background:rgba(255,157,0,0.2);color:#FFB340;border:1px solid rgba(255,157,0,0.4)','Defeito Ligeiro':'background:rgba(51,133,255,0.2);color:#7FB3FF;border:1px solid rgba(51,133,255,0.4)','Verificado':'background:rgba(0,229,160,0.15);color:#00E5A0;border:1px solid rgba(0,229,160,0.3)'};
+  const bs=BADGE[p.classificacao]||'';
+  document.getElementById('bi-car-info').innerHTML=`
+    <span style="font-size:12px;color:#8BA3C7;background:#152640;border:1px solid rgba(0,102,255,0.18);border-radius:6px;padding:3px 10px">💨 ${p.aerogerador}</span>
+    <span style="font-size:12px;border-radius:6px;padding:3px 10px;${bs}">${p.classificacao}</span>
+    ${p.falha?`<span style="font-size:12px;color:#4A6280;background:#152640;border:1px solid rgba(0,102,255,0.18);border-radius:6px;padding:3px 10px">⚠ ${p.falha}</span>`:''}`;
+  document.getElementById('bi-car-thumbs').innerHTML=biCarPhotos.map((ph,i)=>`<img src="${ph.src}" onclick="biCarIdx=${i};biUpdateCar()" style="width:64px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;border:2px solid ${i===biCarIdx?'#0066FF':'transparent'};opacity:${i===biCarIdx?'1':'0.5'};transition:all 0.15s">`).join('');
+  document.getElementById('bi-car-counter').textContent=(biCarIdx+1)+' / '+biCarPhotos.length;
+  document.getElementById('bi-car-prev').style.display=biCarPhotos.length>1?'flex':'none';
+  document.getElementById('bi-car-next').style.display=biCarPhotos.length>1?'flex':'none';
+}
+// Close carousel on backdrop
+document.addEventListener('click',e=>{if(e.target&&e.target.id==='bi-carousel')biCloseCar();});
+document.addEventListener('keydown',e=>{
+  const m=document.getElementById('bi-carousel');if(!m||m.style.display==='none')return;
+  if(e.key==='ArrowRight')biCarNav(1);if(e.key==='ArrowLeft')biCarNav(-1);if(e.key==='Escape')biCloseCar();
+});
+</script>
+
+
 </body>
 </html>
