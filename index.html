@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0000FF">
+    <meta name="theme-color" content="#0A1628">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Inspeções">
@@ -20,7 +20,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%);
+            background: #0F2440;
             min-height: 100vh;
             padding: 20px;
         }
@@ -30,12 +30,13 @@
             margin: 0 auto;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(0,102,255,0.15);
             overflow: hidden;
         }
 
         .header {
-            background: linear-gradient(135deg, #0000FF 0%, #0066FF 100%);
+            background: linear-gradient(135deg, #0F2440 0%, #0D2145 40%, #0047CC 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -7228,7 +7229,8 @@ const AEROGERADORES = [
       <div style="background:#0F1E35;border:1px solid rgba(0,102,255,0.45);border-radius:20px;padding:28px;max-width:600px;width:90%;position:relative;box-shadow:0 24px 80px rgba(0,0,0,0.7)">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
           <div>
-            <div id="bi-car-name" style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:4px"></div>
+            <div id="bi-car-name" style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:2px"></div>
+            <div id="bi-car-cat" style="font-size:11px;color:#4A6280;margin-bottom:4px;font-style:italic"></div>
             <div id="bi-car-sub" style="font-size:12px;color:#4A6280"></div>
           </div>
           <button onclick="biCloseCar()" style="background:#1C3050;border:1px solid rgba(0,102,255,0.18);color:#8BA3C7;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:18px;line-height:1;font-family:'DM Sans',sans-serif">×</button>
@@ -7245,8 +7247,7 @@ const AEROGERADORES = [
     </div>
     <!-- Filters -->
     <div class="bi-flt">
-      <div class="bi-fg"><label>Data inicial</label><input type="date" id="biDF"></div>
-      <div class="bi-fg"><label>Data final</label><input type="date" id="biDT"></div>
+      <div class="bi-fg"><label>Ano</label><select id="biAno"><option value="">Todos</option></select></div>
       <div class="bi-fg"><label>Parque Eólico</label><select id="biPQ" onchange="biOnParqueChange()"><option value="">Todos</option></select></div>
       <div class="bi-fg"><label>Sub-parque</label><select id="biSP" onchange="biOnSubparqueChange()"><option value="">Todos</option></select></div>
       <div class="bi-fg"><label>Categoria</label><select id="biCA"><option value="">Todas</option></select></div>
@@ -7410,10 +7411,15 @@ function biGetAll(){
   return d;
 }
 
-function biRefresh(){
+async function biRefresh(){
   const all=biGetAll();
-  // Load photos from IndexedDB
-  biLoadPhotos();
+  // Load photos from IndexedDB (await to ensure photos are ready before rendering)
+  await biLoadPhotos();
+  // Populate year filter
+  const anos=[...new Set(all.map(r=>(r.data||'').slice(0,4)).filter(a=>a&&a.length===4))].sort().reverse();
+  const anoSel=document.getElementById('biAno');const anoVal=anoSel.value;
+  anoSel.innerHTML='<option value="">Todos</option>'+anos.map(a=>`<option value="${a}">${a}</option>`).join('');
+  anoSel.value=anoVal;
   // Populate parque filter from AEROGERADORES
   const parques=[...new Set(AEROGERADORES.map(a=>a.parque))].sort();
   const pqSel=document.getElementById('biPQ');
@@ -7471,7 +7477,7 @@ function biToggleCls(btn){
 
 function biApply(allOverride){
   const all=allOverride||biGetAll();
-  const df=document.getElementById('biDF').value,dt=document.getElementById('biDT').value;
+  const ano=document.getElementById('biAno').value;
   const pq=document.getElementById('biPQ').value;
   const sp=document.getElementById('biSP').value,ca=document.getElementById('biCA').value;
   const tu=document.getElementById('biTU').value;
@@ -7486,7 +7492,7 @@ function biApply(allOverride){
     validTurbines=new Set(aeros.map(a=>a.codigo));
   }
   biFD=all.filter(r=>{
-    if(df&&r.data<df)return false;if(dt&&r.data>dt)return false;
+    if(ano&&!(r.data||'').startsWith(ano))return false;
     if(validTurbines&&!validTurbines.has(r.aerogerador))return false;
     if(ca&&r.categoria!==ca)return false;
     if(activeCls.length&&!activeCls.includes(r.classificacao))return false;
@@ -7497,7 +7503,7 @@ function biApply(allOverride){
 }
 
 function biReset(){
-  ['biDF','biDT','biPQ','biSP','biCA','biTU'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['biAno','biPQ','biSP','biCA','biTU'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // Clear classification toggle buttons
   document.querySelectorAll('.bi-cls-btn').forEach(b=>{b.className='bi-cls-btn';});
   biPopulateSubparques();
@@ -7679,7 +7685,7 @@ async function biLoadPhotos(){
       if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
       photos.forEach(raw=>{
         const src=raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw;
-        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName});
+        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName,categoria:rec.categoria||''});
       });
     }
   }catch(e){console.log('BI: Could not load photos from IndexedDB',e);}
@@ -7700,7 +7706,7 @@ async function biLoadPhotos(){
       if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
       photos.forEach(raw=>{
         const src=raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw;
-        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName});
+        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName,categoria:rec.categoria||''});
       });
     }catch(e){}
   }
@@ -7738,6 +7744,7 @@ function biOpenCar(compName){
   if(!photos||!photos.length)return;
   biCarPhotos=photos;biCarIdx=0;
   document.getElementById('bi-car-name').textContent=compName;
+  document.getElementById('bi-car-cat').textContent=photos[0].categoria||'';
   document.getElementById('bi-car-sub').textContent=photos.length+' foto'+(photos.length>1?'s':'')+' · '+[...new Set(photos.map(p=>p.aerogerador))].join(', ');
   document.getElementById('bi-carousel').style.display='flex';
   biUpdateCar();
@@ -7747,6 +7754,7 @@ function biCarNav(dir){biCarIdx=(biCarIdx+dir+biCarPhotos.length)%biCarPhotos.le
 function biUpdateCar(){
   const p=biCarPhotos[biCarIdx];
   document.getElementById('bi-car-img').src=p.src;
+  document.getElementById('bi-car-cat').textContent=p.categoria||'';
   const BADGE={'Ação Imediata':'background:rgba(255,61,61,0.2);color:#FF6B6B;border:1px solid rgba(255,61,61,0.4)','Defeito Grave':'background:rgba(255,157,0,0.2);color:#FFB340;border:1px solid rgba(255,157,0,0.4)','Defeito Ligeiro':'background:rgba(51,133,255,0.2);color:#7FB3FF;border:1px solid rgba(51,133,255,0.4)','Verificado':'background:rgba(0,229,160,0.15);color:#00E5A0;border:1px solid rgba(0,229,160,0.3)'};
   const bs=BADGE[p.classificacao]||'';
   document.getElementById('bi-car-info').innerHTML=`
