@@ -7153,7 +7153,7 @@ const AEROGERADORES = [
     align-items:center; justify-content:center; font-size:10px; font-weight:600;
     cursor:pointer; transition:transform 0.15s; border:1.5px solid transparent; }
   .bi-turb-cell:hover { transform:scale(1.08); }
-  .bi-turb-cell .tc-n { font-size:9px; opacity:0.7; margin-top:2px; }
+  .bi-turb-cell .tc-n { font-size:7px; opacity:0.7; margin-top:2px; word-break:break-all; text-align:center; line-height:1.2; }
   .bi-turb-cell .tc-c { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; }
   .tc-ok { background:rgba(0,229,160,0.1); border-color:rgba(0,229,160,0.3); color:#00E5A0; }
   .tc-lt { background:rgba(51,133,255,0.1); border-color:rgba(51,133,255,0.3); color:#3385FF; }
@@ -7350,7 +7350,7 @@ const AEROGERADORES = [
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
           <div>
             <div class="bi-card-t" style="margin-bottom:3px">Ranking de Piores Aerogeradores</div>
-            <div style="font-size:12px;color:#4A6280">Score = Imediata×4 + Grave×3 + Ligeiro×1</div>
+            <div style="font-size:12px;color:#4A6280;cursor:help" title="Fórmula do Score&#10;&#10;Ação Imediata × 4&#10;Defeito Grave    × 3&#10;Defeito Ligeiro  × 1&#10;Verificado       × 0&#10;&#10;Quanto maior o score, mais crítico o aerogerador.">Score = Imediata×4 + Grave×3 + Ligeiro×1 ℹ️</div>
           </div>
           <div style="display:flex;gap:6px;align-items:center">
             <span style="font-size:11px;color:#4A6280">Mostrar:</span>
@@ -7594,14 +7594,19 @@ function biChartFl(d){
 function biTurbMap(d){
   const c=document.getElementById('bTurbMap');c.innerHTML='';
   const ts={};d.forEach(r=>{const sv=BI_SEV[r.classificacao]||0;if(!ts[r.aerogerador]||sv>ts[r.aerogerador].sv)ts[r.aerogerador]={sv,cls:r.classificacao}});
-  const allT=[...new Set(biGetAll().map(r=>r.aerogerador).filter(Boolean))].sort();
-  // Also add known turbines from AEROGERADORES if available
+  // Usar filtros ativos do BI para determinar quais turbinas mostrar
+  const pq=document.getElementById('biPQ').value;
+  const sp=document.getElementById('biSP').value;
+  let allT;
   if(typeof AEROGERADORES!=='undefined'){
-    const parque=document.getElementById('parque')?.value;
-    const pMap={'coxilha_negra':'Coxilha Negra','entorno_2':'Entorno 2'};
-    const pn=pMap[parque]||'Coxilha Negra';
-    AEROGERADORES.filter(a=>a.parque===pn).forEach(a=>{if(!allT.includes(a.codigo))allT.push(a.codigo)});
+    let aeros=AEROGERADORES;
+    if(pq) aeros=aeros.filter(a=>a.parque===pq);
+    if(sp) aeros=aeros.filter(a=>a.sub_parque===sp);
+    allT=aeros.map(a=>a.codigo);
+    d.forEach(r=>{if(r.aerogerador&&!allT.includes(r.aerogerador))allT.push(r.aerogerador);});
     allT.sort();
+  } else {
+    allT=[...new Set(d.map(r=>r.aerogerador).filter(Boolean))].sort();
   }
   allT.forEach(t=>{
     const s=ts[t];const dc=d.filter(r=>r.aerogerador===t&&r.classificacao!=='Verificado').length;
@@ -7609,7 +7614,7 @@ function biTurbMap(d){
     if(s){if(s.cls==='Ação Imediata')cls='tc-dg';else if(s.cls==='Defeito Grave')cls='tc-wr';else if(s.cls==='Defeito Ligeiro')cls='tc-lt';else cls='tc-ok';}
     const el=document.createElement('div');el.className=`bi-turb-cell ${cls}`;
     el.title=s?`${t}\n${s.cls}\n${dc} defeitos`:`${t}\nNão inspecionado`;
-    el.innerHTML=`<span class="tc-c">${s?(dc||'✓'):'–'}</span><span class="tc-n">${t.replace(/ECN|ECSE|EGAL|ECIN/g,'')}</span>`;
+    el.innerHTML=`<span class="tc-c">${s?(dc||'✓'):'–'}</span><span class="tc-n">${t}</span>`;
     c.appendChild(el);
   });
 }
