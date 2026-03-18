@@ -720,7 +720,7 @@
                         <option value="entorno_2">Parque Eólico Entorno 2</option>
                         <option value="cerro_chato" disabled style="color:#999;">Parque Eólico Cerro Chato (em breve)</option>
                         <option value="ibirapuita">Parque Eólico Ibirapuitã</option>
-                        <option value="pindai" disabled style="color:#999;">Parque Eólico Pindaí (em breve)</option>
+                        <option value="gpexpan">Complexo Eólico GPEXPAN</option>
                     </select>
                 </div>
                 
@@ -4108,6 +4108,340 @@ const ESTRUTURA_IBIRAPUITA = {
 };
 
 // Lista de aerogeradores
+// Estrutura de inspeção — Complexo Eólico GPEXPAN
+const ESTRUTURA_GPEXPAN = {
+  "classificacoes": ["Verificado", "Defeito Ligeiro", "Defeito Grave", "Ação Imediata"],
+  "categorias": {
+    "Exterior e Acesso": {
+      "Virola Externa": {
+        "Proteção plástica dos parafusos [bolt caps]": { "classificacoes": [], "falhas": ["Tampa ausente", "Tampa danificada", "Fixação solta"] },
+        "Parafusos [anchor bolts]": { "classificacoes": [], "falhas": ["Parafuso solto", "Corrosão", "Rosca danificada", "Parafuso ausente"] },
+        "Fundação": { "classificacoes": [], "falhas": ["Trinca no concreto", "Afundamento", "Exposição de armadura", "Infiltração"] }
+      },
+      "Aterramento e SPDA": {
+        "Tampas de inspeção de aterramento": { "classificacoes": [], "falhas": ["Tampa ausente", "Tampa danificada", "Fixação solta"] }
+      },
+      "Carenagem": {
+        "PAD e acesso ao aerogerador": { "classificacoes": [], "falhas": ["Desnível do piso", "Trinca", "Obstáculo no acesso"] },
+        "Escada externa": { "classificacoes": [], "falhas": ["Degrau danificado", "Fixação solta", "Corrosão"] },
+        "Porta lado externo": { "classificacoes": [], "falhas": ["Dobradiça danificada", "Fechamento inadequado", "Vedação comprometida"] },
+        "Porta lado interno": { "classificacoes": [], "falhas": ["Dobradiça danificada", "Fechamento inadequado", "Vedação comprometida"] }
+      },
+      "Saúde e Segurança": {
+        "Sinalizações/identificação da turbina": { "classificacoes": [], "falhas": ["Sinalização ausente", "Sinalização ilegível", "Fixação solta"] }
+      }
+    },
+    "Ground e Virola Interna": {
+      "Torre Interior": {
+        "Interior da torre": { "classificacoes": [], "falhas": ["Corrosão", "Sujeira excessiva", "Componentes soltos"] },
+        "Fundação interior": { "classificacoes": [], "falhas": ["Trinca", "Infiltração", "Acúmulo de água"] },
+        "Plataforma": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação estrutural"] }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": { "classificacoes": [], "falhas": ["Isolamento danificado", "Conexão solta", "Aquecimento anormal", "Cabo rompido"] },
+        "Gabinetes": { "classificacoes": [], "falhas": ["Gabinete danificado", "Porta sem vedação", "Fixação solta"] },
+        "Cubículo switchgear": { "classificacoes": [], "falhas": ["Corrosão", "Vazamento de gás", "Indicador de pressão com falha"] },
+        "Tomadas auxiliares da torre": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] }
+      },
+      "Aterramento e SPDA": {
+        "Aterramentos": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] }
+      },
+      "Elevador": {
+        "Elevador de serviço": { "classificacoes": [], "falhas": ["Estrutura danificada", "Fixação solta", "Corrosão"] },
+        "Funcionamento do elevador": { "classificacoes": [], "falhas": ["Funcionamento irregular", "Ruído anormal", "Parada inesperada"] },
+        "Painel elétrico do elevador": { "classificacoes": [], "falhas": ["Componentes danificados", "Conexões soltas", "Aquecimento anormal"] }
+      },
+      "Saúde e Segurança": {
+        "Iluminação convencional e de emergência": { "classificacoes": [], "falhas": ["Lâmpada queimada", "Luminária danificada", "Fiação exposta"] },
+        "Linha de vida": { "classificacoes": [], "falhas": ["Cabo danificado", "Fixação solta", "Corrosão"] },
+        "Escada": { "classificacoes": [], "falhas": ["Degrau danificado", "Fixação solta", "Corrosão"] },
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] }
+      }
+    },
+    "Plataforma 2": {
+      "Carenagem": {
+        "Plataforma": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] },
+        "Escotilha de acesso e manobra": { "classificacoes": [], "falhas": ["Escotilha danificada", "Dobradiça com falha", "Travamento inadequado"] },
+        "Guarda-corpo": { "classificacoes": [], "falhas": ["Guarda-corpo danificado", "Fixação solta", "Corrosão"] }
+      },
+      "Torre": {
+        "Interior da torre": { "classificacoes": [], "falhas": ["Corrosão", "Sujeira excessiva", "Componentes soltos"] },
+        "Flange": { "classificacoes": [], "falhas": ["Corrosão", "Desalinhamento", "Danos estruturais"] },
+        "Parafusos do flange": { "classificacoes": [], "falhas": ["Parafuso solto", "Corrosão", "Parafuso ausente"] }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": { "classificacoes": [], "falhas": ["Isolamento danificado", "Conexão solta", "Aquecimento anormal", "Cabo rompido"] },
+        "Tomadas auxiliares": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do flange": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] }
+      },
+      "Saúde e Segurança": {
+        "Iluminação convencional e de emergência": { "classificacoes": [], "falhas": ["Lâmpada queimada", "Luminária danificada", "Fiação exposta"] },
+        "Linha de vida": { "classificacoes": [], "falhas": ["Cabo danificado", "Fixação solta", "Corrosão"] },
+        "Escada": { "classificacoes": [], "falhas": ["Degrau danificado", "Fixação solta", "Corrosão"] },
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] }
+      }
+    },
+    "Plataforma 3": {
+      "Carenagem": {
+        "Plataforma": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] },
+        "Escotilha de acesso e manobra": { "classificacoes": [], "falhas": ["Escotilha danificada", "Dobradiça com falha", "Travamento inadequado"] }
+      },
+      "Torre": {
+        "Interior da torre": { "classificacoes": [], "falhas": ["Corrosão", "Sujeira excessiva", "Componentes soltos"] },
+        "Flange": { "classificacoes": [], "falhas": ["Corrosão", "Desalinhamento", "Danos estruturais"] },
+        "Parafusos do flange": { "classificacoes": [], "falhas": ["Parafuso solto", "Corrosão", "Parafuso ausente"] }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": { "classificacoes": [], "falhas": ["Isolamento danificado", "Conexão solta", "Aquecimento anormal", "Cabo rompido"] },
+        "Tomadas auxiliares": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do flange": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] }
+      },
+      "Saúde e Segurança": {
+        "Iluminação convencional e de emergência": { "classificacoes": [], "falhas": ["Lâmpada queimada", "Luminária danificada", "Fiação exposta"] },
+        "Linha de vida": { "classificacoes": [], "falhas": ["Cabo danificado", "Fixação solta", "Corrosão"] },
+        "Escada": { "classificacoes": [], "falhas": ["Degrau danificado", "Fixação solta", "Corrosão"] },
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] }
+      }
+    },
+    "Plataforma do Elevador": {
+      "Carenagem": {
+        "Plataforma": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] },
+        "Escotilha de acesso e manobra": { "classificacoes": [], "falhas": ["Escotilha danificada", "Dobradiça com falha", "Travamento inadequado"] },
+        "Viga de sustentação do elevador": { "classificacoes": [], "falhas": ["Estrutura deformada", "Trinca", "Corrosão"] },
+        "Cabos guia e de tração do elevador": { "classificacoes": [], "falhas": ["Cabo desgastado", "Cabo desalinhado", "Fixação solta"] },
+        "Slingas de backup": { "classificacoes": [], "falhas": ["Slinga danificada", "Desgaste", "Fixação solta"] }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": { "classificacoes": [], "falhas": ["Isolamento danificado", "Conexão solta", "Aquecimento anormal", "Cabo rompido"] },
+        "Tomadas auxiliares": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] }
+      }
+    },
+    "Torre Seção do Yaw / Yaw Deck": {
+      "Carenagem": {
+        "Plataforma": { "classificacoes": [], "falhas": ["Estrutura deformada", "Corrosão", "Fixação solta"] },
+        "Escotilha de acesso e manobra": { "classificacoes": [], "falhas": ["Escotilha danificada", "Dobradiça com falha", "Travamento inadequado"] },
+        "Guarda-corpo": { "classificacoes": [], "falhas": ["Guarda-corpo danificado", "Fixação solta", "Corrosão"] }
+      },
+      "Elétrico": {
+        "Circuitos de potência/controle/comunicação": { "classificacoes": [], "falhas": ["Isolamento danificado", "Conexão solta", "Aquecimento anormal", "Cabo rompido"] },
+        "Tomadas auxiliares": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] }
+      },
+      "Yaw": {
+        "Mordaças": { "classificacoes": [], "falhas": ["Desgaste excessivo", "Fixação solta", "Contaminação por graxa"] },
+        "Pista deslizante": { "classificacoes": [], "falhas": ["Desgaste da pista", "Contaminação por óleo", "Danos mecânicos"] },
+        "Anel de engrenagens e pinhões": { "classificacoes": [], "falhas": ["Desgaste de engrenagem", "Falta de lubrificação", "Danos mecânicos"] },
+        "Sensor de conta-giros": { "classificacoes": [], "falhas": ["Sensor sem sinal", "Cabo danificado", "Fixação solta"] },
+        "Tramo de aço": { "classificacoes": [], "falhas": ["Deformação estrutural", "Corrosão", "Fixação solta"] }
+      },
+      "Motor-Redutor Yaw": {
+        "Placa de identificação": { "classificacoes": [], "falhas": ["Placa ilegível", "Placa ausente", "Fixação solta"] },
+        "Conjunto frontal esquerdo": { "classificacoes": [], "falhas": ["Ruído anormal", "Vazamento de óleo", "Fixação solta"] },
+        "Conjunto frontal direito": { "classificacoes": [], "falhas": ["Ruído anormal", "Vazamento de óleo", "Fixação solta"] },
+        "Conjunto traseiro esquerdo": { "classificacoes": [], "falhas": ["Ruído anormal", "Vazamento de óleo", "Fixação solta"] },
+        "Conjunto traseiro direito": { "classificacoes": [], "falhas": ["Ruído anormal", "Vazamento de óleo", "Fixação solta"] }
+      },
+      "Saúde e Segurança": {
+        "Iluminação e iluminação de emergência": { "classificacoes": [], "falhas": ["Lâmpada queimada", "Luminária danificada", "Fiação exposta"] }
+      }
+    },
+    "Drive-Train": {
+      "Mancal Principal": {
+        "Placa de identificação": { "classificacoes": [], "falhas": ["Placa ausente", "Placa ilegível", "Fixação solta"] },
+        "Rotor [mainshaft]": { "classificacoes": [], "falhas": ["Vibração anormal", "Ruído anormal", "Desalinhamento"] },
+        "Inspeção auditiva rotor 500rpm": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Eixo lento": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Mancal dianteiro": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Mancal traseiro": { "classificacoes": [], "falhas": ["Vazamento de graxa", "Nível baixo de óleo", "Contaminação"] },
+        "Coletores de óleo e graxa": { "classificacoes": [], "falhas": ["Óleo ou graxa em excesso", "Coletor danificado", "Obstrução", "Fixação solta"] }
+      },
+      "Acoplamento": {
+        "Placa de identificação": { "classificacoes": [], "falhas": ["Placa ausente", "Placa ilegível", "Fixação solta"] },
+        "Acoplamento": { "classificacoes": [], "falhas": ["Desgaste", "Desalinhamento", "Sinais de deslizamento", "Rachaduras", "Folgas", "Fixação solta"] },
+        "Parafusos e cobertura elementos rotativos": { "classificacoes": [], "falhas": ["Parafusos soltos", "Proteção ausente", "Fixação solta"] },
+        "Chapas [pack plates]": { "classificacoes": [], "falhas": ["Desgaste das chapas", "Desalinhamento", "Vibração"] }
+      },
+      "Freio Hidráulico": {
+        "Freio": { "classificacoes": [], "falhas": ["Vazamento de óleo", "Pressão insuficiente", "Funcionamento irregular"] },
+        "Disco de alta velocidade HSS": { "classificacoes": [], "falhas": ["Desgaste do disco", "Contaminação por óleo", "Danos mecânicos"] }
+      }
+    },
+    "Grupo Hidráulico": {
+      "Mangueiras e Conexões": {
+        "Óleo hidráulico": { "classificacoes": [], "falhas": ["Nível baixo de óleo", "Contaminação", "Vazamento"] },
+        "Conexões das mangueiras e válvulas": { "classificacoes": [], "falhas": ["Vazamento hidráulico", "Conexões soltas", "Mangueira danificada"] },
+        "Acumuladores": { "classificacoes": [], "falhas": ["Pressão inadequada", "Vazamento", "Fixação solta"] },
+        "Filtros": { "classificacoes": [], "falhas": ["Filtro saturado", "Contaminação", "Fixação solta"] },
+        "Radiadores": { "classificacoes": [], "falhas": ["Ventilação insuficiente", "Sujeira excessiva", "Fixação solta"] }
+      },
+      "Elétrico e Instrumentação": {
+        "Motor elétrico": { "classificacoes": [], "falhas": ["Motor inoperante", "Ruído anormal", "Aquecimento"] },
+        "Caixa de borner": { "classificacoes": [], "falhas": ["Conexões soltas", "Corrosão", "Cabo danificado"] },
+        "Pressostatos": { "classificacoes": [], "falhas": ["Pressostato com falha", "Indicação incorreta", "Fixação solta"] },
+        "Conexões elétricas": { "classificacoes": [], "falhas": ["Conexões soltas", "Cabo danificado", "Aquecimento"] }
+      }
+    },
+    "Gerador": {
+      "Gerador": {
+        "Placa de identificação": { "classificacoes": [], "falhas": ["Placa ausente", "Placa ilegível", "Fixação solta"] },
+        "Carcaça do gerador": { "classificacoes": [], "falhas": ["Carcaça danificada", "Corrosão", "Fixação solta"] },
+        "Rolamentos do gerador": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Aquecimento", "Lubrificação insuficiente", "Vazamento", "Coletor de graxa sujo"] },
+        "Sistema de ventilação": { "classificacoes": [], "falhas": ["Ventilação obstruída", "Ventilador com falha", "Sujeira excessiva"] },
+        "Cabos do estator": { "classificacoes": [], "falhas": ["Cabo danificado", "Isolamento comprometido", "Conexões soltas"] },
+        "Cabos do rotor": { "classificacoes": [], "falhas": ["Cabo danificado", "Isolamento comprometido", "Conexões soltas"] },
+        "Coxins e suportes de fixação": { "classificacoes": [], "falhas": ["Coxim danificado", "Fixação solta", "Desgaste"] }
+      },
+      "Corpo de Anilhos": {
+        "Pastilhas e porta-escovas": { "classificacoes": [], "falhas": ["Escovas desgastadas", "Porta-escovas danificado", "Faíscamento"] },
+        "Compartimento interno/trilho": { "classificacoes": [], "falhas": ["Sujeira excessiva", "Componentes soltos", "Corrosão"] },
+        "Compartimento externo/sinalização": { "classificacoes": [], "falhas": ["Tampa danificada", "Sinalização ilegível", "Fixação solta"] }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do gerador": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] }
+      }
+    },
+    "Multiplicadora (Gearbox)": {
+      "Multiplicador": {
+        "Placa de identificação": { "classificacoes": [], "falhas": ["Placa ausente", "Placa ilegível", "Fixação solta"] },
+        "Condições gerais da multiplicadora": { "classificacoes": [], "falhas": ["Vazamento de óleo", "Ruído anormal", "Vibração"] },
+        "Mancais do gearbox": { "classificacoes": [], "falhas": ["Ruído anormal", "Desgaste", "Aquecimento"] },
+        "Óleo": { "classificacoes": [], "falhas": ["Nível baixo de óleo", "Contaminação", "Vazamento"] },
+        "Sistema de bombeamento e filtragem": { "classificacoes": [], "falhas": ["Bomba inoperante", "Vazamento", "Pressão insuficiente"] },
+        "Radiadores de resfriamento": { "classificacoes": [], "falhas": ["Ventilação insuficiente", "Radiador obstruído", "Vazamento"] },
+        "Filtro dessecante/sílica gel": { "classificacoes": [], "falhas": ["Filtro saturado", "Umidade excessiva", "Fixação solta"] },
+        "Tampa de inspeção": { "classificacoes": [], "falhas": ["Tampa danificada", "Vedação comprometida", "Fixação solta"] },
+        "Rolamento dianteiro LSS": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Rolamento traseiro HSS": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Sensores de condição": { "classificacoes": [], "falhas": ["Sensor com falha", "Cabo danificado", "Fixação solta"] },
+        "Vareta magnética": { "classificacoes": [], "falhas": ["Partículas metálicas excessivas", "Ímã saturado", "Fixação solta"] }
+      },
+      "Junta Rotativa": {
+        "Conexões hidráulicas": { "classificacoes": [], "falhas": ["Vazamento hidráulico", "Conexões soltas", "Mangueira danificada"] },
+        "Compartimento elétrico": { "classificacoes": [], "falhas": ["Conexões soltas", "Cabo danificado", "Aquecimento"] }
+      }
+    },
+    "Sala do Trafo": {
+      "Carenagem": {
+        "Porta de acesso": { "classificacoes": [], "falhas": ["Porta danificada", "Fechamento inadequado", "Corrosão"] },
+        "Plataforma": { "classificacoes": [], "falhas": ["Estrutura danificada", "Fixação solta", "Corrosão"] },
+        "Ventiladores": { "classificacoes": [], "falhas": ["Ventilador com falha", "Ruído anormal", "Fixação solta"] },
+        "Braço de sustentação": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] },
+        "Manta antichama": { "classificacoes": [], "falhas": ["Dano ou desgaste", "Fixação solta", "Contaminação"] },
+        "Filtro de entrada de ar": { "classificacoes": [], "falhas": ["Filtro saturado", "Obstrução", "Fixação solta"] }
+      },
+      "Elétrico": {
+        "Circuitos de potência": { "classificacoes": [], "falhas": ["Cabo danificado", "Conexões soltas", "Aquecimento"] },
+        "Muflas e buchas": { "classificacoes": [], "falhas": ["Isolação comprometida", "Vazamento", "Danos mecânicos"] },
+        "Trafo auxiliar": { "classificacoes": [], "falhas": ["Funcionamento irregular", "Ruído anormal", "Aquecimento"] },
+        "Fusíveis": { "classificacoes": [], "falhas": ["Fusível queimado", "Fixação solta", "Contato ruim"] }
+      },
+      "Saúde e Segurança": {
+        "Sinalizações de advertência e segurança": { "classificacoes": [], "falhas": ["Sinalização ausente", "Sinalização ilegível", "Fixação solta"] }
+      }
+    },
+    "Nacelle Interior": {
+      "Carenagem": {
+        "Carenagem interior": { "classificacoes": [], "falhas": ["Dano estrutural", "Fixação solta", "Corrosão"] },
+        "Chassis": { "classificacoes": [], "falhas": ["Deformação", "Trincas", "Fixação solta"] }
+      },
+      "Elétrico": {
+        "Top box": { "classificacoes": [], "falhas": ["Gabinete danificado", "Porta sem vedação", "Fixação solta"] },
+        "Painel do conversor": { "classificacoes": [], "falhas": ["Componentes queimados", "Conexões soltas", "Aquecimento anormal"] },
+        "Tomadas auxiliares da nacele": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] }
+      },
+      "Slip de Comunicação": {
+        "Junta rotativa": { "classificacoes": [], "falhas": ["Conexão rotativa com falha", "Cabo danificado", "Fixação solta"] }
+      },
+      "Testes Funcionais": {
+        "Ventilador do aerogerador": { "classificacoes": [], "falhas": ["Funcionamento irregular", "Ruído anormal", "Vibração"] },
+        "Ventiladores arrefecimento gearbox e conversor": { "classificacoes": [], "falhas": ["Ventilador com falha", "Sujeira excessiva", "Ruído anormal"] },
+        "Bomba de óleo do gearbox": { "classificacoes": [], "falhas": ["Bomba inoperante", "Vazamento", "Ruído anormal"] },
+        "Sistema de pitch pás 1, 2 e 3": { "classificacoes": [], "falhas": ["Falha de acionamento", "Sensor com falha", "Funcionamento irregular"] },
+        "Giro do aerogerador 500rpm": { "classificacoes": [], "falhas": ["Vibração anormal", "Ruído anormal", "Funcionamento irregular"] }
+      },
+      "Sistema de Elevação de Cargas": {
+        "Guincho": { "classificacoes": [], "falhas": ["Guincho danificado", "Cabo desgastado", "Fixação solta"] },
+        "Escotilha de manobra da nacele": { "classificacoes": [], "falhas": ["Escotilha danificada", "Travamento inadequado", "Fixação solta"] }
+      },
+      "Saúde e Segurança": {
+        "Sinalizações de advertência e segurança": { "classificacoes": [], "falhas": ["Sinalização ausente", "Sinalização ilegível", "Fixação solta"] },
+        "Iluminação e iluminação de emergência": { "classificacoes": [], "falhas": ["Lâmpada queimada", "Luminária danificada", "Fiação exposta"] },
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação inadequada", "Corrosão", "Deformação"] },
+        "Kit resgate/evacuação": { "classificacoes": [], "falhas": ["Equipamento ausente", "Validade vencida", "Fixação solta"] },
+        "Extintores de incêndio": { "classificacoes": [], "falhas": ["Extintor vencido", "Pressão baixa", "Fixação solta"] },
+        "Sensor de fumaça da nacele": { "classificacoes": [], "falhas": ["Sensor com falha", "Sujeira excessiva", "Fixação solta"] }
+      }
+    },
+    "Nacelle Exterior": {
+      "Carenagem": {
+        "Carenagem externa": { "classificacoes": [], "falhas": ["Dano estrutural", "Corrosão", "Fixação solta"] },
+        "Escotilha de acesso e ventilação": { "classificacoes": [], "falhas": ["Escotilha danificada", "Vedação comprometida", "Fixação solta"] },
+        "Sensores meteorológicos": { "classificacoes": [], "falhas": ["Sensor danificado", "Fixação solta", "Cabo danificado"] }
+      },
+      "Saúde e Segurança": {
+        "Luzes de sinalização/aviação": { "classificacoes": [], "falhas": ["Luz inoperante", "Fixação solta", "Vedação comprometida"] },
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação inadequada", "Corrosão", "Deformação"] }
+      }
+    },
+    "Hub Externo e Pás": {
+      "Carenagem": {
+        "Carenagem": { "classificacoes": [], "falhas": ["Dano estrutural", "Fixação solta", "Corrosão"] },
+        "Suporte": { "classificacoes": [], "falhas": ["Fixação solta", "Corrosão", "Deformação"] },
+        "Martelinhos": { "classificacoes": [], "falhas": ["Desgaste", "Fixação solta", "Danos mecânicos"] },
+        "Plataforma Nose Cone": { "classificacoes": [], "falhas": ["Dano estrutural", "Fixação solta", "Corrosão"] }
+      },
+      "Elétrico": {
+        "Gabinetes do hub": { "classificacoes": [], "falhas": ["Gabinete danificado", "Porta sem vedação", "Fixação solta"] }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do hub externo": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] }
+      },
+      "Saúde e Segurança": {
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação inadequada", "Corrosão", "Deformação"] }
+      },
+      "Pás - Lado Interno": {
+        "Condição geral das pás": { "classificacoes": [], "falhas": ["Delaminação", "Trinca", "Danos estruturais"] },
+        "Redutora do pitch": { "classificacoes": [], "falhas": ["Ruído anormal", "Vazamento", "Fixação solta"] },
+        "Caixa do pitch": { "classificacoes": [], "falhas": ["Fixação solta", "Desgaste", "Danos mecânicos"] },
+        "Rolamentos do pitch": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Conexão de aterramento da pá": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] },
+        "Conexão pá-adaptador": { "classificacoes": [], "falhas": ["Fixação solta", "Desalinhamento", "Danos mecânicos"] },
+        "Conexão adaptador-rotor": { "classificacoes": [], "falhas": ["Fixação solta", "Desalinhamento", "Danos mecânicos"] }
+      }
+    },
+    "Hub Interno": {
+      "Carenagem": {
+        "Carenagem interna": { "classificacoes": [], "falhas": ["Dano estrutural", "Fixação solta", "Corrosão"] },
+        "Tampa de PIN": { "classificacoes": [], "falhas": ["Tampa danificada", "Fixação solta", "Vedação comprometida"] },
+        "Escotilha de acesso às pás": { "classificacoes": [], "falhas": ["Escotilha danificada", "Travamento inadequado", "Fixação solta"] }
+      },
+      "Elétrico": {
+        "Sensor de Balluf": { "classificacoes": [], "falhas": ["Sensor com falha", "Cabo danificado", "Fixação solta"] },
+        "Tomadas auxiliares": { "classificacoes": [], "falhas": ["Tomada danificada", "Fixação solta", "Falta de energia"] },
+        "Gabinetes do hub": { "classificacoes": [], "falhas": ["Gabinete danificado", "Porta sem vedação", "Fixação solta"] }
+      },
+      "Pitch": {
+        "Rolamentos do pitch externo e interno": { "classificacoes": [], "falhas": ["Ruído anormal", "Vibração", "Desgaste"] },
+        "Cilindros de acionamento do pitch": { "classificacoes": [], "falhas": ["Vazamento hidráulico", "Fixação solta", "Funcionamento irregular"] },
+        "Rótula": { "classificacoes": [], "falhas": ["Desgaste", "Folga excessiva", "Danos mecânicos"] },
+        "Acumuladores": { "classificacoes": [], "falhas": ["Pressão inadequada", "Vazamento", "Fixação solta"] },
+        "Conexões hidráulicas": { "classificacoes": [], "falhas": ["Vazamento hidráulico", "Conexões soltas", "Mangueira danificada"] },
+        "Bloco de válvulas e atuadores": { "classificacoes": [], "falhas": ["Válvula com falha", "Vazamento", "Funcionamento irregular"] }
+      },
+      "Saúde e Segurança": {
+        "Iluminação e iluminação de emergência": { "classificacoes": [], "falhas": ["Lâmpada queimada", "Luminária danificada", "Fiação exposta"] },
+        "Pontos de ancoragem": { "classificacoes": [], "falhas": ["Fixação inadequada", "Corrosão", "Deformação"] }
+      },
+      "Aterramento e SPDA": {
+        "Aterramento do hub interno": { "classificacoes": [], "falhas": ["Conexão solta", "Corrosão", "Cabo danificado"] }
+      }
+    }
+  }
+};
+
 const AEROGERADORES = [
   {
     "parque": "Coxilha Negra",
@@ -4510,7 +4844,63 @@ const AEROGERADORES = [
   { "parque": "Ibirapuitã", "sub_parque": "Ibirapuitã", "codigo": "IBI-10" },
   { "parque": "Ibirapuitã", "sub_parque": "Ibirapuitã", "codigo": "IBI-11" },
   { "parque": "Ibirapuitã", "sub_parque": "Ibirapuitã", "codigo": "IBI-12" },
-  { "parque": "Ibirapuitã", "sub_parque": "Ibirapuitã", "codigo": "IBI-13" }
+  { "parque": "Ibirapuitã", "sub_parque": "Ibirapuitã", "codigo": "IBI-13" },
+  // Complexo Eólico GPEXPAN (54 aeros)
+  { "parque": "GPEXPAN", "sub_parque": "Corrupião 3", "codigo": "MA0202" },
+  { "parque": "GPEXPAN", "sub_parque": "Corrupião 3", "codigo": "MA0203" },
+  { "parque": "GPEXPAN", "sub_parque": "Corrupião 3", "codigo": "MA0204" },
+  { "parque": "GPEXPAN", "sub_parque": "Corrupião 3", "codigo": "MA0205" },
+  { "parque": "GPEXPAN", "sub_parque": "Corrupião 3", "codigo": "MA0206" },
+  { "parque": "GPEXPAN", "sub_parque": "Carcará 3", "codigo": "MA0207" },
+  { "parque": "GPEXPAN", "sub_parque": "Carcará 3", "codigo": "MA0208" },
+  { "parque": "GPEXPAN", "sub_parque": "Carcará 3", "codigo": "MA0209" },
+  { "parque": "GPEXPAN", "sub_parque": "Carcará 3", "codigo": "MA0210" },
+  { "parque": "GPEXPAN", "sub_parque": "Carcará 3", "codigo": "MA0211" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 3", "codigo": "MA0408" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 3", "codigo": "MA0409" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 3", "codigo": "MA0410" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 3", "codigo": "MA0501" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 3", "codigo": "MA0502" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 2", "codigo": "MA0503" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 2", "codigo": "MA0504" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 2", "codigo": "MA0505" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 2", "codigo": "MA0506" },
+  { "parque": "GPEXPAN", "sub_parque": "Catitu 2", "codigo": "MA0507" },
+  { "parque": "GPEXPAN", "sub_parque": "Angical 2", "codigo": "MA1706" },
+  { "parque": "GPEXPAN", "sub_parque": "Angical 2", "codigo": "MA1707" },
+  { "parque": "GPEXPAN", "sub_parque": "Angical 2", "codigo": "MA1708" },
+  { "parque": "GPEXPAN", "sub_parque": "Angical 2", "codigo": "MA1709" },
+  { "parque": "GPEXPAN", "sub_parque": "Angical 2", "codigo": "MA1710" },
+  { "parque": "GPEXPAN", "sub_parque": "Acauã", "codigo": "MA1806" },
+  { "parque": "GPEXPAN", "sub_parque": "Acauã", "codigo": "MA1808" },
+  { "parque": "GPEXPAN", "sub_parque": "Acauã", "codigo": "MA1901" },
+  { "parque": "GPEXPAN", "sub_parque": "Arapapá", "codigo": "MA0809" },
+  { "parque": "GPEXPAN", "sub_parque": "Arapapá", "codigo": "MA0901" },
+  { "parque": "GPEXPAN", "sub_parque": "Teiú 2", "codigo": "MA0906" },
+  { "parque": "GPEXPAN", "sub_parque": "Teiú 2", "codigo": "MA0907" },
+  { "parque": "GPEXPAN", "sub_parque": "Teiú 2", "codigo": "MA0908" },
+  { "parque": "GPEXPAN", "sub_parque": "Teiú 2", "codigo": "MA0909" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2102" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2103" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2104" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2105" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2106" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2107" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2204" },
+  { "parque": "GPEXPAN", "sub_parque": "Tamanduá Mirim 2", "codigo": "MA2205" },
+  { "parque": "GPEXPAN", "sub_parque": "Papagaio", "codigo": "MA1205" },
+  { "parque": "GPEXPAN", "sub_parque": "Papagaio", "codigo": "MA1207" },
+  { "parque": "GPEXPAN", "sub_parque": "Papagaio", "codigo": "MA1208" },
+  { "parque": "GPEXPAN", "sub_parque": "Papagaio", "codigo": "MA1209" },
+  { "parque": "GPEXPAN", "sub_parque": "Papagaio", "codigo": "MA1210" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1301" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1302" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1303" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1304" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1305" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1306" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1307" },
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1308" }
 ];
 
         // Estado da aplicação
@@ -4793,7 +5183,7 @@ const AEROGERADORES = [
 
         function loadAerogeradores() {
             const parque = document.getElementById('parque').value;
-            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã' };
+            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã', 'gpexpan': 'GPEXPAN' };
             const parqueNome = parqueMap[parque] || 'Coxilha Negra';
             const select = document.getElementById('aerogerador');
             select.innerHTML = '<option value="">Selecione o aerogerador...</option>';
@@ -4921,6 +5311,7 @@ const AEROGERADORES = [
             const parque = document.getElementById('parque').value;
             if (parque === 'entorno_2') return ESTRUTURA_ENTORNO2;
             if (parque === 'ibirapuita') return ESTRUTURA_IBIRAPUITA;
+            if (parque === 'gpexpan') return ESTRUTURA_GPEXPAN;
             return ESTRUTURA;
         }
 
@@ -5870,7 +6261,7 @@ const AEROGERADORES = [
         
         function updateParqueProgress() {
             const parque = document.getElementById('parque').value;
-            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã' };
+            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã', 'gpexpan': 'GPEXPAN' };
             const parqueNome = parqueMap[parque] || 'Coxilha Negra';
             const aerosFiltrados = AEROGERADORES.filter(a => a.parque === parqueNome);
             let totalAeros = aerosFiltrados.length;
@@ -7882,10 +8273,17 @@ function biChartCat(d){
 }
 
 function biChartSP(d){
-  biDC('sp');const allT=[...new Set(d.map(r=>r.aerogerador).filter(Boolean))];
-  const parks=[...new Set(allT.map(t=>t.replace(/-\d+$/,'')))].sort();if(!parks.length)return;
+  biDC('sp');
+  // Map aerogerador -> sub_parque using AEROGERADORES
+  const spMap={};if(typeof AEROGERADORES!=='undefined')AEROGERADORES.forEach(a=>{spMap[a.codigo]=a.sub_parque;});
+  const pq=document.getElementById('biPQ').value;
+  const sp=document.getElementById('biSP').value;
+  let aeros=typeof AEROGERADORES!=='undefined'?AEROGERADORES:[];
+  if(pq)aeros=aeros.filter(a=>a.parque===pq);
+  if(sp)aeros=aeros.filter(a=>a.sub_parque===sp);
+  const parks=[...new Set(aeros.map(a=>a.sub_parque))].sort();if(!parks.length)return;
   const cls=['Verificado','Defeito Ligeiro','Defeito Grave','Ação Imediata'];
-  biCharts.sp=new Chart(document.getElementById('bChSP'),{type:'bar',data:{labels:parks,datasets:cls.map(c=>({label:c,data:parks.map(p=>d.filter(r=>r.aerogerador.startsWith(p)&&r.classificacao===c).length),backgroundColor:BI_COL[c],borderRadius:4}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BA3C7'}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
+  biCharts.sp=new Chart(document.getElementById('bChSP'),{type:'bar',data:{labels:parks,datasets:cls.map(c=>({label:c,data:parks.map(p=>d.filter(r=>(spMap[r.aerogerador]||'')=== p&&r.classificacao===c).length),backgroundColor:BI_COL[c],borderRadius:4}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BA3C7',font:{size:10},maxRotation:45}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
 }
 
 function biChartFl(d){
@@ -8003,8 +8401,9 @@ function biEvolucao(d){
   }
 
   let entities;
+  const spMap={};if(typeof AEROGERADORES!=='undefined')AEROGERADORES.forEach(a=>{spMap[a.codigo]=a.sub_parque;});
   if(biEvoMode==='subparque'){
-    entities=[...new Set(filtered.map(r=>r.aerogerador.replace(/-\d+$/,'')))].sort();
+    entities=[...new Set(filtered.map(r=>spMap[r.aerogerador]||r.aerogerador).filter(Boolean))].sort();
   } else {
     const aeroCount={};
     defeitos.forEach(r=>{aeroCount[r.aerogerador]=(aeroCount[r.aerogerador]||0)+1;});
@@ -8016,7 +8415,7 @@ function biEvolucao(d){
     const anoData=defeitos.filter(r=>(r.data||'').startsWith(ano));
     const data=entities.map(ent=>{
       if(biEvoMode==='subparque'){
-        return anoData.filter(r=>r.aerogerador.startsWith(ent)).length;
+        return anoData.filter(r=>(spMap[r.aerogerador]||r.aerogerador)===ent).length;
       } else {
         return anoData.filter(r=>r.aerogerador===ent).length;
       }
@@ -8059,12 +8458,31 @@ function biEvolucao(d){
 }
 
 function biCompletion(d){
-  const COMP=121;const allT=[...new Set(biGetAll().map(r=>r.aerogerador).filter(Boolean))];
-  const pids=[...new Set(allT.map(t=>t.replace(/-\d+$/,'')))].sort();
+  const spMap={};const spCompCount={};
+  if(typeof AEROGERADORES!=='undefined'){
+    AEROGERADORES.forEach(a=>{spMap[a.codigo]=a.sub_parque;});
+    // Count components per structure type
+    const pq=document.getElementById('biPQ').value;
+    const sp=document.getElementById('biSP').value;
+    let aeros=AEROGERADORES;
+    if(pq)aeros=aeros.filter(a=>a.parque===pq);
+    if(sp)aeros=aeros.filter(a=>a.sub_parque===sp);
+    var filteredAeros=aeros;
+  }
+  const pids=[...new Set((filteredAeros||[]).map(a=>a.sub_parque))].sort();
   document.getElementById('bCompletion').innerHTML=pids.map(p=>{
-    const pd=d.filter(r=>r.aerogerador.startsWith(p));const ti=new Set(pd.map(r=>r.aerogerador)).size;
-    const tot=allT.filter(t=>t.startsWith(p)).length;const tp=tot*COMP;const ins=pd.length;
-    const pct=Math.min(100,Math.round(ins/tp*100));
+    const aerosInSP=(filteredAeros||[]).filter(a=>a.sub_parque===p);
+    const tot=aerosInSP.length;
+    const pd=d.filter(r=>spMap[r.aerogerador]===p);const ti=new Set(pd.map(r=>r.aerogerador)).size;
+    const COMP=(function(){
+      const pqv=document.getElementById('biPQ').value;
+      let est=ESTRUTURA;
+      if(pqv==='Entorno 2'||aerosInSP.some(a=>a.parque==='Entorno 2'))est=typeof ESTRUTURA_ENTORNO2!=='undefined'?ESTRUTURA_ENTORNO2:ESTRUTURA;
+      else if(pqv==='Ibirapuitã'||aerosInSP.some(a=>a.parque==='Ibirapuitã'))est=typeof ESTRUTURA_IBIRAPUITA!=='undefined'?ESTRUTURA_IBIRAPUITA:ESTRUTURA;
+      else if(pqv==='GPEXPAN'||aerosInSP.some(a=>a.parque==='GPEXPAN'))est=typeof ESTRUTURA_GPEXPAN!=='undefined'?ESTRUTURA_GPEXPAN:ESTRUTURA;
+      let c=0;for(const subs of Object.values(est.categorias||{}))for(const comps of Object.values(subs))c+=Object.keys(comps).length;return c||138;
+    })();const tp=tot*COMP;const ins=pd.length;
+    const pct=tp>0?Math.min(100,Math.round(ins/tp*100)):0;
     const gr=pct>=80?'linear-gradient(90deg,#0047CC,#00CFFF)':pct>=40?'linear-gradient(90deg,#0047CC,#0066FF)':'linear-gradient(90deg,#1C3050,#0047CC)';
     return `<div class="bi-prog-item"><div class="bi-prog-hdr"><span class="bi-prog-lbl">${p} <span style="color:#4A6280;font-size:12px">(${ti}/${tot} turbinas · ${ins} registros)</span></span><span class="bi-prog-val">${pct}%</span></div><div class="bi-prog-bg"><div class="bi-prog-fill" style="width:${pct}%;background:${gr}"></div></div></div>`;
   }).join('');
