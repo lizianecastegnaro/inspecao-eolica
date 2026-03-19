@@ -762,6 +762,7 @@
                         <label>Classificação <span class="required">*</span></label>
                         <select id="classificacao" required>
                             <option value="">Selecione...</option>
+                            <option value="N/A">N/A</option>
                             <option value="Verificado">Verificado</option>
                             <option value="Defeito Ligeiro">Defeito Ligeiro</option>
                             <option value="Defeito Grave">Defeito Grave </option>
@@ -5230,15 +5231,13 @@ const AEROGERADORES = [
         }
 
         function updateComponentIcon(categoria, subcategoria, componente) {
-            // Atualizar apenas o ícone do componente específico usando data-attributes
+            // Atualizar apenas o ícone do componente específico
             document.querySelectorAll('.tree-component').forEach(comp => {
-                if (
-                    comp.dataset.categoria === categoria &&
-                    comp.dataset.subcategoria === subcategoria &&
-                    comp.dataset.componente === componente
-                ) {
+                const text = comp.textContent;
+                if (text.includes(componente)) {
                     const status = getComponentStatus(categoria, subcategoria, componente);
                     const icon = status ? '✅' : '⭕';
+                    // Preservar apenas o nome do componente, trocar o ícone
                     comp.textContent = `${icon} ${componente}`;
                 }
             });
@@ -5393,9 +5392,6 @@ const AEROGERADORES = [
                     for (const [componente, dados] of Object.entries(componentes)) {
                         const compDiv = document.createElement('div');
                         compDiv.className = 'tree-component';
-                        compDiv.dataset.categoria = categoria;
-                        compDiv.dataset.subcategoria = subcategoria;
-                        compDiv.dataset.componente = componente;
                         
                         const status = getComponentStatus(categoria, subcategoria, componente);
                         const icon = status ? '✅' : '⭕';
@@ -5486,7 +5482,7 @@ const AEROGERADORES = [
             const falhaSelect = document.getElementById('falha');
             const falhaOutraGroup = document.getElementById('falhaOutraGroup');
 
-            if (classificacao === 'Verificado' || !classificacao) {
+            if (classificacao === 'Verificado' || classificacao === 'N/A' || !classificacao) {
                 falhaGroup.style.display = 'none';
                 falhaOutraGroup.style.display = 'none';
                 falhaSelect.required = false;
@@ -5814,7 +5810,7 @@ const AEROGERADORES = [
                 return;
             }
 
-            if (classificacao !== 'Verificado' && !falha) {
+            if (classificacao !== 'Verificado' && classificacao !== 'N/A' && !falha) {
                 alert('Por favor, selecione ou descreva a falha quando a classificação não for "Verificado".');
                 return;
             }
@@ -5845,7 +5841,7 @@ const AEROGERADORES = [
                 subcategoria: currentComponent.subcategoria,
                 componente: currentComponent.componente,
                 classificacao,
-                falha: classificacao === 'Verificado' ? '' : falha,
+                falha: (classificacao === 'Verificado' || classificacao === 'N/A') ? '' : falha,
                 observacoes,
                 temFotos: currentPhotos.length > 0,
                 numFotos: currentPhotos.length,
@@ -5877,9 +5873,9 @@ const AEROGERADORES = [
             // Atualizar apenas o ícone do componente atual sem reconstruir toda árvore
             updateComponentIcon(currentComponent.categoria, currentComponent.subcategoria, currentComponent.componente);
             
-            // Atualizar contadores de progresso e reconstruir árvore para garantir contadores corretos
+            // Atualizar contadores de progresso
             updateProgress();
-            buildTree();
+            updateTreeCounters();
             
             // Atualizar lista de aerogeradores para refletir progresso (sem perder seleção)
             const selectAero = document.getElementById('aerogerador');
@@ -5937,7 +5933,7 @@ const AEROGERADORES = [
         const REQUIRED_FIELDS = ['aerogerador', 'mesAno', 'categoria', 'subcategoria', 'componente', 'classificacao', 'timestamp'];
         
         // Classificações válidas
-        const VALID_CLASSIFICATIONS = ['Verificado', 'Defeito Ligeiro', 'Defeito Grave', 'Ação Imediata'];
+        const VALID_CLASSIFICATIONS = ['Verificado', 'N/A', 'Defeito Ligeiro', 'Defeito Grave', 'Ação Imediata'];
         
         /**
          * Valida um único registro de inspeção
@@ -6075,7 +6071,7 @@ const AEROGERADORES = [
             };
             
             // Se classificação é Verificado, limpar falha
-            if (sanitized.classificacao === 'Verificado') {
+            if (sanitized.classificacao === 'Verificado' || sanitized.classificacao === 'N/A') {
                 sanitized.falha = '';
             }
             
@@ -6499,8 +6495,6 @@ const AEROGERADORES = [
          */
         async function exportReportHTML() {
             const aero = document.getElementById('aerogerador').value;
-            const parqueSelect = document.getElementById('parque');
-            const parqueNome = parqueSelect.options[parqueSelect.selectedIndex].text;
             
             if (!aero) {
                 showToast('⚠️ Selecione um aerogerador primeiro!', 'warning');
@@ -6533,7 +6527,7 @@ const AEROGERADORES = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Inspeção - ${parqueNome} - ${aero}</title>
+    <title>Relatório de Inspeção - ${aero}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }
@@ -6610,7 +6604,7 @@ const AEROGERADORES = [
         </div>
         <div class="header-info">
             <h1>Relatório de Inspeção</h1>
-            <p>${parqueNome} - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
+            <p>Coxilha Negra - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
         </div>
     </div>
 
@@ -7967,6 +7961,7 @@ const AEROGERADORES = [
       <div class="bi-fg"><label>Classificação</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:2px">
           <button class="bi-cls-btn" data-cls="Verificado" onclick="biToggleCls(this)">✓ Verificado</button>
+          <button class="bi-cls-btn" data-cls="N/A" onclick="biToggleCls(this)">— N/A</button>
           <button class="bi-cls-btn" data-cls="Defeito Ligeiro" onclick="biToggleCls(this)">◑ Ligeiro</button>
           <button class="bi-cls-btn" data-cls="Defeito Grave" onclick="biToggleCls(this)">▲ Grave</button>
           <button class="bi-cls-btn" data-cls="Ação Imediata" onclick="biToggleCls(this)">🚨 Imediata</button>
@@ -8114,9 +8109,9 @@ const AEROGERADORES = [
 // ================================================================
 let biVisible=false, biCharts={}, biFD=[], biParetoLv='componente', biRankN=10;
 let biPhotoMap={}, biCompPhotosMap={}, biCarPhotos=[], biCarIdx=0;
-const BI_SEV={'Ação Imediata':4,'Defeito Grave':3,'Defeito Ligeiro':2,'Verificado':1};
-const BI_COL={'Verificado':'rgba(0,229,160,0.8)','Defeito Ligeiro':'rgba(51,133,255,0.8)','Defeito Grave':'rgba(255,157,0,0.8)','Ação Imediata':'rgba(255,61,61,0.85)'};
-const BI_CLS=['Ação Imediata','Defeito Grave','Defeito Ligeiro','Verificado'];
+const BI_SEV={'Ação Imediata':4,'Defeito Grave':3,'Defeito Ligeiro':2,'Verificado':1,'N/A':0};
+const BI_COL={'Verificado':'rgba(0,229,160,0.8)','N/A':'rgba(150,150,150,0.7)','Defeito Ligeiro':'rgba(51,133,255,0.8)','Defeito Grave':'rgba(255,157,0,0.8)','Ação Imediata':'rgba(255,61,61,0.85)'};
+const BI_CLS=['Ação Imediata','Defeito Grave','Defeito Ligeiro','Verificado','N/A'];
 
 function biToggle(){
   biVisible=!biVisible;
@@ -8502,7 +8497,7 @@ function biCritTbls(d){
 }
 
 function biFullTbl(d){
-  const BDG={'Verificado':'bi-bdg-ok','Defeito Ligeiro':'bi-bdg-lt','Defeito Grave':'bi-bdg-wr','Ação Imediata':'bi-bdg-dg'};
+  const BDG={'Verificado':'bi-bdg-ok','N/A':'bi-bdg-ok','Defeito Ligeiro':'bi-bdg-lt','Defeito Grave':'bi-bdg-wr','Ação Imediata':'bi-bdg-dg'};
   const disp=d.slice(0,200);
   document.getElementById('bTblFull').innerHTML=disp.map(r=>`<tr><td><strong>${r.aerogerador}</strong></td><td style="font-size:12px;color:#4A6280">${r.data||'—'}</td><td style="font-size:12px;color:#8BA3C7">${r.categoria||'—'}</td><td style="font-size:12px">${r.componente||r.subcategoria||'—'}</td><td><span class="bi-bdg ${BDG[r.classificacao]||''}">${r.classificacao||'—'}</span></td><td style="font-size:12px;color:#4A6280">${r.falha||'—'}</td><td style="font-size:11px;color:#4A6280;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.observacoes||'—'}</td></tr>`).join('');
   document.getElementById('bTblCount').textContent=d.length>200?`Mostrando 200 de ${d.length} registros.`:`${d.length} registros`;
