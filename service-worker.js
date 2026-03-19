@@ -3,11 +3,10 @@ const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Instalação do Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -19,7 +18,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Ativação - limpa caches antigos
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -36,18 +34,14 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Intercepta requisições - estratégia Cache First
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Retorna do cache se existir
         if (response) {
           return response;
         }
-        // Senão, busca da rede
         return fetch(event.request);
-      }
-    )
+      })
   );
 });
