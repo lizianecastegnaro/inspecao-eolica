@@ -5230,13 +5230,15 @@ const AEROGERADORES = [
         }
 
         function updateComponentIcon(categoria, subcategoria, componente) {
-            // Atualizar apenas o ícone do componente específico
+            // Atualizar apenas o ícone do componente específico usando data-attributes
             document.querySelectorAll('.tree-component').forEach(comp => {
-                const text = comp.textContent;
-                if (text.includes(componente)) {
+                if (
+                    comp.dataset.categoria === categoria &&
+                    comp.dataset.subcategoria === subcategoria &&
+                    comp.dataset.componente === componente
+                ) {
                     const status = getComponentStatus(categoria, subcategoria, componente);
                     const icon = status ? '✅' : '⭕';
-                    // Preservar apenas o nome do componente, trocar o ícone
                     comp.textContent = `${icon} ${componente}`;
                 }
             });
@@ -5391,6 +5393,9 @@ const AEROGERADORES = [
                     for (const [componente, dados] of Object.entries(componentes)) {
                         const compDiv = document.createElement('div');
                         compDiv.className = 'tree-component';
+                        compDiv.dataset.categoria = categoria;
+                        compDiv.dataset.subcategoria = subcategoria;
+                        compDiv.dataset.componente = componente;
                         
                         const status = getComponentStatus(categoria, subcategoria, componente);
                         const icon = status ? '✅' : '⭕';
@@ -5872,9 +5877,9 @@ const AEROGERADORES = [
             // Atualizar apenas o ícone do componente atual sem reconstruir toda árvore
             updateComponentIcon(currentComponent.categoria, currentComponent.subcategoria, currentComponent.componente);
             
-            // Atualizar contadores de progresso
+            // Atualizar contadores de progresso e reconstruir árvore para garantir contadores corretos
             updateProgress();
-            updateTreeCounters();
+            buildTree();
             
             // Atualizar lista de aerogeradores para refletir progresso (sem perder seleção)
             const selectAero = document.getElementById('aerogerador');
@@ -6494,6 +6499,8 @@ const AEROGERADORES = [
          */
         async function exportReportHTML() {
             const aero = document.getElementById('aerogerador').value;
+            const parqueSelect = document.getElementById('parque');
+            const parqueNome = parqueSelect.options[parqueSelect.selectedIndex].text;
             
             if (!aero) {
                 showToast('⚠️ Selecione um aerogerador primeiro!', 'warning');
@@ -6526,7 +6533,7 @@ const AEROGERADORES = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Inspeção - ${aero}</title>
+    <title>Relatório de Inspeção - ${parqueNome} - ${aero}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }
@@ -6603,7 +6610,7 @@ const AEROGERADORES = [
         </div>
         <div class="header-info">
             <h1>Relatório de Inspeção</h1>
-            <p>Coxilha Negra - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
+            <p>${parqueNome} - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
         </div>
     </div>
 
