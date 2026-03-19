@@ -735,6 +735,11 @@
                     <label>Data da Inspeção <span class="required">*</span></label>
                     <input type="date" id="mesAno" required>
                 </div>
+
+                <div class="form-group">
+                    <label>Inspetor</label>
+                    <input type="text" id="responsavel" placeholder="Inspetor">
+                </div>
             </div>
 
             <!-- Progresso -->
@@ -5787,6 +5792,7 @@ const AEROGERADORES = [
         async function saveComponentData() {
             const aero = document.getElementById('aerogerador').value;
             const mesAno = document.getElementById('mesAno').value;
+            const responsavel = (document.getElementById('responsavel').value || '').trim();
             const classificacao = document.getElementById('classificacao').value;
             const falhaSelect = document.getElementById('falha').value;
             const falhaOutra = document.getElementById('falhaOutra').value.trim();
@@ -5837,6 +5843,7 @@ const AEROGERADORES = [
             inspectionData[key] = {
                 aerogerador: aero,
                 mesAno,
+                responsavel,
                 categoria: currentComponent.categoria,
                 subcategoria: currentComponent.subcategoria,
                 componente: currentComponent.componente,
@@ -6313,12 +6320,13 @@ const AEROGERADORES = [
         }
 
         function exportToCSV(data, filename) {
-            const headers = ['Aerogerador', 'Mês/Ano', 'Categoria', 'Sub-categoria', 'Componente', 'Classificação', 'Falha', 'Observações', 'Tem Fotos', 'Num Fotos', 'Data/Hora'];
+            const headers = ['Aerogerador', 'Mês/Ano', 'Inspetor', 'Categoria', 'Sub-categoria', 'Componente', 'Classificação', 'Falha', 'Observações', 'Tem Fotos', 'Num Fotos', 'Data/Hora'];
             const csv = [
                 headers.join(','),
                 ...data.map(row => [
                     row.aerogerador,
                     row.mesAno,
+                    `"${row.responsavel || ''}"`,
                     `"${row.categoria}"`,
                     `"${row.subcategoria}"`,
                     `"${row.componente}"`,
@@ -6495,7 +6503,9 @@ const AEROGERADORES = [
          */
         async function exportReportHTML() {
             const aero = document.getElementById('aerogerador').value;
-            
+            const parqueSelect = document.getElementById('parque');
+            const parqueNome = parqueSelect.options[parqueSelect.selectedIndex].text;
+
             if (!aero) {
                 showToast('⚠️ Selecione um aerogerador primeiro!', 'warning');
                 return;
@@ -6509,6 +6519,11 @@ const AEROGERADORES = [
                 showToast('⚠️ Nenhum dado encontrado para este aerogerador', 'warning');
                 return;
             }
+
+            // Coletar responsáveis únicos
+            const responsaveis = [...new Set(
+                filteredData.map(d => d.responsavel).filter(r => r && r.trim())
+            )].join(', ') || '—';
 
             showToast('⏳ Gerando relatório...', 'info');
 
@@ -6527,7 +6542,7 @@ const AEROGERADORES = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório de Inspeção - ${aero}</title>
+    <title>Relatório de Inspeção - ${parqueNome} - ${aero}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; background: #f5f5f5; }
@@ -6604,7 +6619,8 @@ const AEROGERADORES = [
         </div>
         <div class="header-info">
             <h1>Relatório de Inspeção</h1>
-            <p>Coxilha Negra - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
+            <p>${parqueNome} - ${aero} - ${new Date().toLocaleDateString('pt-BR')}</p>
+            <p style="font-size:13px;margin-top:4px;color:#555;">👷 Inspetor(es): ${responsaveis}</p>
         </div>
     </div>
 
@@ -6866,7 +6882,9 @@ const AEROGERADORES = [
 
                 const url = URL.createObjectURL(blob);
                 const date = new Date().toISOString().split('T')[0];
-                const filename = `backup_inspecao_${date}.json`;
+                const responsavel = (document.getElementById('responsavel').value || '').trim();
+                const responsavelSlug = responsavel ? '_' + responsavel.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') : '';
+                const filename = `backup_inspecao_${date}${responsavelSlug}.json`;
                 
                 const link = document.createElement('a');
                 link.href = url;
