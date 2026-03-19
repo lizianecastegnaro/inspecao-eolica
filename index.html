@@ -775,16 +775,57 @@
                         </select>
                     </div>
 
-                    <div class="form-group" id="falhaGroup" style="display: none;">
-                        <label>Falha <span class="required">*</span></label>
-                        <select id="falha" required>
-                            <option value="">Selecione a falha...</option>
-                        </select>
-                    </div>
+                    <div id="falhaGroup" style="display: none;">
+                        <!-- Falha 1 -->
+                        <div class="form-group">
+                            <label>Falha <span class="required">*</span></label>
+                            <select id="falha" required>
+                                <option value="">Selecione a falha...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="falhaOutraGroup" style="display: none;">
+                            <label>Descreva a falha <span class="required">*</span></label>
+                            <input type="text" id="falhaOutra" placeholder="Digite a falha encontrada...">
+                        </div>
 
-                    <div class="form-group" id="falhaOutraGroup" style="display: none;">
-                        <label>Descreva a falha <span class="required">*</span></label>
-                        <input type="text" id="falhaOutra" placeholder="Digite a falha encontrada...">
+                        <!-- Falha 2 -->
+                        <div class="form-group" id="falha2Group" style="display: none;">
+                            <label>Falha adicional 2</label>
+                            <select id="falha2">
+                                <option value="">Selecione a falha...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="falha2OutraGroup" style="display: none;">
+                            <label>Descreva a falha 2</label>
+                            <input type="text" id="falha2Outra" placeholder="Digite a falha encontrada...">
+                        </div>
+
+                        <!-- Falha 3 -->
+                        <div class="form-group" id="falha3Group" style="display: none;">
+                            <label>Falha adicional 3</label>
+                            <select id="falha3">
+                                <option value="">Selecione a falha...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="falha3OutraGroup" style="display: none;">
+                            <label>Descreva a falha 3</label>
+                            <input type="text" id="falha3Outra" placeholder="Digite a falha encontrada...">
+                        </div>
+
+                        <!-- Botão adicionar falha -->
+                        <div id="addFalhaBtn" style="margin-bottom: 15px; display: none;">
+                            <button type="button" onclick="addFalhaSlot()" style="
+                                background: transparent;
+                                border: 2px dashed #0066FF;
+                                color: #0066FF;
+                                border-radius: 8px;
+                                padding: 8px 18px;
+                                font-size: 13px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                width: 100%;
+                            ">➕ Adicionar outra falha</button>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -5461,24 +5502,52 @@ const AEROGERADORES = [
                 document.getElementById('classificacao').value = saved.classificacao || '';
                 document.getElementById('observacoes').value = saved.observacoes || '';
                 updateFalhaDropdown();
-                if (saved.falha) {
-                    // Verificar se é uma falha personalizada (não está na lista)
-                    const falhaSelect = document.getElementById('falha');
-                    const opcaoExiste = Array.from(falhaSelect.options).some(opt => opt.value === saved.falha);
-                    
-                    if (opcaoExiste) {
-                        falhaSelect.value = saved.falha;
-                    } else if (saved.falha) {
-                        // É uma falha personalizada
-                        falhaSelect.value = '__outra__';
-                        document.getElementById('falhaOutra').value = saved.falha;
-                        document.getElementById('falhaOutraGroup').style.display = 'block';
-                    }
-                }
+
+                // Carregar falhas — suporte ao campo legado (falha) e novo (falhas[])
+                const falhasSalvas = saved.falhas && saved.falhas.length > 0
+                    ? saved.falhas
+                    : (saved.falha ? [saved.falha] : []);
+
+                const falhas = getFalhasDoComponente();
+                falhasSalvas.forEach((valor, i) => {
+                    if (!valor) return;
+                    if (i === 0) setFalhaValue('', valor, falhas);
+                    else if (i === 1) { addFalhaSlot(); setFalhaValue('2', valor, falhas); }
+                    else if (i === 2) { addFalhaSlot(); setFalhaValue('3', valor, falhas); }
+                });
+
+                // Atualizar botão adicionar
+                const f2vis = document.getElementById('falha2Group').style.display !== 'none';
+                const f3vis = document.getElementById('falha3Group').style.display !== 'none';
+                document.getElementById('addFalhaBtn').style.display =
+                    (f2vis && f3vis) ? 'none' : (document.getElementById('falhaGroup').style.display !== 'none' ? 'block' : 'none');
+
                 loadPhotos(key);
             } else {
                 clearForm();
             }
+        }
+
+        // ===== SISTEMA DE MÚLTIPLAS FALHAS (até 3) =====
+
+        function getFalhasDoComponente() {
+            if (currentComponent && currentComponent.dados && currentComponent.dados.falhas) {
+                return currentComponent.dados.falhas;
+            }
+            return [];
+        }
+
+        function buildFalhaOptions(selectEl, falhas) {
+            selectEl.innerHTML = '<option value="">Selecione a falha...</option>';
+            falhas.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = f;
+                selectEl.appendChild(opt);
+            });
+            const outra = document.createElement('option');
+            outra.value = '__outra__'; outra.textContent = '➕ Outra falha...';
+            outra.style.fontStyle = 'italic';
+            selectEl.appendChild(outra);
         }
 
         function updateFalhaDropdown() {
@@ -5490,50 +5559,97 @@ const AEROGERADORES = [
             if (classificacao === 'Verificado' || classificacao === 'N/A' || !classificacao) {
                 falhaGroup.style.display = 'none';
                 falhaOutraGroup.style.display = 'none';
+                // Esconder falhas adicionais
+                [2, 3].forEach(n => {
+                    document.getElementById(`falha${n}Group`).style.display = 'none';
+                    document.getElementById(`falha${n}OutraGroup`).style.display = 'none';
+                });
+                document.getElementById('addFalhaBtn').style.display = 'none';
                 falhaSelect.required = false;
             } else {
+                const falhas = getFalhasDoComponente();
                 falhaGroup.style.display = 'block';
                 falhaSelect.required = true;
-
-                // Preencher opções de falha
-                falhaSelect.innerHTML = '<option value="">Selecione a falha...</option>';
-                
-                if (currentComponent && currentComponent.dados && currentComponent.dados.falhas) {
-                    const falhas = currentComponent.dados.falhas;
-                    
-                    falhas.forEach(falha => {
-                        const option = document.createElement('option');
-                        option.value = falha;
-                        option.textContent = falha;
-                        falhaSelect.appendChild(option);
-                    });
-                }
-                
-                // Adicionar opção "Outra falha..."
-                const optionOutra = document.createElement('option');
-                optionOutra.value = '__outra__';
-                optionOutra.textContent = '➕ Outra falha...';
-                optionOutra.style.fontStyle = 'italic';
-                falhaSelect.appendChild(optionOutra);
+                buildFalhaOptions(falhaSelect, falhas);
+                // Preencher falhas 2 e 3 com as mesmas opções (sem required)
+                [2, 3].forEach(n => {
+                    const sel = document.getElementById(`falha${n}`);
+                    buildFalhaOptions(sel, falhas);
+                });
+                // Mostrar botão adicionar se falha2 ainda não aparece
+                const f2Visivel = document.getElementById('falha2Group').style.display !== 'none';
+                document.getElementById('addFalhaBtn').style.display = f2Visivel ? 'none' : 'block';
             }
-            
-            // Esconder campo de falha personalizada
             falhaOutraGroup.style.display = 'none';
         }
-        
-        function handleFalhaChange() {
-            const falhaSelect = document.getElementById('falha');
-            const falhaOutraGroup = document.getElementById('falhaOutraGroup');
-            const falhaOutraInput = document.getElementById('falhaOutra');
-            
-            if (falhaSelect.value === '__outra__') {
-                falhaOutraGroup.style.display = 'block';
-                falhaOutraInput.required = true;
-                falhaOutraInput.focus();
+
+        function addFalhaSlot() {
+            // Mostrar próximo slot disponível
+            const f2 = document.getElementById('falha2Group');
+            const f3 = document.getElementById('falha3Group');
+            const btn = document.getElementById('addFalhaBtn');
+
+            if (f2.style.display === 'none') {
+                f2.style.display = 'block';
+                // Ainda pode adicionar f3, mantém botão
+            } else if (f3.style.display === 'none') {
+                f3.style.display = 'block';
+                btn.style.display = 'none'; // Atingiu máximo
+            }
+        }
+
+        function handleFalhaChange(n) {
+            // n = '' para falha 1, '2' para falha 2, '3' para falha 3
+            const suffix = n ? n : '';
+            const selectId = suffix ? `falha${suffix}` : 'falha';
+            const outraGroupId = suffix ? `falha${suffix}OutraGroup` : 'falhaOutraGroup';
+            const outraInputId = suffix ? `falha${suffix}Outra` : 'falhaOutra';
+
+            const sel = document.getElementById(selectId);
+            const outraGroup = document.getElementById(outraGroupId);
+            const outraInput = document.getElementById(outraInputId);
+
+            if (sel.value === '__outra__') {
+                outraGroup.style.display = 'block';
+                outraInput.focus();
             } else {
-                falhaOutraGroup.style.display = 'none';
-                falhaOutraInput.required = false;
-                falhaOutraInput.value = '';
+                outraGroup.style.display = 'none';
+                outraInput.value = '';
+            }
+        }
+
+        function getFalhaValue(n) {
+            const suffix = n ? n : '';
+            const selectId = suffix ? `falha${suffix}` : 'falha';
+            const outraId = suffix ? `falha${suffix}Outra` : 'falhaOutra';
+            const groupId = suffix ? `falha${suffix}Group` : 'falhaGroup';
+
+            // Se o grupo não está visível, não conta
+            if (suffix && document.getElementById(groupId).style.display === 'none') return '';
+
+            const val = document.getElementById(selectId).value;
+            if (val === '__outra__') return document.getElementById(outraId).value.trim();
+            return val;
+        }
+
+        function setFalhaValue(n, valor, falhas) {
+            const suffix = n ? n.toString() : '';
+            const selectId = suffix ? `falha${suffix}` : 'falha';
+            const outraGroupId = suffix ? `falha${suffix}OutraGroup` : 'falhaOutraGroup';
+            const outraInputId = suffix ? `falha${suffix}Outra` : 'falhaOutra';
+            const groupId = suffix ? `falha${suffix}Group` : null;
+
+            // Mostrar grupo se necessário
+            if (groupId) document.getElementById(groupId).style.display = 'block';
+
+            const sel = document.getElementById(selectId);
+            const opcaoExiste = Array.from(sel.options).some(opt => opt.value === valor);
+            if (opcaoExiste) {
+                sel.value = valor;
+            } else {
+                sel.value = '__outra__';
+                document.getElementById(outraInputId).value = valor;
+                document.getElementById(outraGroupId).style.display = 'block';
             }
         }
 
@@ -5572,7 +5688,9 @@ const AEROGERADORES = [
             
             document.getElementById('classificacao').addEventListener('change', updateFalhaDropdown);
             
-            document.getElementById('falha').addEventListener('change', handleFalhaChange);
+            document.getElementById('falha').addEventListener('change', () => handleFalhaChange(''));
+            document.getElementById('falha2').addEventListener('change', () => handleFalhaChange('2'));
+            document.getElementById('falha3').addEventListener('change', () => handleFalhaChange('3'));
             
             document.getElementById('photoUpload').addEventListener('click', () => {
                 document.getElementById('photoInput').click();
@@ -5794,12 +5912,14 @@ const AEROGERADORES = [
             const mesAno = document.getElementById('mesAno').value;
             const responsavel = (document.getElementById('responsavel').value || '').trim();
             const classificacao = document.getElementById('classificacao').value;
-            const falhaSelect = document.getElementById('falha').value;
-            const falhaOutra = document.getElementById('falhaOutra').value.trim();
             const observacoes = document.getElementById('observacoes').value;
-            
-            // Determinar a falha final (do dropdown ou personalizada)
-            const falha = falhaSelect === '__outra__' ? falhaOutra : falhaSelect;
+
+            // Coletar todas as falhas preenchidas
+            const falha1 = getFalhaValue('');
+            const falha2 = getFalhaValue('2');
+            const falha3 = getFalhaValue('3');
+            const falhas = [falha1, falha2, falha3].filter(f => f && f.trim());
+            const falha = falha1; // compatibilidade retroativa
 
             if (!aero || !mesAno) {
                 alert('Por favor, preencha o aerogerador e mês/ano da inspeção.');
@@ -5816,7 +5936,7 @@ const AEROGERADORES = [
                 return;
             }
 
-            if (classificacao !== 'Verificado' && classificacao !== 'N/A' && !falha) {
+            if (classificacao !== 'Verificado' && classificacao !== 'N/A' && falhas.length === 0) {
                 alert('Por favor, selecione ou descreva a falha quando a classificação não for "Verificado".');
                 return;
             }
@@ -5849,6 +5969,7 @@ const AEROGERADORES = [
                 componente: currentComponent.componente,
                 classificacao,
                 falha: (classificacao === 'Verificado' || classificacao === 'N/A') ? '' : falha,
+                falhas: (classificacao === 'Verificado' || classificacao === 'N/A') ? [] : falhas,
                 observacoes,
                 temFotos: currentPhotos.length > 0,
                 numFotos: currentPhotos.length,
@@ -5915,6 +6036,14 @@ const AEROGERADORES = [
             document.getElementById('falha').value = '';
             document.getElementById('falhaOutra').value = '';
             document.getElementById('falhaOutraGroup').style.display = 'none';
+            // Limpar e esconder falhas adicionais
+            [2, 3].forEach(n => {
+                document.getElementById(`falha${n}`).value = '';
+                document.getElementById(`falha${n}Outra`).value = '';
+                document.getElementById(`falha${n}Group`).style.display = 'none';
+                document.getElementById(`falha${n}OutraGroup`).style.display = 'none';
+            });
+            document.getElementById('addFalhaBtn').style.display = 'none';
             document.getElementById('observacoes').value = '';
             currentPhotos = [];
             displayPhotos();
@@ -6321,31 +6450,38 @@ const AEROGERADORES = [
 
         function exportToCSV(data, filename) {
             const headers = ['Aerogerador', 'Mês/Ano', 'Inspetor', 'Categoria', 'Sub-categoria', 'Componente', 'Classificação', 'Falha', 'Observações', 'Tem Fotos', 'Num Fotos', 'Data/Hora'];
-            const csv = [
-                headers.join(','),
-                ...data.map(row => [
-                    row.aerogerador,
-                    row.mesAno,
-                    `"${row.responsavel || ''}"`,
-                    `"${row.categoria}"`,
-                    `"${row.subcategoria}"`,
-                    `"${row.componente}"`,
-                    row.classificacao,
-                    `"${row.falha || ''}"`,
-                    `"${(row.observacoes || '').replace(/"/g, '""')}"`,
-                    row.temFotos ? 'Sim' : 'Não',
-                    row.numFotos || 0,
-                    row.timestamp
-                ].join(','))
-            ].join('\n');
+            
+            // Expandir registros com múltiplas falhas em múltiplas linhas
+            const rows = [];
+            data.forEach(row => {
+                const falhasArr = (row.falhas && row.falhas.length > 0)
+                    ? row.falhas
+                    : (row.falha ? [row.falha] : ['']);
+                falhasArr.forEach(f => {
+                    rows.push([
+                        row.aerogerador,
+                        row.mesAno,
+                        `"${row.responsavel || ''}"`,
+                        `"${row.categoria}"`,
+                        `"${row.subcategoria}"`,
+                        `"${row.componente}"`,
+                        row.classificacao,
+                        `"${f || ''}"`,
+                        `"${(row.observacoes || '').replace(/"/g, '""')}"`,
+                        row.temFotos ? 'Sim' : 'Não',
+                        row.numFotos || 0,
+                        row.timestamp
+                    ].join(','));
+                });
+            });
 
+            const csv = [headers.join(','), ...rows].join('\n');
             const BOM = '\uFEFF';
             const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = filename;
             link.click();
-
             showToast('✅ Dados exportados com sucesso!');
         }
 
