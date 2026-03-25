@@ -8116,6 +8116,7 @@ const AEROGERADORES = [
     <div class="bi-hdr-acts">
       <span class="bi-status" id="biStatusBadge" style="display:none">✓ Dados carregados</span>
       <button class="bi-hb bi-hb-ref" onclick="biRefresh()">🔄 Atualizar Dados</button>
+      <button class="bi-hb bi-hb-pr" onclick="gpToggle()" style="background:linear-gradient(135deg,#1a3a1a,#2d7a2d);border-color:rgba(0,200,80,0.4);color:#7fff7f;">📦 Gestão de Peças</button>
       <button class="bi-hb bi-hb-pr" onclick="window.print()">🖨 Imprimir</button>
       <button class="bi-hb bi-hb-back" onclick="biToggle()">← Voltar ao App</button>
     </div>
@@ -8838,6 +8839,374 @@ document.addEventListener('keydown',e=>{
 });
 </script>
 
+<!-- ============================================================
+     GESTÃO DE PEÇAS
+     ============================================================ -->
+<style>
+#gpOverlay { display:none; position:fixed; inset:0; z-index:9500; background:#0A1628; overflow-y:auto; font-family:'DM Sans',sans-serif; color:#E8EDF5; }
+#gpOverlay.active { display:block; }
+#gpOverlay * { box-sizing:border-box; }
+#gpOverlay::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,102,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,102,255,0.04) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+#gpOverlay > * { position:relative; z-index:1; }
+.gp-hdr { background:linear-gradient(135deg,#0D2145,#0A1E40); border-bottom:1px solid rgba(0,200,80,0.3); padding:16px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:50; }
+.gp-hdr h2 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:#7fff7f; margin:0; }
+.gp-hdr .sub { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-top:2px; }
+.gp-main { padding:24px 28px 48px; }
+.gp-flt { background:#0F1E35; border:1px solid rgba(0,200,80,0.15); border-radius:14px; padding:16px 20px; margin-bottom:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.gp-fg { display:flex; flex-direction:column; gap:5px; }
+.gp-fg label { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; font-weight:500; }
+.gp-fg select { background:#152640; border:1px solid rgba(0,200,80,0.18); color:#E8EDF5; border-radius:8px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; outline:none; min-width:160px; }
+.gp-fg select:focus { border-color:#00C850; }
+.gp-fg select option { background:#152640; }
+.gp-btn { background:#0047CC; color:#fff; border:none; border-radius:8px; padding:9px 20px; font-size:13px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; align-self:flex-end; }
+.gp-btn:hover { background:#0066FF; }
+.gp-card { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:14px; padding:20px 22px; margin-bottom:20px; }
+.gp-card-t { font-size:13px; font-weight:500; color:#8BA3C7; margin-bottom:16px; }
+.gp-kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:24px; }
+.gp-kpi { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:12px; padding:16px 18px; text-align:center; border-top:2px solid var(--kc); }
+.gp-kpi-val { font-family:'Syne',sans-serif; font-size:32px; font-weight:800; color:var(--kc); }
+.gp-kpi-lbl { font-size:11px; color:#4A6280; margin-top:4px; text-transform:uppercase; letter-spacing:0.6px; }
+.gp-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.gp-tbl th { text-align:left; padding:10px 12px; font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:#4A6280; font-weight:500; border-bottom:1px solid rgba(0,102,255,0.18); white-space:nowrap; }
+.gp-tbl td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.gp-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+.gp-tbl tr:last-child td { border-bottom:none; }
+.gp-bdg { display:inline-block; border-radius:5px; padding:2px 8px; font-size:11px; font-weight:600; white-space:nowrap; }
+.gp-bdg-im { background:rgba(255,61,61,0.15); color:#FF6B6B; border:1px solid rgba(255,61,61,0.3); }
+.gp-bdg-gr { background:rgba(255,157,0,0.15); color:#FFB340; border:1px solid rgba(255,157,0,0.3); }
+.gp-bdg-lt { background:rgba(51,133,255,0.12); color:#7FB3FF; border:1px solid rgba(51,133,255,0.2); }
+.gp-maquinas { display:flex; flex-wrap:wrap; gap:4px; }
+.gp-maq { background:#152640; border:1px solid rgba(0,102,255,0.25); border-radius:5px; padding:2px 7px; font-size:11px; color:#8BA3C7; white-space:nowrap; }
+.gp-obs { font-size:11px; color:#4A6280; font-style:italic; margin-top:3px; }
+.gp-acao select { background:#152640; border:1px solid rgba(0,102,255,0.2); color:#E8EDF5; border-radius:6px; padding:4px 8px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.gp-sec { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#8BA3C7; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.gp-sec::before { content:''; display:inline-block; width:3px; height:14px; background:#00C850; border-radius:2px; }
+.gp-scroll { max-height:420px; overflow-y:auto; }
+.gp-scroll::-webkit-scrollbar { width:4px; }
+.gp-scroll::-webkit-scrollbar-thumb { background:rgba(0,200,80,0.3); border-radius:2px; }
+.gp-empty { text-align:center; padding:60px; color:#4A6280; }
+.gp-empty h3 { font-family:'Syne',sans-serif; font-size:18px; color:#8BA3C7; margin-bottom:8px; }
+@media(max-width:768px) { .gp-main { padding:16px; } .gp-hdr { padding:14px 16px; } }
+</style>
+
+<div id="gpOverlay">
+  <div class="gp-hdr">
+    <div>
+      <h2>📦 Gestão de Peças</h2>
+      <div class="sub">Componentes para substituição e monitoramento</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="gpExportCSV()" style="background:transparent;border:1px solid rgba(0,200,80,0.3);color:#7fff7f;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ Exportar CSV</button>
+      <button onclick="gpToggle()" style="background:transparent;border:1px solid rgba(0,102,255,0.18);color:#8BA3C7;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">← Voltar ao BI</button>
+    </div>
+  </div>
+
+  <div class="gp-main">
+    <!-- Filtros -->
+    <div class="gp-flt">
+      <div class="gp-fg">
+        <label>Parque Eólico</label>
+        <select id="gpParque" onchange="gpRender()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Mostrar</label>
+        <select id="gpFiltroClass" onchange="gpRender()">
+          <option value="GI">🔴🟠 Grave + Imediata</option>
+          <option value="I">🔴 Apenas Ação Imediata</option>
+          <option value="G">🟠 Apenas Defeito Grave</option>
+          <option value="GIL">Todos os defeitos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Ação planejada</label>
+        <select id="gpFiltroAcao" onchange="gpRender()">
+          <option value="">Todas</option>
+          <option value="Substituir">🔧 Substituir</option>
+          <option value="Consertar">🛠 Consertar</option>
+          <option value="Monitorar">⏳ Monitorar</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="gp-kpis">
+      <div class="gp-kpi" style="--kc:#FF6B6B"><div class="gp-kpi-val" id="gpKI">0</div><div class="gp-kpi-lbl">Ação Imediata</div></div>
+      <div class="gp-kpi" style="--kc:#FFB340"><div class="gp-kpi-val" id="gpKG">0</div><div class="gp-kpi-lbl">Defeito Grave</div></div>
+      <div class="gp-kpi" style="--kc:#7FB3FF"><div class="gp-kpi-val" id="gpKL">0</div><div class="gp-kpi-lbl">Defeito Ligeiro</div></div>
+      <div class="gp-kpi" style="--kc:#00C850"><div class="gp-kpi-val" id="gpKT">0</div><div class="gp-kpi-lbl">Total a Substituir/Consertar</div></div>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="gp-sec">Componentes com maior incidência</div>
+    <div class="gp-card" style="margin-bottom:24px">
+      <div class="gp-card-t">Quantidade de máquinas afetadas por componente</div>
+      <div style="height:320px"><canvas id="gpChart"></canvas></div>
+    </div>
+
+    <!-- Tabela detalhada -->
+    <div class="gp-sec">Detalhamento por componente</div>
+    <div id="gpEmpty" class="gp-empty" style="display:none">
+      <h3>✅ Nenhum defeito encontrado</h3>
+      <p style="font-size:14px">Ajuste os filtros ou realize mais inspeções.</p>
+    </div>
+    <div id="gpTabelaWrap">
+      <div class="gp-card">
+        <div class="gp-scroll">
+          <table class="gp-tbl">
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>Falha</th>
+                <th>Classificação</th>
+                <th>Máquinas afetadas</th>
+                <th style="text-align:center">Total</th>
+                <th>Ação planejada</th>
+              </tr>
+            </thead>
+            <tbody id="gpTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// GESTÃO DE PEÇAS ENGINE
+// ============================================================
+let gpVisible = false;
+let gpAcoes = {}; // { "componente|falha" : "Substituir" }
+const GP_ACOES_KEY = 'gpAcoes_v1';
+
+function gpToggle() {
+  gpVisible = !gpVisible;
+  const o = document.getElementById('gpOverlay');
+  if (gpVisible) {
+    o.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    gpInit();
+  } else {
+    o.classList.remove('active');
+    // Não restaura overflow pois o BI ainda está aberto
+  }
+}
+
+function gpInit() {
+  // Carregar ações salvas
+  try { gpAcoes = JSON.parse(localStorage.getItem(GP_ACOES_KEY) || '{}'); } catch(e) { gpAcoes = {}; }
+
+  // Popular filtro de parques
+  const parques = [...new Set(AEROGERADORES.map(a => a.parque))].sort();
+  const sel = document.getElementById('gpParque');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Todos os parques</option>' + parques.map(p => `<option value="${p}">${p}</option>`).join('');
+  if (parques.includes(val)) sel.value = val;
+
+  gpRender();
+}
+
+function gpGetDados() {
+  const parque = document.getElementById('gpParque').value;
+  const filtroClass = document.getElementById('gpFiltroClass').value;
+  const filtroAcao = document.getElementById('gpFiltroAcao').value;
+
+  // Turbinas do parque selecionado
+  let turbinas = AEROGERADORES;
+  if (parque) turbinas = turbinas.filter(a => a.parque === parque);
+  const codigosTurbinas = new Set(turbinas.map(a => a.codigo));
+
+  // Classes a incluir
+  const incluir = new Set();
+  if (filtroClass === 'I') incluir.add('Ação Imediata');
+  else if (filtroClass === 'G') incluir.add('Defeito Grave');
+  else if (filtroClass === 'GI') { incluir.add('Ação Imediata'); incluir.add('Defeito Grave'); }
+  else { incluir.add('Ação Imediata'); incluir.add('Defeito Grave'); incluir.add('Defeito Ligeiro'); }
+
+  // Agrupar por componente + falha
+  const mapa = {}; // key: "componente||falha" → { componente, falha, classificacao, maquinas[], observacoes[] }
+
+  for (const [k, r] of Object.entries(inspectionData)) {
+    if (!codigosTurbinas.has(r.aerogerador)) continue;
+    if (!incluir.has(r.classificacao)) continue;
+
+    // Expandir múltiplas falhas
+    const falhasArr = (r.falhas && r.falhas.length > 0) ? r.falhas : (r.falha ? [r.falha] : ['—']);
+    falhasArr.forEach(f => {
+      const chave = `${r.componente}||${f}`;
+      if (!mapa[chave]) {
+        mapa[chave] = {
+          componente: r.componente,
+          falha: f || '—',
+          classificacao: r.classificacao,
+          maquinas: [],
+          observacoes: new Set()
+        };
+      }
+      // Pegar pior classificação
+      const sev = { 'Ação Imediata': 3, 'Defeito Grave': 2, 'Defeito Ligeiro': 1 };
+      if ((sev[r.classificacao] || 0) > (sev[mapa[chave].classificacao] || 0)) {
+        mapa[chave].classificacao = r.classificacao;
+      }
+      if (!mapa[chave].maquinas.includes(r.aerogerador)) mapa[chave].maquinas.push(r.aerogerador);
+      if (r.observacoes && r.observacoes.trim()) mapa[chave].observacoes.add(r.observacoes.trim());
+    });
+  }
+
+  // Converter para array e aplicar filtro de ação
+  let dados = Object.values(mapa).map(d => ({
+    ...d,
+    maquinas: d.maquinas.sort(),
+    observacoes: [...d.observacoes].join(' · '),
+    acaoKey: `${d.componente}||${d.falha}`,
+    acao: gpAcoes[`${d.componente}||${d.falha}`] || 'Substituir'
+  }));
+
+  if (filtroAcao) dados = dados.filter(d => d.acao === filtroAcao);
+
+  // Ordenar: Ação Imediata primeiro, depois Grave, depois por quantidade desc
+  const ordem = { 'Ação Imediata': 0, 'Defeito Grave': 1, 'Defeito Ligeiro': 2 };
+  dados.sort((a, b) => {
+    if (ordem[a.classificacao] !== ordem[b.classificacao]) return ordem[a.classificacao] - ordem[b.classificacao];
+    return b.maquinas.length - a.maquinas.length;
+  });
+
+  return dados;
+}
+
+function gpRender() {
+  const dados = gpGetDados();
+  const all = Object.values(inspectionData);
+
+  // KPIs — contar registros únicos (componente+maquina) por classificação
+  const parque = document.getElementById('gpParque').value;
+  let turbinas = AEROGERADORES;
+  if (parque) turbinas = turbinas.filter(a => a.parque === parque);
+  const codigosTurbinas = new Set(turbinas.map(a => a.codigo));
+
+  let cI = 0, cG = 0, cL = 0;
+  for (const r of Object.values(inspectionData)) {
+    if (!codigosTurbinas.has(r.aerogerador)) continue;
+    if (r.classificacao === 'Ação Imediata') cI++;
+    else if (r.classificacao === 'Defeito Grave') cG++;
+    else if (r.classificacao === 'Defeito Ligeiro') cL++;
+  }
+  document.getElementById('gpKI').textContent = cI;
+  document.getElementById('gpKG').textContent = cG;
+  document.getElementById('gpKL').textContent = cL;
+  document.getElementById('gpKT').textContent = cI + cG;
+
+  // Mostrar/ocultar empty state
+  const empty = dados.length === 0;
+  document.getElementById('gpEmpty').style.display = empty ? '' : 'none';
+  document.getElementById('gpTabelaWrap').style.display = empty ? 'none' : '';
+
+  if (!empty) {
+    gpRenderChart(dados);
+    gpRenderTabela(dados);
+  }
+}
+
+let gpChartInst = null;
+function gpRenderChart(dados) {
+  if (gpChartInst) { gpChartInst.destroy(); gpChartInst = null; }
+
+  // Top 20 por quantidade de máquinas
+  const top = dados.slice(0, 20);
+  const labels = top.map(d => {
+    const n = d.componente.length > 32 ? d.componente.slice(0, 30) + '…' : d.componente;
+    return d.falha && d.falha !== '—' ? `${n} · ${d.falha.length > 20 ? d.falha.slice(0,18)+'…' : d.falha}` : n;
+  });
+
+  const datasetsMap = {
+    'Ação Imediata': { label: '🔴 Ação Imediata', data: Array(top.length).fill(0), bg: 'rgba(255,61,61,0.85)' },
+    'Defeito Grave':  { label: '🟠 Defeito Grave',  data: Array(top.length).fill(0), bg: 'rgba(255,157,0,0.85)' },
+    'Defeito Ligeiro':{ label: '🔵 Defeito Ligeiro', data: Array(top.length).fill(0), bg: 'rgba(51,133,255,0.6)' }
+  };
+  top.forEach((d, i) => { if (datasetsMap[d.classificacao]) datasetsMap[d.classificacao].data[i] = d.maquinas.length; });
+
+  const datasets = Object.values(datasetsMap)
+    .filter(ds => ds.data.some(v => v > 0))
+    .map(ds => ({ label: ds.label, data: ds.data, backgroundColor: ds.bg, borderRadius: 4, borderSkipped: false }));
+
+  gpChartInst = new Chart(document.getElementById('gpChart'), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: {
+        legend: { labels: { color: '#8BA3C7', font: { size: 11 }, boxWidth: 10, padding: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw} máquina${ctx.raw > 1 ? 's' : ''}` } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8BA3C7', font: { size: 11 }, stepSize: 1 } },
+        y: { grid: { display: false }, ticks: { color: '#8BA3C7', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function gpRenderTabela(dados) {
+  const BADGE = {
+    'Ação Imediata': 'gp-bdg-im',
+    'Defeito Grave': 'gp-bdg-gr',
+    'Defeito Ligeiro': 'gp-bdg-lt'
+  };
+  const ACOES = ['Substituir', 'Consertar', 'Monitorar'];
+  const ACOES_ICONE = { 'Substituir': '🔧', 'Consertar': '🛠', 'Monitorar': '⏳' };
+
+  document.getElementById('gpTbody').innerHTML = dados.map((d, i) => {
+    const acao = d.acao;
+    const maqHtml = d.maquinas.map(m => `<span class="gp-maq">${m}</span>`).join('');
+    const obsHtml = d.observacoes ? `<div class="gp-obs">💬 ${d.observacoes}</div>` : '';
+    const acaoOpts = ACOES.map(a => `<option value="${a}" ${a === acao ? 'selected' : ''}>${ACOES_ICONE[a]} ${a}</option>`).join('');
+    const chave = d.acaoKey.replace(/"/g, '&quot;');
+
+    return `<tr>
+      <td><strong style="font-size:13px">${d.componente}</strong></td>
+      <td>
+        <span style="font-size:13px;color:#E8EDF5">${d.falha !== '—' ? d.falha : '<span style="color:#4A6280">—</span>'}</span>
+        ${obsHtml}
+      </td>
+      <td><span class="gp-bdg ${BADGE[d.classificacao] || ''}">${d.classificacao}</span></td>
+      <td><div class="gp-maquinas">${maqHtml}</div></td>
+      <td style="text-align:center;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:${d.classificacao === 'Ação Imediata' ? '#FF6B6B' : d.classificacao === 'Defeito Grave' ? '#FFB340' : '#7FB3FF'}">${d.maquinas.length}</td>
+      <td class="gp-acao"><select onchange="gpSalvarAcao('${chave}', this.value)">${acaoOpts}</select></td>
+    </tr>`;
+  }).join('');
+}
+
+function gpSalvarAcao(chave, valor) {
+  gpAcoes[chave] = valor;
+  try { localStorage.setItem(GP_ACOES_KEY, JSON.stringify(gpAcoes)); } catch(e) {}
+}
+
+function gpExportCSV() {
+  const dados = gpGetDados();
+  if (!dados.length) { showToast('⚠️ Nenhum dado para exportar', 'warning'); return; }
+
+  const headers = ['Componente', 'Falha', 'Classificação', 'Máquinas', 'Total', 'Ação Planejada', 'Observações'];
+  const rows = dados.map(d => [
+    `"${d.componente}"`,
+    `"${d.falha}"`,
+    d.classificacao,
+    `"${d.maquinas.join(', ')}"`,
+    d.maquinas.length,
+    d.acao,
+    `"${d.observacoes || ''}"`
+  ].join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gestao_pecas_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('✅ CSV exportado!', 'success');
+}
+</script>
 
 </body>
 </html>
