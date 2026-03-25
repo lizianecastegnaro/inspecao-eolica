@@ -296,6 +296,10 @@
             background: #e0a800;
         }
 
+        .mobile-only {
+            display: none;
+        }
+
         .progress-info {
             background: #e6e6ff;
             padding: 15px;
@@ -666,6 +670,12 @@
             .desktop-only {
                 display: none !important;
             }
+            .mobile-only {
+                display: inline-block !important;
+            }
+            .mobile-only {
+                display: inline-block !important;
+            }
         }
     </style>
 </head>
@@ -858,12 +868,10 @@
                     <button class="btn btn-secondary" id="diagData" title="Verificar integridade dos dados salvos">🔍 Diagnóstico</button>
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
-                    <button class="btn btn-primary" id="backupData" title="Salvar todos os dados em um arquivo">💾 Fazer Backup</button>
-                    <button class="btn btn-secondary desktop-only" id="restoreData" title="Restaurar dados de um arquivo de backup">📂 Restaurar Backup</button>
+                    <button class="btn btn-primary mobile-only" id="backupData" title="Salvar todos os dados em um arquivo (com fotos)">💾 Fazer Backup</button>
+                    <button class="btn btn-primary desktop-only" id="backupSemFotos" title="Salvar dados sem fotos (arquivo menor)">💾 Backup sem Fotos</button>
+                    <button class="btn btn-warning desktop-only" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Mesclar Backups</button>
                     <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
-                </div>
-                <div class="buttons-row desktop-only" style="margin-top: 10px;">
-                    <button class="btn btn-warning" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Mesclar Backups</button>
                     <input type="file" id="mergeFileInput" accept=".json" multiple style="display: none;">
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
@@ -5758,6 +5766,14 @@ const AEROGERADORES = [
                 });
             }
 
+            const backupSemFotosBtn = document.getElementById('backupSemFotos');
+            if (backupSemFotosBtn) {
+                backupSemFotosBtn.addEventListener('click', () => {
+                    console.log('Botão BACKUP SEM FOTOS clicado!');
+                    createBackupSemFotos();
+                });
+            }
+
             if (restoreBtn) {
                 restoreBtn.addEventListener('click', () => {
                     console.log('Botão RESTAURAR clicado!');
@@ -7179,6 +7195,56 @@ if (mergeFileInput) {
             return migrated;
         }
 
+        async function createBackupSemFotos() {
+            console.log('=== CRIANDO BACKUP SEM FOTOS ===');
+            try {
+                let inspData = {};
+                try {
+                    inspData = await loadAllInspectionsFromDB();
+                } catch (e) {
+                    const saved = localStorage.getItem('inspectionData');
+                    if (saved) inspData = JSON.parse(saved);
+                }
+
+                const numInspecoes = Object.keys(inspData).length;
+                if (numInspecoes === 0) {
+                    showToast('⚠️ Nenhum dado para fazer backup', 'warning');
+                    return;
+                }
+
+                const backup = {
+                    version: '2.0',
+                    createdAt: new Date().toISOString(),
+                    appName: 'Inspeção de Torres Eólicas (PWA) — Sem Fotos',
+                    data: {
+                        inspectionData: inspData,
+                        photos: {}
+                    }
+                };
+
+                const json = JSON.stringify(backup);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const date = new Date().toISOString().split('T')[0];
+                const responsavel = (document.getElementById('responsavel').value || '').trim();
+                const responsavelSlug = responsavel ? '_' + responsavel.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') : '';
+                const filename = `backup_sem_fotos_${date}${responsavelSlug}.json`;
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+                showToast(`✅ Backup sem fotos criado! ${numInspecoes} inspeções`, 'success');
+            } catch (e) {
+                console.error('Erro ao criar backup sem fotos:', e);
+                showToast('❌ Erro ao criar backup: ' + e.message, 'error');
+            }
+        }
+
         async function restoreBackup(file) {
             console.log('=== RESTAURANDO BACKUP ===');
             
@@ -7627,7 +7693,7 @@ if (mergeFileInput) {
             report.estrutura = {
                 totalCategorias: Object.keys(ESTRUTURA.categorias).length,
                 totalComponentes: totalComponentes,
-                totalAerogeradores: AEROGERADORES.length
+                totalAerogeradores: new Set(Object.values(inspectionData).map(r => r.aerogerador).filter(Boolean)).size
             };
             
             // 5. Verificar backups
