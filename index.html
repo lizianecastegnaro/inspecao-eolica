@@ -5703,7 +5703,36 @@ const AEROGERADORES = [
             document.getElementById('photoUpload').addEventListener('click', () => {
                 document.getElementById('photoInput').click();
             });
+const photoUpload = document.getElementById('photoUpload');
 
+photoUpload.addEventListener('click', () => {
+    document.getElementById('photoInput').click();
+});
+
+photoUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    photoUpload.style.borderColor = '#0000FF';
+    photoUpload.style.background = '#f0f0ff';
+});
+
+photoUpload.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    photoUpload.style.borderColor = '';
+    photoUpload.style.background = '';
+});
+
+photoUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    photoUpload.style.borderColor = '';
+    photoUpload.style.background = '';
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+    const fakeEvent = { target: { files } };
+    handlePhotoUpload(fakeEvent);
+});
             document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
 
             if (saveBtn) {
@@ -9064,6 +9093,20 @@ document.addEventListener('keydown',e=>{
 .gp-empty { text-align:center; padding:60px; color:#4A6280; }
 .gp-empty h3 { font-family:'Syne',sans-serif; font-size:18px; color:#8BA3C7; margin-bottom:8px; }
 @media(max-width:768px) { .gp-main { padding:16px; } .gp-hdr { padding:14px 16px; } }
+.gp-view-btn { background:#152640; border:1px solid rgba(0,200,80,0.18); color:#4A6280; border-radius:8px; padding:7px 16px; font-size:12px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.18s; }
+.gp-view-btn:hover { border-color:#00C850; color:#7fff7f; }
+.gp-view-btn.active { background:rgba(0,200,80,0.12); border-color:rgba(0,200,80,0.5); color:#7fff7f; }
+.gp-aero-card { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:12px; margin-bottom:12px; overflow:hidden; }
+.gp-aero-hdr { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer; transition:background 0.15s; }
+.gp-aero-hdr:hover { background:rgba(255,255,255,0.03); }
+.gp-aero-code { font-family:'Syne',sans-serif; font-size:15px; font-weight:800; min-width:90px; }
+.gp-aero-score { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; background:#1C3050; border-radius:6px; padding:3px 10px; }
+.gp-aero-bars { flex:1; display:flex; gap:6px; }
+.gp-aero-bar-item { display:flex; align-items:center; gap:4px; font-size:11px; }
+.gp-aero-body { display:none; padding:0 18px 14px; border-top:1px solid rgba(0,102,255,0.1); }
+.gp-aero-body.open { display:block; }
+.gp-aero-row { display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:12px; }
+.gp-aero-row:last-child { border-bottom:none; }
 </style>
 
 <div id="gpOverlay">
@@ -9083,7 +9126,13 @@ document.addEventListener('keydown',e=>{
     <div class="gp-flt">
       <div class="gp-fg">
         <label>Parque Eólico</label>
-        <select id="gpParque" onchange="gpRender()">
+        <select id="gpParque" onchange="gpOnParqueChange()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Sub-parque</label>
+        <select id="gpSubParque" onchange="gpRender()">
           <option value="">Todos</option>
         </select>
       </div>
@@ -9122,29 +9171,46 @@ document.addEventListener('keydown',e=>{
       <div style="height:320px"><canvas id="gpChart"></canvas></div>
     </div>
 
+    <!-- Toggle de visão -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap">
+      <div class="gp-sec" style="margin-bottom:0">Visão</div>
+      <div style="display:flex;gap:6px">
+        <button id="gpBtnComp" class="gp-view-btn active" onclick="gpSetView('comp')">🔩 Por Componente</button>
+        <button id="gpBtnAero" class="gp-view-btn" onclick="gpSetView('aero')">💨 Por Aerogerador</button>
+      </div>
+    </div>
+
     <!-- Tabela detalhada -->
-    <div class="gp-sec">Detalhamento por componente</div>
     <div id="gpEmpty" class="gp-empty" style="display:none">
       <h3>✅ Nenhum defeito encontrado</h3>
       <p style="font-size:14px">Ajuste os filtros ou realize mais inspeções.</p>
     </div>
     <div id="gpTabelaWrap">
-      <div class="gp-card">
-        <div class="gp-scroll">
-          <table class="gp-tbl">
-            <thead>
-              <tr>
-                <th>Componente</th>
-                <th>Falha</th>
-                <th>Classificação</th>
-                <th>Máquinas afetadas</th>
-                <th style="text-align:center">Total</th>
-                <th>Ação planejada</th>
-              </tr>
-            </thead>
-            <tbody id="gpTbody"></tbody>
-          </table>
+      <!-- VIEW: Por Componente -->
+      <div id="gpViewComp">
+        <div class="gp-sec">Detalhamento por componente</div>
+        <div class="gp-card">
+          <div class="gp-scroll">
+            <table class="gp-tbl">
+              <thead>
+                <tr>
+                  <th>Componente</th>
+                  <th>Falha</th>
+                  <th>Classificação</th>
+                  <th>Máquinas afetadas</th>
+                  <th style="text-align:center">Total</th>
+                  <th>Ação planejada</th>
+                </tr>
+              </thead>
+              <tbody id="gpTbody"></tbody>
+            </table>
+          </div>
         </div>
+      </div>
+      <!-- VIEW: Por Aerogerador -->
+      <div id="gpViewAero" style="display:none">
+        <div class="gp-sec">Resumo por Aerogerador</div>
+        <div id="gpAeroList"></div>
       </div>
     </div>
   </div>
@@ -9172,27 +9238,41 @@ function gpToggle() {
 }
 
 function gpInit() {
-  // Carregar ações salvas
   try { gpAcoes = JSON.parse(localStorage.getItem(GP_ACOES_KEY) || '{}'); } catch(e) { gpAcoes = {}; }
-
-  // Popular filtro de parques
   const parques = [...new Set(AEROGERADORES.map(a => a.parque))].sort();
   const sel = document.getElementById('gpParque');
   const val = sel.value;
   sel.innerHTML = '<option value="">Todos os parques</option>' + parques.map(p => `<option value="${p}">${p}</option>`).join('');
   if (parques.includes(val)) sel.value = val;
+  gpPopulateSubParques();
+}
 
+function gpOnParqueChange() {
+  gpPopulateSubParques();
   gpRender();
+}
+
+function gpPopulateSubParques() {
+  const pq = document.getElementById('gpParque').value;
+  let aeros = AEROGERADORES;
+  if (pq) aeros = aeros.filter(a => a.parque === pq);
+  const subs = [...new Set(aeros.map(a => a.sub_parque))].sort();
+  const spSel = document.getElementById('gpSubParque');
+  const spVal = spSel.value;
+  spSel.innerHTML = '<option value="">Todos</option>' + subs.map(s => `<option value="${s}">${s}</option>`).join('');
+  if (subs.includes(spVal)) spSel.value = spVal; else spSel.value = '';
 }
 
 function gpGetDados() {
   const parque = document.getElementById('gpParque').value;
+  const subParque = document.getElementById('gpSubParque').value;
   const filtroClass = document.getElementById('gpFiltroClass').value;
   const filtroAcao = document.getElementById('gpFiltroAcao').value;
 
-  // Turbinas do parque selecionado
+  // Turbinas filtradas por parque + sub-parque
   let turbinas = AEROGERADORES;
   if (parque) turbinas = turbinas.filter(a => a.parque === parque);
+  if (subParque) turbinas = turbinas.filter(a => a.sub_parque === subParque);
   const codigosTurbinas = new Set(turbinas.map(a => a.codigo));
 
   // Classes a incluir
@@ -9259,8 +9339,10 @@ function gpRender() {
 
   // KPIs — contar registros únicos (componente+maquina) por classificação
   const parque = document.getElementById('gpParque').value;
+  const subParque = document.getElementById('gpSubParque').value;
   let turbinas = AEROGERADORES;
   if (parque) turbinas = turbinas.filter(a => a.parque === parque);
+  if (subParque) turbinas = turbinas.filter(a => a.sub_parque === subParque);
   const codigosTurbinas = new Set(turbinas.map(a => a.codigo));
 
   let cI = 0, cG = 0, cL = 0;
@@ -9283,7 +9365,90 @@ function gpRender() {
   if (!empty) {
     gpRenderChart(dados);
     gpRenderTabela(dados);
+    gpRenderAeroView(dados);
   }
+}
+
+let gpCurrentView = 'comp';
+
+function gpSetView(v) {
+  gpCurrentView = v;
+  document.getElementById('gpViewComp').style.display = v === 'comp' ? '' : 'none';
+  document.getElementById('gpViewAero').style.display = v === 'aero' ? '' : 'none';
+  document.getElementById('gpBtnComp').classList.toggle('active', v === 'comp');
+  document.getElementById('gpBtnAero').classList.toggle('active', v === 'aero');
+}
+
+function gpRenderAeroView(dados) {
+  const container = document.getElementById('gpAeroList');
+  if (!container) return;
+
+  // Agrupar dados por aerogerador
+  const porAero = {};
+  dados.forEach(d => {
+    d.maquinas.forEach(aero => {
+      if (!porAero[aero]) porAero[aero] = { imediata: [], grave: [], ligeiro: [], score: 0 };
+      const entry = { componente: d.componente, falha: d.falha, classificacao: d.classificacao, acao: d.acao, observacoes: d.observacoes };
+      if (d.classificacao === 'Ação Imediata') { porAero[aero].imediata.push(entry); porAero[aero].score += 4; }
+      else if (d.classificacao === 'Defeito Grave') { porAero[aero].grave.push(entry); porAero[aero].score += 3; }
+      else if (d.classificacao === 'Defeito Ligeiro') { porAero[aero].ligeiro.push(entry); porAero[aero].score += 1; }
+    });
+  });
+
+  if (!Object.keys(porAero).length) { container.innerHTML = ''; return; }
+
+  // Ordenar: maior score primeiro; dentro do mesmo score, alfabético
+  const sorted = Object.entries(porAero).sort((a, b) => {
+    if (b[1].score !== a[1].score) return b[1].score - a[1].score;
+    return a[0].localeCompare(b[0], undefined, { numeric: true });
+  });
+
+  const maxScore = sorted[0]?.[1]?.score || 1;
+  const ACOES_ICONE = { 'Substituir': '🔧', 'Consertar': '🛠', 'Monitorar': '⏳' };
+  const CLS_COLOR = { 'Ação Imediata': '#FF6B6B', 'Defeito Grave': '#FFB340', 'Defeito Ligeiro': '#7FB3FF' };
+  const CLS_BDG = { 'Ação Imediata': 'gp-bdg-im', 'Defeito Grave': 'gp-bdg-gr', 'Defeito Ligeiro': 'gp-bdg-lt' };
+
+  container.innerHTML = sorted.map(([aero, info]) => {
+    const total = info.imediata.length + info.grave.length + info.ligeiro.length;
+    const scoreBar = Math.round(info.score / maxScore * 100);
+    const scoreColor = info.imediata.length > 0 ? '#FF6B6B' : info.grave.length > 0 ? '#FFB340' : '#7FB3FF';
+    const allItems = [...info.imediata, ...info.grave, ...info.ligeiro];
+
+    const rowsHtml = allItems.map(item => `
+      <div class="gp-aero-row">
+        <span class="gp-bdg ${CLS_BDG[item.classificacao]}" style="flex-shrink:0">${item.classificacao === 'Ação Imediata' ? '🚨' : item.classificacao === 'Defeito Grave' ? '⚠️' : '◑'} ${item.classificacao}</span>
+        <div style="flex:1;min-width:0">
+          <div style="color:#E8EDF5;font-weight:500">${item.componente}</div>
+          ${item.falha && item.falha !== '—' ? `<div style="color:#4A6280;margin-top:2px">↳ ${item.falha}</div>` : ''}
+          ${item.observacoes ? `<div style="color:#3a5070;font-style:italic;margin-top:2px">💬 ${item.observacoes}</div>` : ''}
+        </div>
+        <span style="color:#4A6280;flex-shrink:0;font-size:11px">${ACOES_ICONE[item.acao] || '🔧'} ${item.acao}</span>
+      </div>`).join('');
+
+    const statsHtml = [
+      info.imediata.length > 0 ? `<span class="gp-aero-bar-item" style="color:#FF6B6B">🔴 ${info.imediata.length}</span>` : '',
+      info.grave.length > 0 ? `<span class="gp-aero-bar-item" style="color:#FFB340">🟠 ${info.grave.length}</span>` : '',
+      info.ligeiro.length > 0 ? `<span class="gp-aero-bar-item" style="color:#7FB3FF">🔵 ${info.ligeiro.length}</span>` : ''
+    ].filter(Boolean).join('');
+
+    const uid = 'gpa_' + aero.replace(/[^a-zA-Z0-9]/g, '_');
+    return `<div class="gp-aero-card">
+      <div class="gp-aero-hdr" onclick="document.getElementById('${uid}').classList.toggle('open')">
+        <span class="gp-aero-code" style="color:${scoreColor}">${aero}</span>
+        <span class="gp-aero-score" style="color:${scoreColor}">Score ${info.score}</span>
+        <div class="gp-aero-bars">${statsHtml}</div>
+        <div style="flex:1;max-width:120px">
+          <div style="background:#1C3050;border-radius:3px;height:4px;overflow:hidden">
+            <div style="width:${scoreBar}%;height:100%;background:linear-gradient(90deg,${scoreColor},${scoreColor}99);border-radius:3px;transition:width 0.6s"></div>
+          </div>
+        </div>
+        <span style="color:#4A6280;font-size:11px;flex-shrink:0">${total} item${total > 1 ? 's' : ''} ▾</span>
+      </div>
+      <div id="${uid}" class="gp-aero-body">
+        ${rowsHtml}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 let gpChartInst = null;
