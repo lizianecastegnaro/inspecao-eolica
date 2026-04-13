@@ -686,6 +686,19 @@
         </div>
     </div>
 
+    <!-- Modal Câmera Personalizada -->
+    <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column; align-items:center; justify-content:space-between;">
+        <div style="width:100%; flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+            <video id="cameraVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+        </div>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        <div style="width:100%; padding:20px; box-sizing:border-box; display:flex; gap:12px; justify-content:center; background:#111;">
+            <button onclick="fecharCamera()" style="flex:1; max-width:140px; padding:14px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Cancelar</button>
+            <button onclick="capturarFoto()" style="flex:1; max-width:160px; padding:14px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
+            <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; padding:14px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
+        </div>
+    </div>
+
     <!-- Modal de Foto Ampliada -->
     <div id="photoModal" class="photo-modal-overlay" style="display: none;" onclick="closePhotoModal()">
         <div class="photo-modal-content" onclick="event.stopPropagation()">
@@ -837,7 +850,7 @@
                         <label>Fotos (opcional)</label>
                         <div class="photo-upload" id="photoUpload">
                             <p>📸 Clique ou arraste fotos aqui</p>
-                            <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display: none;">
+                            <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
                         </div>
                         <div style="margin-top: 8px;">
                             <button type="button" id="btnLanterna" onclick="toggleLanterna()" style="
@@ -5708,7 +5721,7 @@ const AEROGERADORES = [
             document.getElementById('falha3').addEventListener('change', () => handleFalhaChange('3'));
             
             document.getElementById('photoUpload').addEventListener('click', () => {
-                document.getElementById('photoInput').click();
+                abrirCameraPersonalizada();
             });
 
             document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
@@ -5850,13 +5863,13 @@ const AEROGERADORES = [
             });
         }
 
-        function handlePhotoUpload(e) {
+        async function handlePhotoUpload(e) {
             const files = Array.from(e.target.files);
-            files.forEach(file => {
+            const promises = files.map(file => new Promise((resolve) => {
                 // Aumentamos o limite para 20MB já que vamos comprimir
                 if (file.size > 20 * 1024 * 1024) {
                     alert(`A foto ${file.name} é muito grande. Máximo 20MB por foto.`);
-                    return;
+                    return resolve();
                 }
                 const reader = new FileReader();
                 reader.onload = async (ev) => {
@@ -5871,9 +5884,11 @@ const AEROGERADORES = [
 
                     currentPhotos.push(compressed);
                     displayPhotos();
+                    resolve();
                 };
                 reader.readAsDataURL(file);
-            });
+            }));
+            await Promise.all(promises);
         }
 
         // ===== LANTERNA =====
@@ -5923,6 +5938,66 @@ const AEROGERADORES = [
                 btn.style.borderColor = '#f0c040';
             }
         }
+
+        // ===== CÂMERA PERSONALIZADA =====
+        let cameraStream = null;
+
+        async function abrirCameraPersonalizada() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+
+            try {
+                // Se a lanterna já estiver ativa, reutiliza o mesmo stream (torch já ligado)
+                if (lanternaAtiva && lanternaStream) {
+                    cameraStream = lanternaStream;
+                } else {
+                    // Tenta abrir com torch; se não suportar, abre sem
+                    try {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: 'environment', advanced: [{ torch: true }] }
+                        });
+                    } catch {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: 'environment' }
+                        });
+                    }
+                }
+                video.srcObject = cameraStream;
+                modal.style.display = 'flex';
+            } catch (e) {
+                showToast('⚠️ Não foi possível acessar a câmera', 'warning');
+            }
+        }
+
+        async function capturarFoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            const compressed = await compressImage(dataUrl);
+            currentPhotos.push(compressed);
+            displayPhotos();
+
+            fecharCamera();
+        }
+
+        function fecharCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            modal.style.display = 'none';
+            video.srcObject = null;
+
+            // Só para o stream se não for o stream da lanterna
+            if (cameraStream && cameraStream !== lanternaStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+            }
+            cameraStream = null;
+        }
+
             const preview = document.getElementById('photoPreview');
             preview.innerHTML = '';
             
