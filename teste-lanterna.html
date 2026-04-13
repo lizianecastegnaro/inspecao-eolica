@@ -687,15 +687,13 @@
     </div>
 
     <!-- Modal Câmera Personalizada -->
-    <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column; align-items:center; justify-content:space-between;">
-        <div style="width:100%; flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            <video id="cameraVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
-        </div>
+    <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column;">
+        <video id="cameraVideo" autoplay playsinline muted style="display:block; width:100%; height:calc(100% - 90px); object-fit:cover; pointer-events:none;"></video>
         <canvas id="cameraCanvas" style="display:none;"></canvas>
-        <div style="width:100%; padding:20px; box-sizing:border-box; display:flex; gap:12px; justify-content:center; background:#111;">
-            <button onclick="fecharCamera()" style="flex:1; max-width:140px; padding:14px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Cancelar</button>
-            <button onclick="capturarFoto()" style="flex:1; max-width:160px; padding:14px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
-            <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; padding:14px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
+        <div style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
+            <button onclick="fecharCamera()" style="flex:1; max-width:140px; height:54px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Cancelar</button>
+            <button onclick="capturarFoto()" style="flex:1; max-width:160px; height:54px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
+            <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; height:54px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
         </div>
     </div>
 
