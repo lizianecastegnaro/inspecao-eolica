@@ -296,6 +296,10 @@
             background: #e0a800;
         }
 
+        .mobile-only {
+            display: none;
+        }
+
         .progress-info {
             background: #e6e6ff;
             padding: 15px;
@@ -666,6 +670,12 @@
             .desktop-only {
                 display: none !important;
             }
+            .mobile-only {
+                display: inline-block !important;
+            }
+            .mobile-only {
+                display: inline-block !important;
+            }
         }
     </style>
 </head>
@@ -688,19 +698,13 @@
 
     <!-- Modal Câmera Personalizada -->
     <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column;">
-        <!-- Preview ao vivo -->
         <video id="cameraVideo" autoplay playsinline muted style="display:block; width:100%; height:calc(100% - 90px); object-fit:cover; pointer-events:none;"></video>
-        <!-- Foto congelada (confirmação) -->
-        <canvas id="cameraCanvas" style="display:none; width:100%; height:calc(100% - 90px); object-fit:cover;"></canvas>
-
-        <!-- Botões: modo captura -->
+        <canvas id="cameraCanvas" style="display:none; width:100%; height:calc(100% - 90px);"></canvas>
         <div id="cameraBtnsCaptura" style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
             <button onclick="fecharCamera()" style="flex:1; max-width:140px; height:54px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Cancelar</button>
             <button onclick="capturarFoto()" style="flex:1; max-width:160px; height:54px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
             <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; height:54px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
         </div>
-
-        <!-- Botões: modo confirmação -->
         <div id="cameraBtnsConfirmacao" style="display:none; position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; gap:12px; justify-content:center; align-items:center; background:#111;">
             <button onclick="repetirFoto()" style="flex:1; max-width:160px; height:54px; background:#c0392b; color:#fff; border:none; border-radius:12px; font-size:22px; font-weight:bold; cursor:pointer;">✕</button>
             <button onclick="usarFoto()" style="flex:1; max-width:160px; height:54px; background:#4CAF50; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">✓ Usar foto</button>
@@ -739,9 +743,9 @@
                     <select id="parque" required>
                         <option value="coxilha_negra" selected>Parque Eólico Coxilha Negra</option>
                         <option value="entorno_2">Parque Eólico Entorno 2</option>
-                        <option value="cerro_chato" disabled style="color:#999;">Parque Eólico Cerro Chato (em breve)</option>
                         <option value="ibirapuita">Parque Eólico Ibirapuitã</option>
                         <option value="gpexpan">Complexo Eólico GPEXPAN</option>
+                        <option value="cerro_chato">Parque Eólico Cerro Chato</option>
                     </select>
                 </div>
                 
@@ -879,13 +883,12 @@
                     <button class="btn btn-secondary" id="diagData" title="Verificar integridade dos dados salvos">🔍 Diagnóstico</button>
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
-                    <button class="btn btn-primary" id="backupData" title="Salvar todos os dados em um arquivo">💾 Fazer Backup</button>
-                    <button class="btn btn-secondary desktop-only" id="restoreData" title="Restaurar dados de um arquivo de backup">📂 Restaurar Backup</button>
+                    <button class="btn btn-primary mobile-only" id="backupData" title="Salvar todos os dados em um arquivo (com fotos)">💾 Fazer Backup</button>
+                    <button class="btn btn-primary desktop-only" id="backupSemFotos" title="Salvar dados sem fotos (arquivo menor)">💾 Exportar Dados (sem Fotos)</button>
+                    <button class="btn btn-warning desktop-only" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Carregar Backups</button>
+                    <button class="btn desktop-only" id="importarParqueBtn" title="Importar novo parque a partir de planilha Excel" style="background:linear-gradient(135deg,#1a3a2a,#1e7a4a);color:#7fffa0;border:1px solid rgba(0,200,80,0.35);">📥 Importar Parque (Excel)</button>
                     <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
-                </div>
-                <div class="buttons-row desktop-only" style="margin-top: 10px;">
-                    <button class="btn btn-warning" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Mesclar Backups</button>
-                    <input type="file" id="mergeFileInput" accept=".json" style="display: none;">
+                    <input type="file" id="mergeFileInput" accept=".json" multiple style="display: none;">
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
                     <button class="btn" id="openDashboardBI" onclick="biToggle()" style="background:linear-gradient(135deg,#0A1628,#0047CC);color:white;width:100%;font-size:18px;padding:16px;border:1px solid rgba(0,102,255,0.4);box-shadow:0 4px 20px rgba(0,102,255,0.3);">📊 Dashboard BI</button>
@@ -4510,6 +4513,1107 @@ const ESTRUTURA_GPEXPAN = {
   }
 };
 
+const ESTRUTURA_CERRO_CHATO = {
+  "categorias": {
+    "Exterior e Acessos": {
+      "Fundação": {
+        "Fundação": {
+          "classificacoes": [],
+          "falhas": [
+            "Dano no acabamento do grout",
+            "Rachaduras ou trincas na fundação",
+            "Infiltração de água",
+            "Descamação do concreto",
+            "Folga nos parafusos anchor bolt"
+          ]
+        },
+        "Bolt caps": {
+          "classificacoes": [],
+          "falhas": [
+            "Proteção plástica ausente",
+            "Proteção plástica danificada",
+            "Anel de vedação deteriorado",
+            "Oxidação nos parafusos expostos",
+            "Anticorrosivo não aplicado"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Tampas de inspeção": {
+          "classificacoes": [],
+          "falhas": [
+            "Tampa ausente",
+            "Tampa danificada",
+            "Vegetação obstruindo o acesso",
+            "Tampa sem fixação",
+            "Corrosão na tampa"
+          ]
+        }
+      },
+      "Carenagem": {
+        "PAD": {
+          "classificacoes": [],
+          "falhas": [
+            "Obstáculos no acesso",
+            "Iluminação inoperante",
+            "Piso em más condições",
+            "Vegetação invadindo a área",
+            "Limpeza inadequada"
+          ]
+        },
+        "Escada externa": {
+          "classificacoes": [],
+          "falhas": [
+            "Contaminação por óleo",
+            "Corrosão nos degraus",
+            "Fixação inadequada",
+            "Danos estruturais",
+            "Falta de limpeza"
+          ]
+        },
+        "Porta lado externo": {
+          "classificacoes": [],
+          "falhas": [
+            "Vedação danificada",
+            "Tranca com defeito",
+            "Oxidação na estrutura",
+            "Grade de filtro obstruída",
+            "Retenção inoperante"
+          ]
+        },
+        "Porta lado interno": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos estruturais",
+            "Vedação danificada",
+            "Tranca com defeito",
+            "Filtro obstruído",
+            "Oxidação na estrutura"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Identificação da turbina": {
+          "classificacoes": [],
+          "falhas": [
+            "Identificação ausente",
+            "Identificação ilegível",
+            "Identificação não padronizada",
+            "Sinalização desbotada",
+            "Placa danificada"
+          ]
+        }
+      },
+      "Torre exterior": {
+        "Tramos": {
+          "classificacoes": [],
+          "falhas": [
+            "Presença de animais",
+            "Fissuras na estrutura",
+            "Danos na pintura",
+            "Infiltração visível",
+            "Trincas no concreto"
+          ]
+        },
+        "Pintura": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de sujeira",
+            "Descascamento da tinta",
+            "Manchas de oxidação",
+            "Danos por impacto",
+            "Cobertura insuficiente"
+          ]
+        }
+      },
+      "Vias de acesso": {
+        "Vias de acesso": {
+          "classificacoes": [],
+          "falhas": [
+            "Obstáculos no acesso",
+            "Erosão do solo",
+            "Vegetação obstruindo a via",
+            "Sinalização ausente",
+            "Buracos ou afundamentos"
+          ]
+        }
+      }
+    },
+    "Transformador": {
+      "Transformador": {
+        "Carcaça do transformador": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação na carcaça",
+            "Danos na pintura",
+            "Aterramento solto",
+            "Iluminação inoperante",
+            "Trava danificada"
+          ]
+        },
+        "Vedação do transformador": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta sem vedação adequada",
+            "Entrada de cabos sem vedação",
+            "Tampa danificada",
+            "Infiltração de água",
+            "Folga nas juntas"
+          ]
+        },
+        "Cabos do transformador": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada nas buchas",
+            "Isolamento danificado",
+            "Oxidação nos terminais",
+            "Cabos sem identificação",
+            "Danos mecânicos no cabo"
+          ]
+        },
+        "Relés do transformador": {
+          "classificacoes": [],
+          "falhas": [
+            "Ajuste incorreto do relé",
+            "Relé inoperante",
+            "Configuração fora do padrão",
+            "Falta de registro de ajuste",
+            "Deterioração dos componentes"
+          ]
+        },
+        "Óleo do transformador": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Nível de óleo abaixo do mínimo",
+            "Óleo contaminado",
+            "Indicador de nível danificado",
+            "Odor anormal no óleo"
+          ]
+        }
+      }
+    },
+    "Torre do Aerogerador": {
+      "Carenagem": {
+        "Interior - Plataforma": {
+          "classificacoes": [],
+          "falhas": [
+            "Presença de animais",
+            "Acúmulo de água",
+            "Limpeza inadequada",
+            "Danos na plataforma",
+            "Objetos estranhos presentes"
+          ]
+        },
+        "Aterramento da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão danificada",
+            "Isolamento deteriorado",
+            "Oxidação nos terminais",
+            "Danos por arco elétrico",
+            "Cabo de aterramento solto"
+          ]
+        },
+        "Escotilha da torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Dobradiças danificadas",
+            "Escotilha sem vedação",
+            "Integridade comprometida",
+            "Trava com defeito"
+          ]
+        }
+      },
+      "Torre interior": {
+        "Tramos": {
+          "classificacoes": [],
+          "falhas": [
+            "Trincas no concreto",
+            "Infiltração de água",
+            "Oxidação na estrutura",
+            "Fissuras visíveis",
+            "Danos na pintura interna"
+          ]
+        },
+        "Vedação entre seções": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste na vedação",
+            "Infiltração entre seções",
+            "Vedação inexistente",
+            "Folga entre seções",
+            "Deterioração do material selante"
+          ]
+        },
+        "Cabos de potência": {
+          "classificacoes": [],
+          "falhas": [
+            "Cabo sem fixação",
+            "Isolamento danificado",
+            "Sinais de superaquecimento",
+            "Desgaste por atrito",
+            "Cabo fora do guia"
+          ]
+        }
+      },
+      "Saúde e segurança": {
+        "Iluminação da base": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação",
+            "Lâmpada queimada",
+            "Fiação exposta",
+            "Luminária danificada",
+            "Iluminação insuficiente"
+          ]
+        },
+        "Iluminação de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Fora de operação",
+            "Bateria sem carga",
+            "Luminária danificada",
+            "Certificação vencida",
+            "Teste funcional reprovado"
+          ]
+        },
+        "Degraus da escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Ausência de certificação",
+            "Degrau danificado",
+            "Corrosão nos degraus",
+            "Fixação inadequada",
+            "Degrau ausente"
+          ]
+        },
+        "Parafusos de fixação da escada": {
+          "classificacoes": [],
+          "falhas": [
+            "Marcações alteradas",
+            "Torque incorreto",
+            "Oxidação nos parafusos",
+            "Parafuso ausente",
+            "Folga na fixação"
+          ]
+        },
+        "Linha de vida cabo de aço": {
+          "classificacoes": [],
+          "falhas": [
+            "Validade da certificação expirada",
+            "Cabo com fios rompidos",
+            "Fixação insuficiente",
+            "Validação vencida",
+            "Deformação permanente no cabo"
+          ]
+        },
+        "Linha de vida trilho": {
+          "classificacoes": [],
+          "falhas": [
+            "Validade da certificação expirada",
+            "Trilho com danos estruturais",
+            "Fixação insuficiente",
+            "Validação vencida",
+            "Corrediça com defeito"
+          ]
+        },
+        "Pontos de ancoragem": {
+          "classificacoes": [],
+          "falhas": [
+            "Solda com defeito",
+            "Certificação vencida",
+            "Ponto de ancoragem solto",
+            "Deformação estrutural",
+            "Corrosão comprometendo a integridade"
+          ]
+        },
+        "Extintores de incêndio": {
+          "classificacoes": [],
+          "falhas": [
+            "Validade expirada",
+            "Extintor ausente",
+            "Carga insuficiente",
+            "Lacre violado",
+            "Certificação vencida"
+          ]
+        },
+        "Telefone e sinal sonoro": {
+          "classificacoes": [],
+          "falhas": [
+            "Inoperante",
+            "Áudio com falha",
+            "Cabo danificado",
+            "Botão de acionamento com defeito",
+            "Sem sinal"
+          ]
+        }
+      },
+      "Elevador de serviço": {
+        "Certificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Validade da inspeção expirada",
+            "Documentação ausente",
+            "Certificado não afixado",
+            "Certificação irregular",
+            "Laudo técnico vencido"
+          ]
+        },
+        "Manutenção": {
+          "classificacoes": [],
+          "falhas": [
+            "Ausência de livro de registro",
+            "Manutenção preventiva atrasada",
+            "Registro incompleto",
+            "Falta de plano de manutenção",
+            "Histórico de falhas não registrado"
+          ]
+        },
+        "Parapeito": {
+          "classificacoes": [],
+          "falhas": [
+            "Fixação inadequada",
+            "Corrosão na estrutura",
+            "Integridade comprometida",
+            "Parapeito ausente",
+            "Danos mecânicos"
+          ]
+        },
+        "Painel elétrico": {
+          "classificacoes": [],
+          "falhas": [
+            "Painel elétrico violado",
+            "Disjuntor disparado",
+            "Sinais de superaquecimento",
+            "Identificação ausente",
+            "Cabo solto no painel"
+          ]
+        },
+        "Teste funcional": {
+          "classificacoes": [],
+          "falhas": [
+            "Elevador inoperante",
+            "Falha no sistema de freio",
+            "Porta de segurança com defeito",
+            "Parada de emergência inoperante",
+            "Sobrecarga não detectada"
+          ]
+        }
+      },
+      "Aterramentos": {
+        "Conexões na base": {
+          "classificacoes": [],
+          "falhas": [
+            "Aterramento solto",
+            "Oxidação no terminal",
+            "Cabo de aterramento danificado",
+            "Conexão corroída",
+            "Ausência de marcação de torque"
+          ]
+        }
+      }
+    },
+    "Subsolo do Aerogerador": {
+      "Subsolo": {
+        "Sinalizações do subsolo": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinalização ausente",
+            "Sinalização ilegível",
+            "Não padronizada",
+            "Sinalização danificada",
+            "Visibilidade comprometida"
+          ]
+        },
+        "Limpeza do subsolo": {
+          "classificacoes": [],
+          "falhas": [
+            "Acúmulo de água",
+            "Presença de animais mortos",
+            "Excesso de poeira",
+            "Resíduos no fundo",
+            "Condições insalubres"
+          ]
+        },
+        "Iluminação do subsolo": {
+          "classificacoes": [],
+          "falhas": [
+            "Inoperante",
+            "Lâmpada queimada",
+            "Fiação exposta",
+            "Iluminação insuficiente",
+            "Luminária danificada"
+          ]
+        }
+      }
+    },
+    "Sistema Elétrico / Gabinetes": {
+      "Sistema Elétrico e Ventilação": {
+        "UPS": {
+          "classificacoes": [],
+          "falhas": [
+            "Tempo de operação excedido",
+            "Bateria sem carga",
+            "Integridade comprometida",
+            "Alarme ativo",
+            "Sem placa de identificação"
+          ]
+        },
+        "Tomadas auxiliares": {
+          "classificacoes": [],
+          "falhas": [
+            "Tomada danificada",
+            "Sinais de superaquecimento",
+            "Sem identificação de tensão",
+            "Fixação inadequada",
+            "Isolamento deteriorado"
+          ]
+        },
+        "Cabos de potência": {
+          "classificacoes": [],
+          "falhas": [
+            "Isolamento danificado",
+            "Fixação inadequada",
+            "Oxidação nos terminais",
+            "Cabo fora do trajeto correto",
+            "Sinais de superaquecimento"
+          ]
+        },
+        "Ventilação": {
+          "classificacoes": [],
+          "falhas": [
+            "Filtro de ar obstruído",
+            "Ventilador inoperante",
+            "Filtro sem limpeza",
+            "Ruído anormal",
+            "Entrada de ar obstruída"
+          ]
+        }
+      },
+      "Cubículo Switchgear": {
+        "Carcaça switchgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos na pintura",
+            "Oxidação na carcaça",
+            "TAG ausente ou incorreta",
+            "Aterramento solto",
+            "Limpeza inadequada"
+          ]
+        },
+        "Vedação switchgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta sem vedação",
+            "Entrada de cabo sem vedação",
+            "Tampa danificada",
+            "Infiltração de umidade",
+            "Folga nas juntas"
+          ]
+        },
+        "Gás do switchgear": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressão abaixo do mínimo",
+            "Vazamento de gás",
+            "Indicador de pressão danificado",
+            "Sem registro de pressão",
+            "Pressão acima do máximo"
+          ]
+        }
+      },
+      "RMU - Ring Main Unit": {
+        "Gabinetes RMU": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos na carcaça",
+            "Limpeza inadequada",
+            "Integridade comprometida",
+            "Identificação ausente",
+            "Fixação com folga"
+          ]
+        },
+        "Aterramento RMU": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação no terminal",
+            "Aterramento solto",
+            "Sinais de arco elétrico",
+            "Cabo de aterramento danificado",
+            "Conexão corroída"
+          ]
+        },
+        "DPS": {
+          "classificacoes": [],
+          "falhas": [
+            "DPS inoperante",
+            "Sinalização de falha ativa",
+            "DPS ausente",
+            "Limpeza inadequada",
+            "Conexão solta"
+          ]
+        }
+      }
+    },
+    "Torre Seção do Yaw e Loop": {
+      "Cabos do Loop": {
+        "Circuitos potência/controle": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de arco elétrico",
+            "Isolamento danificado",
+            "Torção excessiva nos cabos",
+            "Conector danificado",
+            "Fixação inadequada"
+          ]
+        },
+        "Sensor Cable Twist": {
+          "classificacoes": [],
+          "falhas": [
+            "Esfera atuadora danificada",
+            "Fim de curso inoperante",
+            "Cabo do sensor danificado",
+            "Fixação inadequada",
+            "Sistema sem funcionamento"
+          ]
+        },
+        "Plataforma do loop": {
+          "classificacoes": [],
+          "falhas": [
+            "Limpeza inadequada",
+            "Fixação com folga",
+            "Danos mecânicos",
+            "Corrosão na estrutura",
+            "Objeto estranho presente"
+          ]
+        }
+      },
+      "Sistema do Yaw": {
+        "Lubrificação do Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de graxa",
+            "Nível de lubrificante baixo",
+            "Bomba inoperante",
+            "Graxa contaminada",
+            "Amostra não coletada"
+          ]
+        },
+        "Rolamento do Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Folga excessiva",
+            "Oxidação no rolamento",
+            "Vedação danificada",
+            "Graxa contaminada",
+            "Amostra não coletada para análise"
+          ]
+        },
+        "Freios do Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste excessivo das pastilhas",
+            "Oxidação no conjunto",
+            "Fixação inadequada no bedplate",
+            "Folga fora do especificado",
+            "Contaminação por óleo"
+          ]
+        },
+        "Dentes e pinhões Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Desgaste excessivo",
+            "Lubrificação insuficiente",
+            "Oxidação nos dentes",
+            "Lascamento dos dentes",
+            "Folga excessiva no engrenamento"
+          ]
+        },
+        "Parafusos nacele/torre": {
+          "classificacoes": [],
+          "falhas": [
+            "Torque fora do especificado",
+            "Oxidação nos parafusos",
+            "Marcações de torque ausentes",
+            "Parafuso com dano",
+            "Folga detectada"
+          ]
+        }
+      },
+      "Motor-Redutor do Yaw": {
+        "Motores do Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Nível de óleo baixo",
+            "Vazamento de óleo",
+            "Carcaça danificada",
+            "Ruído anormal",
+            "Placa de identificação ausente"
+          ]
+        },
+        "Redutores do Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Nível de óleo baixo",
+            "Vazamento de óleo",
+            "Vibração anormal",
+            "Aquecimento excessivo",
+            "Placa de identificação ausente"
+          ]
+        }
+      },
+      "Saúde e Segurança Yaw": {
+        "Iluminação Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Iluminação inoperante",
+            "Iluminação de emergência sem carga",
+            "Luminária danificada",
+            "Fiação exposta",
+            "Iluminação insuficiente"
+          ]
+        },
+        "Escada de acesso à nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Degrau danificado",
+            "Oxidação na estrutura",
+            "Fixação inadequada",
+            "Ausência de guarda-corpo",
+            "Degrau ausente"
+          ]
+        }
+      }
+    },
+    "Drive-Train": {
+      "Drive-Train": {
+        "Conexão do Hub": {
+          "classificacoes": [],
+          "falhas": [
+            "Parafusos danificados",
+            "Folga no flange da tampa",
+            "Corrosão no alojamento",
+            "Marcas de torque ausentes",
+            "Desgaste excessivo"
+          ]
+        },
+        "Eixo principal": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Oxidação no eixo",
+            "Alinhamento incorreto",
+            "Parafusos folgados",
+            "Marcas de torque ausentes"
+          ]
+        },
+        "Rolamento principal": {
+          "classificacoes": [],
+          "falhas": [
+            "Vedação danificada",
+            "Vazamento de graxa",
+            "Ruído ou vibração anormal",
+            "Graxa contaminada",
+            "Coletor de graxa cheio"
+          ]
+        },
+        "Rolamento frontal": {
+          "classificacoes": [],
+          "falhas": [
+            "Vedação danificada",
+            "Vazamento de graxa",
+            "Ruído ou vibração anormal",
+            "Graxa contaminada",
+            "Coletor de graxa cheio"
+          ]
+        }
+      },
+      "Sistema Hidráulico e Freio": {
+        "Sistema hidráulico": {
+          "classificacoes": [],
+          "falhas": [
+            "Pressão fora do especificado",
+            "Vazamento de óleo hidráulico",
+            "Mangueira danificada",
+            "Válvula com defeito",
+            "Óleo hidráulico contaminado"
+          ]
+        },
+        "Sistema de freio": {
+          "classificacoes": [],
+          "falhas": [
+            "Falha no comando de parada",
+            "Falha no emergency stop",
+            "Freio inoperante",
+            "Teste funcional reprovado",
+            "Tempo de frenagem fora do padrão"
+          ]
+        },
+        "Freio mecânico (caliper)": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento no caliper",
+            "Desgaste das pastilhas",
+            "Marcas de torque ausentes",
+            "Teste de frenagem reprovado",
+            "Contaminação por óleo"
+          ]
+        },
+        "Rotor lock": {
+          "classificacoes": [],
+          "falhas": [
+            "Pino de trava com defeito",
+            "Nível de óleo baixo",
+            "Sistema de bloqueio inoperante",
+            "Braço do travão danificado",
+            "Operação fora do padrão"
+          ]
+        }
+      }
+    },
+    "Gerador": {
+      "Gerador": {
+        "Carcaça do gerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Contaminação por óleo",
+            "Oxidação na carcaça",
+            "Fissuras ou trincas",
+            "Placa de identificação ausente",
+            "Limpeza inadequada"
+          ]
+        },
+        "Estator": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de arco elétrico",
+            "Isolamento danificado",
+            "Oxidação nos enrolamentos",
+            "Bucin danificado",
+            "Aquecimento anormal"
+          ]
+        },
+        "Rotor": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de arco elétrico",
+            "Isolamento danificado",
+            "Oxidação nos enrolamentos",
+            "Desequilíbrio detectado",
+            "Polo danificado"
+          ]
+        },
+        "Retificador/Conversor": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de superaquecimento",
+            "Proteção acrílica ausente",
+            "Filtro de ar obstruído",
+            "Cabo solto",
+            "Componente danificado"
+          ]
+        },
+        "Filtro do gerador": {
+          "classificacoes": [],
+          "falhas": [
+            "Filtro obstruído",
+            "Fixação inadequada",
+            "Dano no filtro",
+            "Entrada de ar bloqueada",
+            "Filtro sem limpeza"
+          ]
+        }
+      }
+    },
+    "Nacele Interior": {
+      "Estado Geral": {
+        "Carenagem de aço": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos na pintura interna",
+            "Conexão com estrutura solta",
+            "Selante deteriorado nas junções",
+            "Escotilha sem vedação",
+            "Limpeza inadequada"
+          ]
+        },
+        "Estrutura de suporte metálica": {
+          "classificacoes": [],
+          "falhas": [
+            "Ponto de oxidação na estrutura",
+            "Trincas nos pontos de solda",
+            "Fixação com folga",
+            "Marcas de impacto",
+            "Piso metálico com limpeza inadequada"
+          ]
+        },
+        "Guincho/talha": {
+          "classificacoes": [],
+          "falhas": [
+            "Certificação vencida",
+            "Corrente com danos",
+            "Bacia de contenção ausente",
+            "Guincho inoperante",
+            "Ausência de lubrificação"
+          ]
+        }
+      },
+      "Elétrico": {
+        "Armário de controle da nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de arco elétrico",
+            "Filtro de ar obstruído",
+            "Cabo solto ou danificado",
+            "Componente danificado",
+            "Entrada de ar bloqueada"
+          ]
+        },
+        "Inversor de Yaw": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de superaquecimento",
+            "Filtro obstruído",
+            "Cabo solto",
+            "Componente danificado",
+            "Alarme ativo"
+          ]
+        },
+        "Sistema de lubrificação": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de lubrificante",
+            "Nível baixo",
+            "Bomba inoperante",
+            "Lubrificante contaminado",
+            "Limpeza inadequada"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Parada de emergência": {
+          "classificacoes": [],
+          "falhas": [
+            "Botão inoperante",
+            "Teste funcional reprovado",
+            "Sinalização ausente",
+            "Dano no dispositivo",
+            "Tempo de resposta fora do padrão"
+          ]
+        },
+        "Kit resgate/evacuação": {
+          "classificacoes": [],
+          "falhas": [
+            "Kit ausente",
+            "Certificação vencida",
+            "Equipamento danificado",
+            "Validade expirada",
+            "Kit incompleto"
+          ]
+        },
+        "Extintores nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Validade expirada",
+            "Extintor ausente",
+            "Carga insuficiente",
+            "Lacre violado",
+            "Certificação vencida"
+          ]
+        },
+        "Sistema de refrigeração a água": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de água",
+            "Nível baixo",
+            "Bomba inoperante",
+            "Limpeza inadequada",
+            "Alarme de temperatura ativo"
+          ]
+        }
+      }
+    },
+    "Nacele Exterior": {
+      "Estado Geral": {
+        "Carenagem exterior": {
+          "classificacoes": [],
+          "falhas": [
+            "Danos na pintura exterior",
+            "Infiltração por vedação danificada",
+            "Painel solto",
+            "Corrosão na carenagem",
+            "Danos por impacto"
+          ]
+        },
+        "Sensor de vento": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de descarga elétrica",
+            "Danos no revestimento",
+            "Vedação da fixação danificada",
+            "Sensor inoperante",
+            "Fissuras na cavidade de medição"
+          ]
+        }
+      },
+      "Saúde e Segurança": {
+        "Luzes de aviação": {
+          "classificacoes": [],
+          "falhas": [
+            "Luz de aviação inoperante",
+            "Oxidação no suporte",
+            "Circuito com defeito",
+            "Marcas de torque ausentes",
+            "Lâmpada queimada"
+          ]
+        }
+      },
+      "Aterramento e SPDA": {
+        "Para-raios": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de descarga elétrica",
+            "Oxidação na conexão SPDA",
+            "Suporte de fixação danificado",
+            "Conexão elétrica solta",
+            "Corrosão no equipamento"
+          ]
+        }
+      }
+    },
+    "Hub e Pás": {
+      "Hub Interno": {
+        "Hub - condições gerais": {
+          "classificacoes": [],
+          "falhas": [
+            "Contaminação por óleo",
+            "Oxidação interna",
+            "Limpeza inadequada",
+            "Objeto estranho presente",
+            "Dano na estrutura interna"
+          ]
+        },
+        "Baterias do hub": {
+          "classificacoes": [],
+          "falhas": [
+            "Oxidação nos terminais",
+            "Carga insuficiente",
+            "Bateria danificada",
+            "Vazamento de eletrólito",
+            "Bateria sem identificação"
+          ]
+        },
+        "Iluminação do hub": {
+          "classificacoes": [],
+          "falhas": [
+            "Inoperante",
+            "Lâmpada queimada",
+            "Fiação exposta",
+            "Luminária danificada",
+            "Iluminação insuficiente"
+          ]
+        }
+      },
+      "Pás": {
+        "Condição geral das pás": {
+          "classificacoes": [],
+          "falhas": [
+            "Erosão na borda de ataque",
+            "Fissuras na superfície",
+            "Contaminação por óleo",
+            "Oxidação",
+            "Danos por impacto de raios"
+          ]
+        },
+        "Rolamentos do pitch": {
+          "classificacoes": [],
+          "falhas": [
+            "Folga excessiva",
+            "Lubrificação insuficiente",
+            "Graxa contaminada",
+            "Vedação danificada",
+            "Amostra não coletada para análise"
+          ]
+        },
+        "Conexão aterramento da pá": {
+          "classificacoes": [],
+          "falhas": [
+            "Conexão solta",
+            "Oxidação no terminal",
+            "Sinais de descarga elétrica",
+            "Cabo de aterramento danificado",
+            "Corrosão comprometendo a condutividade"
+          ]
+        },
+        "Conexão pá/adaptador": {
+          "classificacoes": [],
+          "falhas": [
+            "Folga na conexão",
+            "Danos na interface",
+            "Parafusos com torque incorreto",
+            "Oxidação na junta",
+            "Integridade comprometida"
+          ]
+        },
+        "Conexão adaptador/rotor": {
+          "classificacoes": [],
+          "falhas": [
+            "Folga na conexão",
+            "Danos na interface",
+            "Parafusos com torque incorreto",
+            "Oxidação na junta",
+            "Integridade comprometida"
+          ]
+        }
+      },
+      "Motores e Sensores": {
+        "Motores de acionamento do pitch": {
+          "classificacoes": [],
+          "falhas": [
+            "Vazamento de óleo",
+            "Fixação inadequada",
+            "Torque incorreto",
+            "Aquecimento anormal",
+            "Ruído anormal"
+          ]
+        },
+        "Sensores fim de curso das pás": {
+          "classificacoes": [],
+          "falhas": [
+            "Sensor inoperante",
+            "Posicionamento incorreto",
+            "Cabo do sensor danificado",
+            "Resposta fora do padrão",
+            "Sensor solto"
+          ]
+        },
+        "Slipring": {
+          "classificacoes": [],
+          "falhas": [
+            "Pastilhas desgastadas",
+            "Sinais de arco elétrico",
+            "Oxidação nos contatos",
+            "Compartimento externo danificado",
+            "Conexão solta"
+          ]
+        },
+        "SPDA pás/nacele": {
+          "classificacoes": [],
+          "falhas": [
+            "Sinais de descarga elétrica",
+            "Conexão de SPDA solta",
+            "Corrosão comprometendo a continuidade",
+            "Componente SPDA danificado",
+            "Limpeza inadequada"
+          ]
+        }
+      }
+    }
+  }
+};
+
 const AEROGERADORES = [
   {
     "parque": "Coxilha Negra",
@@ -4968,7 +6072,52 @@ const AEROGERADORES = [
   { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1305" },
   { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1306" },
   { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1307" },
-  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1308" }
+  { "parque": "GPEXPAN", "sub_parque": "Coqueirinho 2", "codigo": "MA1308" },
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-01"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-02"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-03"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-04"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-05"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-06"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-07"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-08"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-09"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-10"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-11"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-12"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-13"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-14"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato I", "codigo": "ECC1-15"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-01"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-02"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-03"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-04"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-05"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-06"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-07"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-08"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-09"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-10"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-11"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-12"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-13"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-14"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato II", "codigo": "ECC2-15"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-01"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-02"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-03"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-04"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-05"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-06"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-07"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-08"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-09"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-10"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-11"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-12"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-13"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-14"},
+  {"parque": "Cerro Chato", "sub_parque": "Cerro Chato III", "codigo": "ECC3-15"}
 ];
 
         // Estado da aplicação
@@ -5211,6 +6360,7 @@ const AEROGERADORES = [
                 countTotalComponents();
                 
                 console.log('3. Carregando aerogeradores...');
+                if (typeof importParqueCarregarCustoms === 'function') importParqueCarregarCustoms();
                 loadAerogeradores();
                 
                 console.log('4. Construindo árvore...');
@@ -5251,8 +6401,16 @@ const AEROGERADORES = [
 
         function loadAerogeradores() {
             const parque = document.getElementById('parque').value;
-            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã', 'gpexpan': 'GPEXPAN' };
-            const parqueNome = parqueMap[parque] || 'Coxilha Negra';
+            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã', 'gpexpan': 'GPEXPAN', 'cerro_chato': 'Cerro Chato' };
+            // Para parques customizados, buscar o nome a partir do próprio AEROGERADORES
+            let parqueNome = parqueMap[parque];
+            if (!parqueNome) {
+                const custom = AEROGERADORES.find(a => {
+                    const key = 'custom_' + a.parque.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+                    return key === parque;
+                });
+                parqueNome = custom ? custom.parque : 'Coxilha Negra';
+            }
             const select = document.getElementById('aerogerador');
             select.innerHTML = '<option value="">Selecione o aerogerador...</option>';
             AEROGERADORES.filter(a => a.parque === parqueNome).forEach(aero => {
@@ -5380,6 +6538,10 @@ const AEROGERADORES = [
             if (parque === 'entorno_2') return ESTRUTURA_ENTORNO2;
             if (parque === 'ibirapuita') return ESTRUTURA_IBIRAPUITA;
             if (parque === 'gpexpan') return ESTRUTURA_GPEXPAN;
+            if (parque === 'cerro_chato') return ESTRUTURA_CERRO_CHATO;
+            // Parques customizados importados
+            const chave = 'ESTRUTURA_' + parque.toUpperCase();
+            if (window[chave]) return window[chave];
             return ESTRUTURA;
         }
 
@@ -5507,10 +6669,12 @@ const AEROGERADORES = [
 
             // Carregar dados salvos se existirem
             loadComponentData();
-
-            // Scroll suave — aguarda o layout ser recalculado antes de scrollar
+            
+            // Scroll suave — compatível com mobile
             requestAnimationFrame(() => {
-                document.getElementById('inspectionSection').scrollIntoView({behavior: 'smooth', block: 'start'});
+                const el = document.getElementById('inspectionSection');
+                const top = el.getBoundingClientRect().top + window.pageYOffset - 10;
+                window.scrollTo({ top, behavior: 'smooth' });
             });
         }
 
@@ -5718,7 +6882,36 @@ const AEROGERADORES = [
             document.getElementById('photoUpload').addEventListener('click', () => {
                 abrirCameraPersonalizada();
             });
+const photoUpload = document.getElementById('photoUpload');
 
+photoUpload.addEventListener('click', () => {
+    abrirCameraPersonalizada();
+});
+
+photoUpload.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    photoUpload.style.borderColor = '#0000FF';
+    photoUpload.style.background = '#f0f0ff';
+});
+
+photoUpload.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    photoUpload.style.borderColor = '';
+    photoUpload.style.background = '';
+});
+
+photoUpload.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    photoUpload.style.borderColor = '';
+    photoUpload.style.background = '';
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+    const fakeEvent = { target: { files } };
+    handlePhotoUpload(fakeEvent);
+});
             document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
 
             if (saveBtn) {
@@ -5781,6 +6974,14 @@ const AEROGERADORES = [
                 });
             }
 
+            const backupSemFotosBtn = document.getElementById('backupSemFotos');
+            if (backupSemFotosBtn) {
+                backupSemFotosBtn.addEventListener('click', () => {
+                    console.log('Botão BACKUP SEM FOTOS clicado!');
+                    createBackupSemFotos();
+                });
+            }
+
             if (restoreBtn) {
                 restoreBtn.addEventListener('click', () => {
                     console.log('Botão RESTAURAR clicado!');
@@ -5808,14 +7009,68 @@ const AEROGERADORES = [
                 });
             }
 
-            if (mergeFileInput) {
-                mergeFileInput.addEventListener('change', (e) => {
-                    if (e.target.files.length > 0) {
-                        mergeBackup(e.target.files[0]);
-                        e.target.value = '';
-                    }
-                });
+            // if (mergeFileInput) {
+            //     mergeFileInput.addEventListener('change', (e) => {
+            //         if (e.target.files.length > 0) {
+            //             mergeBackup(e.target.files[0]);
+            //             e.target.value = '';
+            //         }
+            //     });
+            // }
+            // Encontre e substitua ESTE bloco inteiro:
+
+// PELO BLOCO ABAIXO:
+if (mergeFileInput) {
+    mergeFileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        e.target.value = '';
+        if (!files.length) return;
+
+        if (files.length === 1) {
+            await mergeBackup(files[0]);
+            return;
+        }
+
+        const nomeArquivos = files.map((f, i) => `${i + 1}. ${f.name}`).join('\n');
+        const confirmMsg = `🔀 MESCLAR ${files.length} ARQUIVOS\n\n${nomeArquivos}\n\nOs arquivos serão mesclados em sequência.\nDados mais recentes prevalecem em conflito.\n\nDeseja continuar?`;
+
+        if (!confirm(confirmMsg)) {
+            showToast('Mesclagem cancelada', 'info');
+            return;
+        }
+
+        let totalAdicionadas = 0, totalAtualizadas = 0, totalFotos = 0;
+        const erros = [];
+
+        for (let i = 0; i < files.length; i++) {
+            showToast(`⏳ Mesclando ${i + 1}/${files.length}: ${files[i].name}`, 'info');
+            try {
+                const result = await mergeBackupSilent(files[i]);
+                totalAdicionadas += result.adicionadas;
+                totalAtualizadas += result.atualizadas;
+                totalFotos += result.fotos;
+            } catch (err) {
+                erros.push(`${files[i].name}: ${err.message}`);
             }
+        }
+
+        buildTree();
+        updateProgress();
+        updateParqueProgress();
+
+        const resumo = [];
+        if (totalAdicionadas > 0) resumo.push(`${totalAdicionadas} novas inspeções`);
+        if (totalAtualizadas > 0) resumo.push(`${totalAtualizadas} atualizadas`);
+        if (totalFotos > 0) resumo.push(`${totalFotos} fotos`);
+
+        const msg = `✅ ${files.length} arquivos mesclados! ${resumo.join(' · ') || 'Sem alterações'}`;
+        if (erros.length > 0) {
+            alert(msg + '\n\nErros:\n' + erros.join('\n'));
+        } else {
+            showToast(msg, 'success');
+        }
+    });
+}
 
             document.getElementById('aerogerador').addEventListener('change', () => {
                 buildTree();
@@ -5858,13 +7113,13 @@ const AEROGERADORES = [
             });
         }
 
-        async function handlePhotoUpload(e) {
+        function handlePhotoUpload(e) {
             const files = Array.from(e.target.files);
-            const promises = files.map(file => new Promise((resolve) => {
+            files.forEach(file => {
                 // Aumentamos o limite para 20MB já que vamos comprimir
                 if (file.size > 20 * 1024 * 1024) {
                     alert(`A foto ${file.name} é muito grande. Máximo 20MB por foto.`);
-                    return resolve();
+                    return;
                 }
                 const reader = new FileReader();
                 reader.onload = async (ev) => {
@@ -5879,11 +7134,9 @@ const AEROGERADORES = [
 
                     currentPhotos.push(compressed);
                     displayPhotos();
-                    resolve();
                 };
                 reader.readAsDataURL(file);
-            }));
-            await Promise.all(promises);
+            });
         }
 
         // ===== LANTERNA =====
@@ -5891,20 +7144,14 @@ const AEROGERADORES = [
         let lanternaAtiva = false;
 
         async function toggleLanterna() {
-            const btn = document.getElementById('btnLanterna');
             if (!lanternaAtiva) {
                 try {
-                    // Solicitar acesso à câmera traseira com lanterna
                     lanternaStream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: 'environment' }
                     });
                     const track = lanternaStream.getVideoTracks()[0];
                     await track.applyConstraints({ advanced: [{ torch: true }] });
                     lanternaAtiva = true;
-                    btn.textContent = '🔦 Desligar Lanterna';
-                    btn.style.background = '#f0c040';
-                    btn.style.color = '#1a1a2e';
-                    btn.style.borderColor = '#f0c040';
                 } catch (e) {
                     if (e.name === 'NotAllowedError') {
                         showToast('⚠️ Permissão de câmera negada', 'warning');
@@ -5925,13 +7172,6 @@ const AEROGERADORES = [
                 lanternaStream = null;
             }
             lanternaAtiva = false;
-            const btn = document.getElementById('btnLanterna');
-            if (btn) {
-                btn.textContent = '🔦 Ligar Lanterna';
-                btn.style.background = '#1a1a2e';
-                btn.style.color = '#f0c040';
-                btn.style.borderColor = '#f0c040';
-            }
         }
 
         // ===== CÂMERA PERSONALIZADA =====
@@ -5943,7 +7183,6 @@ const AEROGERADORES = [
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
 
-            // Garante que começa no modo captura
             video.style.display = 'block';
             canvas.style.display = 'none';
             document.getElementById('cameraBtnsCaptura').style.display = 'flex';
@@ -5955,11 +7194,12 @@ const AEROGERADORES = [
                 if (lanternaAtiva && lanternaStream) {
                     cameraStream = lanternaStream;
                 } else {
-                    // Tenta abrir com torch; se não suportar, abre sem
                     try {
                         cameraStream = await navigator.mediaDevices.getUserMedia({
                             video: { facingMode: 'environment', advanced: [{ torch: true }] }
                         });
+                        lanternaAtiva = true;
+                        lanternaStream = cameraStream;
                     } catch {
                         cameraStream = await navigator.mediaDevices.getUserMedia({
                             video: { facingMode: 'environment' }
@@ -5977,13 +7217,11 @@ const AEROGERADORES = [
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
 
-            // Congela a imagem no canvas
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             fotoCapturadaDataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-            // Mostra o canvas congelado e os botões de confirmação
             video.style.display = 'none';
             canvas.style.display = 'block';
             document.getElementById('cameraBtnsCaptura').style.display = 'none';
@@ -5994,7 +7232,6 @@ const AEROGERADORES = [
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
 
-            // Volta ao preview ao vivo
             video.style.display = 'block';
             canvas.style.display = 'none';
             document.getElementById('cameraBtnsCaptura').style.display = 'flex';
@@ -6005,9 +7242,9 @@ const AEROGERADORES = [
         async function usarFoto() {
             if (!fotoCapturadaDataUrl) return;
             const dataUrl = fotoCapturadaDataUrl;
-            const canvas = document.getElementById('cameraCanvas');
 
             // Anima a foto congelada encolhendo para o canto inferior esquerdo
+            const canvas = document.getElementById('cameraCanvas');
             canvas.style.transition = 'transform 0.45s cubic-bezier(0.4, 0, 0.8, 0.6), opacity 0.45s ease-in';
             canvas.style.transformOrigin = 'bottom left';
             canvas.style.transform = 'scale(0.05) translate(0, 20%)';
@@ -6039,6 +7276,7 @@ const AEROGERADORES = [
             cameraStream = null;
         }
 
+        function displayPhotos() {
             const preview = document.getElementById('photoPreview');
             preview.innerHTML = '';
             
@@ -6061,7 +7299,7 @@ const AEROGERADORES = [
                 div.appendChild(btn);
                 preview.appendChild(div);
             });
-        
+        }
 
         async function loadPhotos(key) {
             try {
@@ -6267,7 +7505,6 @@ const AEROGERADORES = [
             document.getElementById('observacoes').value = '';
             currentPhotos = [];
             displayPhotos();
-            desligarLanterna();
             updateFalhaDropdown();
         }
 
@@ -6619,8 +7856,15 @@ const AEROGERADORES = [
         
         function updateParqueProgress() {
             const parque = document.getElementById('parque').value;
-            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã', 'gpexpan': 'GPEXPAN' };
-            const parqueNome = parqueMap[parque] || 'Coxilha Negra';
+            const parqueMap = { 'coxilha_negra': 'Coxilha Negra', 'entorno_2': 'Entorno 2', 'ibirapuita': 'Ibirapuitã', 'gpexpan': 'GPEXPAN', 'cerro_chato': 'Cerro Chato' };
+            let parqueNome = parqueMap[parque];
+            if (!parqueNome) {
+                const custom = AEROGERADORES.find(a => {
+                    const key = 'custom_' + a.parque.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+                    return key === parque;
+                });
+                parqueNome = custom ? custom.parque : 'Coxilha Negra';
+            }
             const aerosFiltrados = AEROGERADORES.filter(a => a.parque === parqueNome);
             let totalAeros = aerosFiltrados.length;
             let completosAeros = 0;
@@ -7303,6 +8547,56 @@ const AEROGERADORES = [
             return migrated;
         }
 
+        async function createBackupSemFotos() {
+            console.log('=== CRIANDO BACKUP SEM FOTOS ===');
+            try {
+                let inspData = {};
+                try {
+                    inspData = await loadAllInspectionsFromDB();
+                } catch (e) {
+                    const saved = localStorage.getItem('inspectionData');
+                    if (saved) inspData = JSON.parse(saved);
+                }
+
+                const numInspecoes = Object.keys(inspData).length;
+                if (numInspecoes === 0) {
+                    showToast('⚠️ Nenhum dado para fazer backup', 'warning');
+                    return;
+                }
+
+                const backup = {
+                    version: '2.0',
+                    createdAt: new Date().toISOString(),
+                    appName: 'Inspeção de Torres Eólicas (PWA) — Sem Fotos',
+                    data: {
+                        inspectionData: inspData,
+                        photos: {}
+                    }
+                };
+
+                const json = JSON.stringify(backup);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const date = new Date().toISOString().split('T')[0];
+                const responsavel = (document.getElementById('responsavel').value || '').trim();
+                const responsavelSlug = responsavel ? '_' + responsavel.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') : '';
+                const filename = `backup_sem_fotos_${date}${responsavelSlug}.json`;
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+                showToast(`✅ Backup sem fotos criado! ${numInspecoes} inspeções`, 'success');
+            } catch (e) {
+                console.error('Erro ao criar backup sem fotos:', e);
+                showToast('❌ Erro ao criar backup: ' + e.message, 'error');
+            }
+        }
+
         async function restoreBackup(file) {
             console.log('=== RESTAURANDO BACKUP ===');
             
@@ -7551,6 +8845,63 @@ const AEROGERADORES = [
 
             reader.readAsText(file);
         }
+        /**
+         * Versão silenciosa do mergeBackup para processamento em lote.
+         */
+        function mergeBackupSilent(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const backup = JSON.parse(e.target.result);
+                        if (!backup.data || !backup.version) throw new Error('Arquivo inválido');
+
+                        const backupInspections = backup.data.inspectionData || {};
+                        const backupPhotos = backup.data.photos || {};
+                        let adicionadas = 0, atualizadas = 0, fotos = 0;
+
+                        for (const [key, data] of Object.entries(backupInspections)) {
+                            const newKey = migrateKey(key);
+                            const newData = migrateData(data);
+                            const existingData = inspectionData[newKey];
+                            if (!existingData) {
+                                inspectionData[newKey] = newData;
+                                await saveInspectionToDB(newKey, newData);
+                                adicionadas++;
+                            } else {
+                                const existingTime = existingData.timestamp ? new Date(existingData.timestamp).getTime() : 0;
+                                const newTime = newData.timestamp ? new Date(newData.timestamp).getTime() : 0;
+                                if (newTime > existingTime) {
+                                    inspectionData[newKey] = newData;
+                                    await saveInspectionToDB(newKey, newData);
+                                    atualizadas++;
+                                }
+                            }
+                        }
+
+                        for (const [key, newPhotos] of Object.entries(backupPhotos)) {
+                            if (Array.isArray(newPhotos) && newPhotos.length > 0) {
+                                const migratedKey = migrateKey(key);
+                                let existingPhotos = await loadPhotosFromDB(migratedKey) || [];
+                                for (const newPhoto of newPhotos) {
+                                    if (!existingPhotos.includes(newPhoto)) {
+                                        existingPhotos.push(newPhoto);
+                                        fotos++;
+                                    }
+                                }
+                                await savePhotosToDB(migratedKey, existingPhotos);
+                            }
+                        }
+
+                        resolve({ adicionadas, atualizadas, fotos });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+                reader.readAsText(file);
+            });
+        }
 
         // Variável global para armazenar o relatório atual (para copiar JSON)
         let currentDiagnosticReport = null;
@@ -7694,7 +9045,7 @@ const AEROGERADORES = [
             report.estrutura = {
                 totalCategorias: Object.keys(ESTRUTURA.categorias).length,
                 totalComponentes: totalComponentes,
-                totalAerogeradores: AEROGERADORES.length
+                totalAerogeradores: new Set(Object.values(inspectionData).map(r => r.aerogerador).filter(Boolean)).size
             };
             
             // 5. Verificar backups
@@ -8294,6 +9645,7 @@ const AEROGERADORES = [
     <div class="bi-hdr-acts">
       <span class="bi-status" id="biStatusBadge" style="display:none">✓ Dados carregados</span>
       <button class="bi-hb bi-hb-ref" onclick="biRefresh()">🔄 Atualizar Dados</button>
+      <button class="bi-hb bi-hb-pr" onclick="gpToggle()" style="background:linear-gradient(135deg,#1a3a1a,#2d7a2d);border-color:rgba(0,200,80,0.4);color:#7fff7f;">📦 Gestão de Peças</button>
       <button class="bi-hb bi-hb-pr" onclick="window.print()">🖨 Imprimir</button>
       <button class="bi-hb bi-hb-back" onclick="biToggle()">← Voltar ao App</button>
     </div>
@@ -9016,6 +10368,1501 @@ document.addEventListener('keydown',e=>{
 });
 </script>
 
+<!-- ============================================================
+ <!-- ============================================================
+     GESTÃO DE PEÇAS
+     ============================================================ -->
+<style>
+#gpOverlay { display:none; position:fixed; inset:0; z-index:9500; background:#0A1628; overflow-y:auto; font-family:'DM Sans',sans-serif; color:#E8EDF5; }
+#gpOverlay.active { display:block; }
+#gpOverlay * { box-sizing:border-box; }
+#gpOverlay::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,102,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,102,255,0.04) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+#gpOverlay > * { position:relative; z-index:1; }
+#gpOverlay input, #gpOverlay select { position:relative; z-index:2; pointer-events:all; }
+
+/* HEADER */
+.gp-hdr { background:linear-gradient(135deg,#0D2145,#0A1E40); border-bottom:1px solid rgba(0,200,80,0.3); padding:16px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:50; }
+.gp-hdr h2 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:#7fff7f; margin:0; }
+.gp-hdr .sub { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-top:2px; }
+.gp-main { padding:24px 28px 80px; }
+
+/* FILTROS */
+.gp-flt { background:#0F1E35; border:1px solid rgba(0,200,80,0.15); border-radius:14px; padding:16px 20px; margin-bottom:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.gp-fg { display:flex; flex-direction:column; gap:5px; }
+.gp-fg label { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; font-weight:500; }
+.gp-fg select { background:#152640; border:1px solid rgba(0,200,80,0.18); color:#E8EDF5; border-radius:8px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; outline:none; min-width:160px; }
+.gp-fg select:focus { border-color:#00C850; }
+.gp-fg select option { background:#152640; }
+
+/* KPI BAR */
+.gp-kpi-bar { background:#0D2145; border-bottom:1px solid rgba(0,102,255,0.15); padding:14px 0; display:flex; gap:0; flex-wrap:wrap; margin-bottom:24px; border-radius:12px; overflow:hidden; border:1px solid rgba(0,102,255,0.18); }
+.gp-kpi { flex:1; text-align:center; padding:10px 16px; border-right:1px solid rgba(255,255,255,0.06); min-width:120px; }
+.gp-kpi:last-child { border-right:none; }
+.gp-kpi-val { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; line-height:1; }
+.gp-kpi-lbl { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; margin-top:4px; color:#4A6280; }
+.gp-kpi-val.im { color:#FF6B6B; }
+.gp-kpi-val.gr { color:#FFB340; }
+.gp-kpi-val.lt { color:#7FB3FF; }
+.gp-kpi-val.wh { color:#E8EDF5; }
+.gp-kpi-val.green { color:#00C850; font-size:20px; }
+.gp-kpi-sep { width:1px; background:rgba(255,255,255,0.06); }
+
+/* SAVE BAR */
+.gp-save-bar { background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:10px; padding:10px 18px; font-size:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:20px; color:#68d391; }
+.gp-save-btns { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.gp-save-btn { background:#0d3d22; border:1px solid rgba(0,200,80,0.3); color:#7fff7f; border-radius:6px; padding:6px 14px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:600; }
+.gp-save-btn:hover { background:#0a4d2a; }
+.gp-save-btn.excel { background:#0a3d22; border-color:rgba(0,200,80,0.4); }
+
+/* PROGRESS */
+.gp-prog-wrap { background:#0F1E35; border:1px solid rgba(0,102,255,0.15); border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:14px; font-size:12px; color:#4A6280; margin-bottom:20px; }
+.gp-prog-bar { flex:1; height:6px; background:#1C3050; border-radius:10px; overflow:hidden; }
+.gp-prog-fill { height:100%; background:linear-gradient(90deg,#0066FF,#00C850); border-radius:10px; transition:width 0.4s; }
+.gp-prog-txt { white-space:nowrap; font-weight:600; color:#0066FF; }
+
+/* NAV PILLS */
+.gp-nav-pills { background:#0F1E35; border:1px solid rgba(0,102,255,0.15); border-radius:10px; padding:10px 16px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:20px; }
+.gp-nav-lbl { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-right:4px; }
+.gp-nav-pill { text-decoration:none; border:1.5px solid; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:600; white-space:nowrap; cursor:pointer; background:transparent; }
+.gp-nav-pill:hover { opacity:0.75; }
+
+/* SUMMARY BLOCK */
+.gp-summary { background:#0D2145; border:1px solid rgba(0,102,255,0.2); border-radius:12px; margin-bottom:24px; overflow:hidden; }
+.gp-summary-top { padding:18px 22px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.gp-gt-label { font-size:12px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; }
+.gp-gt-val { font-family:'Syne',sans-serif; font-size:28px; font-weight:900; color:#00C850; margin-top:4px; }
+.gp-gt-sub { font-size:11px; color:#4A6280; margin-top:2px; }
+.gp-summary-cats { padding:16px 22px; }
+.gp-summary-cats h3 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#4A6280; margin-bottom:12px; font-weight:600; }
+.gp-cat-tbl { width:100%; border-collapse:collapse; }
+.gp-cat-tbl td { padding:7px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.05); color:#C5D8F0; }
+.gp-cat-tbl tr:last-child td { border-bottom:none; }
+.gp-cat-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+.gp-sum-count { text-align:center; width:80px; color:#4A6280; font-size:12px; }
+.gp-sum-val { text-align:right; width:170px; font-weight:700; color:#00C850; white-space:nowrap; }
+.gp-sum-val-zero { color:#4A6280 !important; }
+.gp-total-row td { border-top:1px solid rgba(0,200,80,0.2) !important; font-weight:800; color:#E8EDF5; padding-top:10px; }
+.gp-total-row .gp-sum-val { color:#00C850; font-size:15px; }
+
+/* AERO BLOCKS */
+.gp-aero-block { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:12px; margin-bottom:16px; overflow:hidden; border-left:4px solid #1C3050; }
+.gp-aero-block.aero-im { border-left-color:#FF4444; }
+.gp-aero-block.aero-gr { border-left-color:#FF9900; }
+.gp-aero-block.aero-lt { border-left-color:#3385FF; }
+.gp-aero-hdr2 { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0D1E38; border-bottom:1px solid rgba(0,102,255,0.1); flex-wrap:wrap; gap:8px; }
+.gp-aero-title { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.gp-aero-code2 { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; color:#7FB3FF; min-width:80px; }
+.gp-aero-badges { display:flex; gap:6px; flex-wrap:wrap; }
+.gp-mini-badge { font-size:11px; font-weight:600; border-radius:12px; padding:2px 9px; }
+.gp-mini-im { background:rgba(255,68,68,0.15); color:#FF6B6B; border:1px solid rgba(255,68,68,0.3); }
+.gp-mini-gr { background:rgba(255,153,0,0.15); color:#FFB340; border:1px solid rgba(255,153,0,0.3); }
+.gp-mini-lt { background:rgba(51,133,255,0.12); color:#7FB3FF; border:1px solid rgba(51,133,255,0.2); }
+.gp-aero-count { font-size:12px; color:#4A6280; font-weight:500; }
+
+/* TABLE */
+.gp-tbl-wrap { overflow-x:auto; }
+.gp-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.gp-tbl th { background:#0D1E38; text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.7px; color:#4A6280; font-weight:600; border-bottom:1px solid rgba(0,102,255,0.15); white-space:nowrap; }
+.gp-tbl .th-cat { background:#0A2240; color:#7FB3FF; min-width:210px; }
+.gp-tbl .th-custo { background:#0A2810; color:#00C850; min-width:130px; text-align:right; }
+.gp-tbl td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.gp-tbl tr:last-child td { border-bottom:none; }
+.gp-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+
+/* BADGES */
+.gp-bdg { display:inline-block; border-radius:5px; padding:2px 8px; font-size:11px; font-weight:600; white-space:nowrap; }
+.gp-bdg-im { background:rgba(255,68,68,0.15); color:#FF6B6B; border:1px solid rgba(255,68,68,0.3); }
+.gp-bdg-gr { background:rgba(255,153,0,0.15); color:#FFB340; border:1px solid rgba(255,153,0,0.3); }
+.gp-bdg-lt { background:rgba(51,133,255,0.12); color:#7FB3FF; border:1px solid rgba(51,133,255,0.2); }
+
+/* CATEGORIZAÇÃO SELECT */
+.gp-cat-cell { min-width:210px; }
+.gp-cat-select { width:100%; background:#152640; border:1px solid rgba(0,102,255,0.2); border-radius:6px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; color:#E8EDF5; cursor:pointer; outline:none; }
+.gp-cat-select:focus { border-color:#0066FF; box-shadow:0 0 0 2px rgba(0,102,255,0.2); }
+.gp-cat-select.filled { background:#0A2240; border-color:rgba(0,102,255,0.4); font-weight:600; color:#7FB3FF; }
+.gp-cat-outro { margin-top:4px; width:100%; background:#152640; border:1px solid rgba(0,102,255,0.2); border-radius:6px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; color:#E8EDF5; outline:none; }
+.gp-cat-outro:focus { border-color:#0066FF; }
+
+/* CUSTO INPUT */
+.gp-custo-cell { min-width:120px; text-align:right; }
+.gp-custo-wrap { display:flex; align-items:center; gap:4px; justify-content:flex-end; }
+.gp-custo-prefix { font-size:11px; color:#4A6280; white-space:nowrap; }
+.gp-custo-input { width:88px; background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; text-align:right; outline:none; color:#E8EDF5; }
+.gp-custo-input:focus { border-color:#00C850; box-shadow:0 0 0 2px rgba(0,200,80,0.15); }
+.gp-custo-input.has-value { background:#0d3d22; font-weight:600; color:#7fff7f; border-color:rgba(0,200,80,0.5); }
+
+/* SUBTOTAL ROW */
+.gp-subtotal-row td { background:#0B2B1A; border-top:1px solid rgba(0,200,80,0.2); font-weight:700; padding:10px; }
+.gp-subtotal-label { color:#00C850; font-size:12px; text-align:right; }
+.gp-subtotal-val { text-align:right; white-space:nowrap; color:#00C850; font-size:14px; font-weight:800; }
+
+/* OBS */
+.gp-obs-txt { font-size:11px; color:#4A6280; font-style:italic; margin-top:2px; }
+
+/* SECTION TITLE */
+.gp-sec { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#8BA3C7; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.gp-sec::before { content:''; display:inline-block; width:3px; height:14px; background:#00C850; border-radius:2px; }
+
+.gp-empty { text-align:center; padding:60px; color:#4A6280; }
+.gp-empty h3 { font-family:'Syne',sans-serif; font-size:18px; color:#8BA3C7; margin-bottom:8px; }
+
+@media(max-width:768px) { .gp-main { padding:16px 12px 80px; } .gp-hdr { padding:14px 16px; } }
+</style>
+
+<div id="gpOverlay">
+  <div class="gp-hdr">
+    <div>
+      <h2>📦 Gestão de Peças</h2>
+      <div class="sub">Categorização de defeitos e estimativa de custos</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button onclick="gpExportHTML()" class="gp-save-btn" style="font-size:12px;">⬇ Salvar HTML</button>
+      <button onclick="gpExportExcel()" class="gp-save-btn excel" style="font-size:12px;">📊 Exportar Excel</button>
+      <button onclick="gpToggle()" style="background:transparent;border:1px solid rgba(0,102,255,0.18);color:#8BA3C7;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">← Voltar ao BI</button>
+    </div>
+  </div>
+
+  <div class="gp-main">
+
+    <!-- Filtros -->
+    <div class="gp-flt">
+      <div class="gp-fg">
+        <label>Parque Eólico</label>
+        <select id="gpParque" onchange="gpOnParqueChange()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Sub-parque</label>
+        <select id="gpSubParque" onchange="gpRender()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Mostrar</label>
+        <select id="gpFiltroClass" onchange="gpRender()">
+          <option value="GI">🔴🟠 Grave + Imediata</option>
+          <option value="I">🔴 Apenas Ação Imediata</option>
+          <option value="G">🟠 Apenas Defeito Grave</option>
+          <option value="GIL">Todos os defeitos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPI Bar -->
+    <div class="gp-kpi-bar">
+      <div class="gp-kpi"><div class="gp-kpi-val wh" id="gpKA">0</div><div class="gp-kpi-lbl">Aerogeradores</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val wh" id="gpKT">0</div><div class="gp-kpi-lbl">Total Defeitos</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val im" id="gpKI">0</div><div class="gp-kpi-lbl">Ação Imediata</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val gr" id="gpKG">0</div><div class="gp-kpi-lbl">Defeito Grave</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val lt" id="gpKL">0</div><div class="gp-kpi-lbl">Defeito Ligeiro</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val wh" id="gpKCat">0</div><div class="gp-kpi-lbl">Categorizados</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val green">R$ <span id="gpKCusto">0,00</span></div><div class="gp-kpi-lbl">Custo Total Est.</div></div>
+    </div>
+
+    <!-- Save bar -->
+    <div class="gp-save-bar">
+      <span>💾 Categorização salva automaticamente neste navegador</span>
+      <div class="gp-save-btns">
+        <span id="gpSaveIndicator" style="font-size:11px;opacity:0.8;">✓ Tudo salvo</span>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="gp-prog-wrap">
+      <span>Progresso da categorização:</span>
+      <div class="gp-prog-bar"><div class="gp-prog-fill" id="gpProgFill" style="width:0%"></div></div>
+      <span class="gp-prog-txt" id="gpProgTxt">0 / 0 categorizados</span>
+    </div>
+
+    <!-- Nav index -->
+    <div class="gp-nav-pills" id="gpNavPills" style="display:none">
+      <span class="gp-nav-lbl">Ir para:</span>
+      <span id="gpNavInner"></span>
+    </div>
+
+    <!-- Summary block -->
+    <div class="gp-summary" id="gpSummary" style="display:none">
+      <div class="gp-summary-top">
+        <div>
+          <div class="gp-gt-label">Custo Total Estimado</div>
+          <div class="gp-gt-val">R$ <span id="gpGrandTotal">0,00</span></div>
+          <div class="gp-gt-sub"><span id="gpGrandFilled">0</span> itens com custo informado</div>
+        </div>
+        <div style="text-align:right">
+          <div class="gp-gt-label">Progresso</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#E8EDF5;margin-top:4px"><span id="gpSumCat">0</span> / <span id="gpSumTotal">0</span></div>
+          <div class="gp-gt-sub">defeitos categorizados</div>
+        </div>
+      </div>
+      <div class="gp-summary-cats">
+        <h3>Custo estimado por categoria de atendimento</h3>
+        <table class="gp-cat-tbl">
+          <tbody id="gpCatSumBody"></tbody>
+          <tfoot>
+            <tr class="gp-total-row">
+              <td><strong>Total Geral</strong></td>
+              <td class="gp-sum-count" id="gpCatSumTotalCount"></td>
+              <td class="gp-sum-val">R$ <span id="gpCatSumTotalVal">0,00</span></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="gpEmpty" class="gp-empty" style="display:none">
+      <h3>✅ Nenhum defeito encontrado</h3>
+      <p style="font-size:14px">Ajuste os filtros ou realize mais inspeções.</p>
+    </div>
+
+    <!-- Aero blocks container -->
+    <div id="gpBlocksWrap"></div>
+
+  </div>
+<!-- ============================================================
+     GESTÃO DE PEÇAS
+     ============================================================ -->
+<style>
+#gpOverlay { display:none; position:fixed; inset:0; z-index:9500; background:#0A1628; overflow-y:auto; font-family:'DM Sans',sans-serif; color:#E8EDF5; }
+#gpOverlay.active { display:block; }
+#gpOverlay * { box-sizing:border-box; }
+#gpOverlay::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,102,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,102,255,0.04) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+#gpOverlay > * { position:relative; z-index:1; }
+
+/* HEADER */
+.gp-hdr { background:linear-gradient(135deg,#0D2145,#0A1E40); border-bottom:1px solid rgba(0,200,80,0.3); padding:16px 28px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; position:sticky; top:0; z-index:50; }
+.gp-hdr h2 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; color:#7fff7f; margin:0; }
+.gp-hdr .sub { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-top:2px; }
+.gp-main { padding:24px 28px 80px; }
+
+/* FILTROS */
+.gp-flt { background:#0F1E35; border:1px solid rgba(0,200,80,0.15); border-radius:14px; padding:16px 20px; margin-bottom:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+.gp-fg { display:flex; flex-direction:column; gap:5px; }
+.gp-fg label { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; font-weight:500; }
+.gp-fg select { background:#152640; border:1px solid rgba(0,200,80,0.18); color:#E8EDF5; border-radius:8px; padding:8px 12px; font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; outline:none; min-width:160px; }
+.gp-fg select:focus { border-color:#00C850; }
+.gp-fg select option { background:#152640; }
+
+/* KPI BAR */
+.gp-kpi-bar { background:#0D2145; border-bottom:1px solid rgba(0,102,255,0.15); padding:14px 0; display:flex; gap:0; flex-wrap:wrap; margin-bottom:24px; border-radius:12px; overflow:hidden; border:1px solid rgba(0,102,255,0.18); }
+.gp-kpi { flex:1; text-align:center; padding:10px 16px; border-right:1px solid rgba(255,255,255,0.06); min-width:120px; }
+.gp-kpi:last-child { border-right:none; }
+.gp-kpi-val { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; line-height:1; }
+.gp-kpi-lbl { font-size:10px; text-transform:uppercase; letter-spacing:0.8px; margin-top:4px; color:#4A6280; }
+.gp-kpi-val.im { color:#FF6B6B; }
+.gp-kpi-val.gr { color:#FFB340; }
+.gp-kpi-val.lt { color:#7FB3FF; }
+.gp-kpi-val.wh { color:#E8EDF5; }
+.gp-kpi-val.green { color:#00C850; font-size:20px; }
+.gp-kpi-sep { width:1px; background:rgba(255,255,255,0.06); }
+
+/* SAVE BAR */
+.gp-save-bar { background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:10px; padding:10px 18px; font-size:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:20px; color:#68d391; }
+.gp-save-btns { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.gp-save-btn { background:#0d3d22; border:1px solid rgba(0,200,80,0.3); color:#7fff7f; border-radius:6px; padding:6px 14px; font-size:12px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:600; }
+.gp-save-btn:hover { background:#0a4d2a; }
+.gp-save-btn.excel { background:#0a3d22; border-color:rgba(0,200,80,0.4); }
+
+/* PROGRESS */
+.gp-prog-wrap { background:#0F1E35; border:1px solid rgba(0,102,255,0.15); border-radius:10px; padding:10px 18px; display:flex; align-items:center; gap:14px; font-size:12px; color:#4A6280; margin-bottom:20px; }
+.gp-prog-bar { flex:1; height:6px; background:#1C3050; border-radius:10px; overflow:hidden; }
+.gp-prog-fill { height:100%; background:linear-gradient(90deg,#0066FF,#00C850); border-radius:10px; transition:width 0.4s; }
+.gp-prog-txt { white-space:nowrap; font-weight:600; color:#0066FF; }
+
+/* NAV PILLS */
+.gp-nav-pills { background:#0F1E35; border:1px solid rgba(0,102,255,0.15); border-radius:10px; padding:10px 16px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:20px; }
+.gp-nav-lbl { font-size:11px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-right:4px; }
+.gp-nav-pill { text-decoration:none; border:1.5px solid; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:600; white-space:nowrap; cursor:pointer; background:transparent; }
+.gp-nav-pill:hover { opacity:0.75; }
+
+/* SUMMARY BLOCK */
+.gp-summary { background:#0D2145; border:1px solid rgba(0,102,255,0.2); border-radius:12px; margin-bottom:24px; overflow:hidden; }
+.gp-summary-top { padding:18px 22px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.gp-gt-label { font-size:12px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; }
+.gp-gt-val { font-family:'Syne',sans-serif; font-size:28px; font-weight:900; color:#00C850; margin-top:4px; }
+.gp-gt-sub { font-size:11px; color:#4A6280; margin-top:2px; }
+.gp-summary-cats { padding:16px 22px; }
+.gp-summary-cats h3 { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#4A6280; margin-bottom:12px; font-weight:600; }
+.gp-cat-tbl { width:100%; border-collapse:collapse; }
+.gp-cat-tbl td { padding:7px 10px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.05); color:#C5D8F0; }
+.gp-cat-tbl tr:last-child td { border-bottom:none; }
+.gp-cat-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+.gp-sum-count { text-align:center; width:80px; color:#4A6280; font-size:12px; }
+.gp-sum-val { text-align:right; width:170px; font-weight:700; color:#00C850; white-space:nowrap; }
+.gp-sum-val-zero { color:#4A6280 !important; }
+.gp-total-row td { border-top:1px solid rgba(0,200,80,0.2) !important; font-weight:800; color:#E8EDF5; padding-top:10px; }
+.gp-total-row .gp-sum-val { color:#00C850; font-size:15px; }
+
+/* AERO BLOCKS */
+.gp-aero-block { background:#0F1E35; border:1px solid rgba(0,102,255,0.18); border-radius:12px; margin-bottom:16px; overflow:hidden; border-left:4px solid #1C3050; }
+.gp-aero-block.aero-im { border-left-color:#FF4444; }
+.gp-aero-block.aero-gr { border-left-color:#FF9900; }
+.gp-aero-block.aero-lt { border-left-color:#3385FF; }
+.gp-aero-hdr2 { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#0D1E38; border-bottom:1px solid rgba(0,102,255,0.1); flex-wrap:wrap; gap:8px; }
+.gp-aero-title { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.gp-aero-code2 { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; color:#7FB3FF; min-width:80px; }
+.gp-aero-badges { display:flex; gap:6px; flex-wrap:wrap; }
+.gp-mini-badge { font-size:11px; font-weight:600; border-radius:12px; padding:2px 9px; }
+.gp-mini-im { background:rgba(255,68,68,0.15); color:#FF6B6B; border:1px solid rgba(255,68,68,0.3); }
+.gp-mini-gr { background:rgba(255,153,0,0.15); color:#FFB340; border:1px solid rgba(255,153,0,0.3); }
+.gp-mini-lt { background:rgba(51,133,255,0.12); color:#7FB3FF; border:1px solid rgba(51,133,255,0.2); }
+.gp-aero-count { font-size:12px; color:#4A6280; font-weight:500; }
+
+/* TABLE */
+.gp-tbl-wrap { overflow-x:auto; }
+.gp-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+.gp-tbl th { background:#0D1E38; text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:0.7px; color:#4A6280; font-weight:600; border-bottom:1px solid rgba(0,102,255,0.15); white-space:nowrap; }
+.gp-tbl .th-cat { background:#0A2240; color:#7FB3FF; min-width:210px; }
+.gp-tbl .th-custo { background:#0A2810; color:#00C850; min-width:130px; text-align:right; }
+.gp-tbl td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.gp-tbl tr:last-child td { border-bottom:none; }
+.gp-tbl tr:hover td { background:rgba(255,255,255,0.02); }
+
+/* BADGES */
+.gp-bdg { display:inline-block; border-radius:5px; padding:2px 8px; font-size:11px; font-weight:600; white-space:nowrap; }
+.gp-bdg-im { background:rgba(255,68,68,0.15); color:#FF6B6B; border:1px solid rgba(255,68,68,0.3); }
+.gp-bdg-gr { background:rgba(255,153,0,0.15); color:#FFB340; border:1px solid rgba(255,153,0,0.3); }
+.gp-bdg-lt { background:rgba(51,133,255,0.12); color:#7FB3FF; border:1px solid rgba(51,133,255,0.2); }
+
+/* CATEGORIZAÇÃO SELECT */
+.gp-cat-cell { min-width:210px; }
+.gp-cat-select { width:100%; background:#152640; border:1px solid rgba(0,102,255,0.2); border-radius:6px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; color:#E8EDF5; cursor:pointer; outline:none; }
+.gp-cat-select:focus { border-color:#0066FF; box-shadow:0 0 0 2px rgba(0,102,255,0.2); }
+.gp-cat-select.filled { background:#0A2240; border-color:rgba(0,102,255,0.4); font-weight:600; color:#7FB3FF; }
+.gp-cat-outro { margin-top:4px; width:100%; background:#152640; border:1px solid rgba(0,102,255,0.2); border-radius:6px; padding:5px 8px; font-size:12px; font-family:'DM Sans',sans-serif; color:#E8EDF5; outline:none; }
+.gp-cat-outro:focus { border-color:#0066FF; }
+
+/* CUSTO INPUT */
+.gp-custo-cell { min-width:120px; text-align:right; }
+.gp-custo-wrap { display:flex; align-items:center; gap:4px; justify-content:flex-end; }
+.gp-custo-prefix { font-size:11px; color:#4A6280; white-space:nowrap; }
+.gp-custo-input { width:88px; background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; text-align:right; outline:none; color:#E8EDF5; }
+.gp-custo-input:focus { border-color:#00C850; box-shadow:0 0 0 2px rgba(0,200,80,0.15); }
+.gp-custo-input.has-value { background:#0d3d22; font-weight:600; color:#7fff7f; border-color:rgba(0,200,80,0.5); }
+
+/* SUBTOTAL ROW */
+.gp-subtotal-row td { background:#0B2B1A; border-top:1px solid rgba(0,200,80,0.2); font-weight:700; padding:10px; }
+.gp-subtotal-label { color:#00C850; font-size:12px; text-align:right; }
+.gp-subtotal-val { text-align:right; white-space:nowrap; color:#00C850; font-size:14px; font-weight:800; }
+
+/* OBS */
+.gp-obs-txt { font-size:11px; color:#4A6280; font-style:italic; margin-top:2px; }
+
+/* SECTION TITLE */
+.gp-sec { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#8BA3C7; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.gp-sec::before { content:''; display:inline-block; width:3px; height:14px; background:#00C850; border-radius:2px; }
+
+.gp-empty { text-align:center; padding:60px; color:#4A6280; }
+.gp-empty h3 { font-family:'Syne',sans-serif; font-size:18px; color:#8BA3C7; margin-bottom:8px; }
+
+@media(max-width:768px) { .gp-main { padding:16px 12px 80px; } .gp-hdr { padding:14px 16px; } }
+</style>
+
+<div id="gpOverlay">
+  <div class="gp-hdr">
+    <div>
+      <h2>📦 Gestão de Peças</h2>
+      <div class="sub">Categorização de defeitos e estimativa de custos</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button onclick="gpExportHTML()" class="gp-save-btn" style="font-size:12px;">⬇ Salvar HTML</button>
+      <button onclick="gpExportExcel()" class="gp-save-btn excel" style="font-size:12px;">📊 Exportar Excel</button>
+      <button onclick="gpToggle()" style="background:transparent;border:1px solid rgba(0,102,255,0.18);color:#8BA3C7;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">← Voltar ao BI</button>
+    </div>
+  </div>
+
+  <div class="gp-main">
+
+    <!-- Filtros -->
+    <div class="gp-flt">
+      <div class="gp-fg">
+        <label>Parque Eólico</label>
+        <select id="gpParque" onchange="gpOnParqueChange()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Sub-parque</label>
+        <select id="gpSubParque" onchange="gpRender()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
+        <label>Mostrar</label>
+        <select id="gpFiltroClass" onchange="gpRender()">
+          <option value="GI">🔴🟠 Grave + Imediata</option>
+          <option value="I">🔴 Apenas Ação Imediata</option>
+          <option value="G">🟠 Apenas Defeito Grave</option>
+          <option value="GIL">Todos os defeitos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- KPI Bar -->
+    <div class="gp-kpi-bar">
+      <div class="gp-kpi"><div class="gp-kpi-val wh" id="gpKA">0</div><div class="gp-kpi-lbl">Aerogeradores</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val wh" id="gpKT">0</div><div class="gp-kpi-lbl">Total Defeitos</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val im" id="gpKI">0</div><div class="gp-kpi-lbl">Ação Imediata</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val gr" id="gpKG">0</div><div class="gp-kpi-lbl">Defeito Grave</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val lt" id="gpKL">0</div><div class="gp-kpi-lbl">Defeito Ligeiro</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val wh" id="gpKCat">0</div><div class="gp-kpi-lbl">Categorizados</div></div>
+      <div class="gp-kpi"><div class="gp-kpi-val green">R$ <span id="gpKCusto">0,00</span></div><div class="gp-kpi-lbl">Custo Total Est.</div></div>
+    </div>
+
+    <!-- Save bar -->
+    <div class="gp-save-bar">
+      <span>💾 Categorização salva automaticamente neste navegador</span>
+      <div class="gp-save-btns">
+        <span id="gpSaveIndicator" style="font-size:11px;opacity:0.8;">✓ Tudo salvo</span>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="gp-prog-wrap">
+      <span>Progresso da categorização:</span>
+      <div class="gp-prog-bar"><div class="gp-prog-fill" id="gpProgFill" style="width:0%"></div></div>
+      <span class="gp-prog-txt" id="gpProgTxt">0 / 0 categorizados</span>
+    </div>
+
+    <!-- Nav index -->
+    <div class="gp-nav-pills" id="gpNavPills" style="display:none">
+      <span class="gp-nav-lbl">Ir para:</span>
+      <span id="gpNavInner"></span>
+    </div>
+
+    <!-- Summary block -->
+    <div class="gp-summary" id="gpSummary" style="display:none">
+      <div class="gp-summary-top">
+        <div>
+          <div class="gp-gt-label">Custo Total Estimado</div>
+          <div class="gp-gt-val">R$ <span id="gpGrandTotal">0,00</span></div>
+          <div class="gp-gt-sub"><span id="gpGrandFilled">0</span> itens com custo informado</div>
+        </div>
+        <div style="text-align:right">
+          <div class="gp-gt-label">Progresso</div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#E8EDF5;margin-top:4px"><span id="gpSumCat">0</span> / <span id="gpSumTotal">0</span></div>
+          <div class="gp-gt-sub">defeitos categorizados</div>
+        </div>
+      </div>
+      <div class="gp-summary-cats">
+        <h3>Custo estimado por categoria de atendimento</h3>
+        <table class="gp-cat-tbl">
+          <tbody id="gpCatSumBody"></tbody>
+          <tfoot>
+            <tr class="gp-total-row">
+              <td><strong>Total Geral</strong></td>
+              <td class="gp-sum-count" id="gpCatSumTotalCount"></td>
+              <td class="gp-sum-val">R$ <span id="gpCatSumTotalVal">0,00</span></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="gpEmpty" class="gp-empty" style="display:none">
+      <h3>✅ Nenhum defeito encontrado</h3>
+      <p style="font-size:14px">Ajuste os filtros ou realize mais inspeções.</p>
+    </div>
+
+    <!-- Aero blocks container -->
+    <div id="gpBlocksWrap"></div>
+
+  </div>
+</div>
+<script>
+// ============================================================
+// GESTÃO DE PEÇAS — ENGINE v2
+// ============================================================
+const GP_KEY = 'gpCusto_v2';
+const GP_CATS = ['reposicao','fora_escopo','res','qp','componente_menor','servico','nao_impeditiva','outro'];
+const GP_CAT_LABELS = {
+  reposicao:        '🔧 Reposição de Peça',
+  fora_escopo:      '💰 Custo Adicional (Fora de Escopo)',
+  res:              '🤝 Manutenção com a RES',
+  qp:               '⚙️ Atuação do QP',
+  componente_menor: '🛒 Aquisição de Componente Menor',
+  servico:          '🏗️ Contratação de Serviço',
+  nao_impeditiva:   '📋 Pendência Não Impeditiva',
+  outro:            '✏️ Outro — especificar'
+};
+
+let gpVisible = false;
+let gpDadosAtivos = []; // cache da última renderização
+let gpTotalAtivo = 0;   // total de linhas do filtro atual
+
+function gpToggle() {
+  gpVisible = !gpVisible;
+  const o = document.getElementById('gpOverlay');
+  if (gpVisible) {
+    o.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    gpInit();
+  } else {
+    o.classList.remove('active');
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+function gpInit() {
+  const parques = [...new Set(AEROGERADORES.map(a => a.parque))].sort();
+  const sel = document.getElementById('gpParque');
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Todos os parques</option>' +
+    parques.map(p => `<option value="${p}">${p}</option>`).join('');
+  if (parques.includes(val)) sel.value = val;
+  gpPopulateSubParques();
+  gpRender();
+}
+
+function gpOnParqueChange() {
+  gpPopulateSubParques();
+  gpRender();
+}
+
+function gpPopulateSubParques() {
+  const pq = document.getElementById('gpParque').value;
+  let aeros = AEROGERADORES;
+  if (pq) aeros = aeros.filter(a => a.parque === pq);
+  const subs = [...new Set(aeros.map(a => a.sub_parque))].sort();
+  const spSel = document.getElementById('gpSubParque');
+  const spVal = spSel.value;
+  spSel.innerHTML = '<option value="">Todos</option>' +
+    subs.map(s => `<option value="${s}">${s}</option>`).join('');
+  if (subs.includes(spVal)) spSel.value = spVal; else spSel.value = '';
+}
+
+// ── DADOS ─────────────────────────────────────────────────────
+function gpGetDados() {
+  const parque     = document.getElementById('gpParque').value;
+  const subParque  = document.getElementById('gpSubParque').value;
+  const filtroClass= document.getElementById('gpFiltroClass').value;
+
+  let turbinas = AEROGERADORES;
+  if (parque)    turbinas = turbinas.filter(a => a.parque === parque);
+  if (subParque) turbinas = turbinas.filter(a => a.sub_parque === subParque);
+  const codigos = new Set(turbinas.map(a => a.codigo));
+
+  const incluir = new Set();
+  if (filtroClass === 'I')   { incluir.add('Ação Imediata'); }
+  else if (filtroClass === 'G')   { incluir.add('Defeito Grave'); }
+  else if (filtroClass === 'GI')  { incluir.add('Ação Imediata'); incluir.add('Defeito Grave'); }
+  else { incluir.add('Ação Imediata'); incluir.add('Defeito Grave'); incluir.add('Defeito Ligeiro'); }
+
+  // agrupar por aerogerador → lista de linhas de defeito
+  const porAero = {};
+  for (const [k, r] of Object.entries(inspectionData)) {
+    if (!codigos.has(r.aerogerador)) continue;
+    if (!incluir.has(r.classificacao)) continue;
+
+    const aero = r.aerogerador;
+    if (!porAero[aero]) porAero[aero] = [];
+
+    const falhasArr = (r.falhas && r.falhas.length > 0)
+      ? r.falhas
+      : (r.falha ? [r.falha] : ['—']);
+
+    falhasArr.forEach(f => {
+      porAero[aero].push({
+        aero,
+        categoria:    r.categoria    || '',
+        subcategoria: r.subcategoria || '',
+        componente:   r.componente   || '',
+        falha:        f || '—',
+        classificacao:r.classificacao,
+        observacoes:  r.observacoes  || '',
+        data:         r.data         || '',
+        rowKey: `${aero}||${r.componente}||${f}`
+      });
+    });
+  }
+
+  // ordenar aerogeradores: maior severidade primeiro, depois alfabético
+  const sevOrd = { 'Ação Imediata': 3, 'Defeito Grave': 2, 'Defeito Ligeiro': 1 };
+  const aerosSorted = Object.keys(porAero).sort((a, b) => {
+    const maxSev = arr => Math.max(...arr.map(r => sevOrd[r.classificacao] || 0));
+    const diff = maxSev(porAero[b]) - maxSev(porAero[a]);
+    return diff !== 0 ? diff : a.localeCompare(b, undefined, { numeric: true });
+  });
+
+  return { porAero, aerosSorted, codigos };
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function gpRender() {
+  const { porAero, aerosSorted, codigos } = gpGetDados();
+  const saved = gpLoadSaved();
+
+  // KPIs
+  let cA = 0, cT = 0, cI = 0, cG = 0, cL = 0;
+  const filtroClass = document.getElementById('gpFiltroClass').value;
+  const incluir = new Set();
+  if (filtroClass === 'I')  { incluir.add('Ação Imediata'); }
+  else if (filtroClass === 'G')  { incluir.add('Defeito Grave'); }
+  else if (filtroClass === 'GI') { incluir.add('Ação Imediata'); incluir.add('Defeito Grave'); }
+  else { incluir.add('Ação Imediata'); incluir.add('Defeito Grave'); incluir.add('Defeito Ligeiro'); }
+
+  aerosSorted.forEach(a => { cA++; });
+  for (const r of Object.values(inspectionData)) {
+    if (!codigos.has(r.aerogerador)) continue;
+    if (!incluir.has(r.classificacao)) continue;
+    cT++;
+    if (r.classificacao === 'Ação Imediata') cI++;
+    else if (r.classificacao === 'Defeito Grave') cG++;
+    else if (r.classificacao === 'Defeito Ligeiro') cL++;
+  }
+
+  document.getElementById('gpKA').textContent  = cA;
+  document.getElementById('gpKT').textContent  = cT;
+  document.getElementById('gpKI').textContent  = cI;
+  document.getElementById('gpKG').textContent  = cG;
+  document.getElementById('gpKL').textContent  = cL;
+
+  const empty = aerosSorted.length === 0;
+  document.getElementById('gpEmpty').style.display     = empty ? '' : 'none';
+  document.getElementById('gpBlocksWrap').style.display= empty ? 'none' : '';
+
+  if (empty) {
+    gpTotalAtivo = 0;
+    gpDadosAtivos = [];
+    gpUpdateTotals(saved, []);
+    return;
+  }
+
+  // Contar total de linhas visíveis
+  let totalLinhas = 0;
+  aerosSorted.forEach(a => { totalLinhas += porAero[a].length; });
+  gpTotalAtivo = totalLinhas;
+
+  // Cache para totais
+  gpDadosAtivos = [];
+  aerosSorted.forEach(a => gpDadosAtivos.push(...porAero[a]));
+
+  // Nav pills
+  const navEl = document.getElementById('gpNavInner');
+  const navWrap = document.getElementById('gpNavPills');
+  navWrap.style.display = '';
+  const CLS_COLOR = { 'Ação Imediata': '#FF6B6B', 'Defeito Grave': '#FFB340', 'Defeito Ligeiro': '#7FB3FF' };
+  navEl.innerHTML = aerosSorted.map(a => {
+    const maxCls = porAero[a].reduce((m, r) => {
+      const s = { 'Ação Imediata':3,'Defeito Grave':2,'Defeito Ligeiro':1 };
+      return (s[r.classificacao]||0) > (s[m]||0) ? r.classificacao : m;
+    }, 'Defeito Ligeiro');
+    const c = CLS_COLOR[maxCls] || '#7FB3FF';
+    return `<button class="gp-nav-pill" style="border-color:${c};color:${c}" onclick="document.getElementById('gpaero_${a.replace(/[^a-zA-Z0-9]/g,'_')}').scrollIntoView({behavior:'smooth',block:'start'})">${a}</button>`;
+  }).join('');
+
+  // Summary visible
+  document.getElementById('gpSummary').style.display = '';
+
+  // Render blocks
+  const wrap = document.getElementById('gpBlocksWrap');
+  wrap.innerHTML = aerosSorted.map(aero => gpBuildAeroBlock(aero, porAero[aero], saved)).join('');
+
+  gpUpdateTotals(saved, gpDadosAtivos);
+}
+
+// ── BUILD AERO BLOCK ──────────────────────────────────────────
+function gpBuildAeroBlock(aero, linhas, saved) {
+  let cI=0, cG=0, cL=0;
+  linhas.forEach(r => {
+    if (r.classificacao==='Ação Imediata') cI++;
+    else if (r.classificacao==='Defeito Grave') cG++;
+    else cL++;
+  });
+  const topCls = cI > 0 ? 'aero-im' : cG > 0 ? 'aero-gr' : 'aero-lt';
+  const uid = 'gpaero_' + aero.replace(/[^a-zA-Z0-9]/g,'_');
+
+  const badges = [
+    cI > 0 ? `<span class="gp-mini-badge gp-mini-im">${cI} Imediata</span>` : '',
+    cG > 0 ? `<span class="gp-mini-badge gp-mini-gr">${cG} Grave</span>` : '',
+    cL > 0 ? `<span class="gp-mini-badge gp-mini-lt">${cL} Ligeiro</span>` : ''
+  ].filter(Boolean).join('');
+
+  const rows = linhas.map(r => gpBuildRow(r, aero, saved)).join('');
+
+  const subId = 'gpsub_' + uid;
+
+  return `<div class="gp-aero-block ${topCls}" id="${uid}">
+    <div class="gp-aero-hdr2">
+      <div class="gp-aero-title">
+        <span class="gp-aero-code2">${aero}</span>
+        <div class="gp-aero-badges">${badges}</div>
+      </div>
+      <span class="gp-aero-count">${linhas.length} defeito${linhas.length!==1?'s':''}</span>
+    </div>
+    <div class="gp-tbl-wrap">
+      <table class="gp-tbl">
+        <thead>
+          <tr>
+            <th>Categoria</th><th>Subcategoria</th><th>Componente</th>
+            <th>Falha</th><th>Classificação</th><th>Observações</th><th>Data</th>
+            <th class="th-cat">Categorização</th>
+            <th class="th-custo">Custo Estimado</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr class="gp-subtotal-row">
+            <td colspan="8" class="gp-subtotal-label">Subtotal — ${aero}</td>
+            <td class="gp-subtotal-val">R$ <span id="${subId}" class="gp-subtotal-num">0,00</span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── BUILD ROW ─────────────────────────────────────────────────
+function gpBuildRow(r, aero, saved) {
+  const key = r.rowKey;
+  const s = saved[key] || {};
+  const catVal  = s.cat  || '';
+  const outroVal= s.outro|| '';
+  const custoVal= s.custo|| '';
+
+  const BADGE_CLS = {
+    'Ação Imediata':'gp-bdg-im',
+    'Defeito Grave':'gp-bdg-gr',
+    'Defeito Ligeiro':'gp-bdg-lt'
+  };
+  const EMOJI = {
+    'Ação Imediata':'🚨',
+    'Defeito Grave':'⚠️',
+    'Defeito Ligeiro':'◑'
+  };
+
+  const bdg = `<span class="gp-bdg ${BADGE_CLS[r.classificacao]||''}">${EMOJI[r.classificacao]||''} ${r.classificacao}</span>`;
+  const obs = r.observacoes ? `<span style="color:#4A6280;font-size:11px;font-style:italic">${r.observacoes}</span>` : `<span style="color:#4A6280">—</span>`;
+
+  const opts = GP_CATS.map(c =>
+    `<option value="${c}"${catVal===c?' selected':''}>${GP_CAT_LABELS[c]}</option>`
+  ).join('');
+
+  const outroDisplay = catVal==='outro' ? '' : 'display:none';
+  const selectFilled = catVal ? ' filled' : '';
+  const custoHasVal  = gpParseBRL(custoVal) > 0;
+  const safeKey = key.replace(/"/g, '&quot;');
+
+  return `<tr>
+    <td style="font-size:12px;color:#8BA3C7">${r.categoria}</td>
+    <td style="font-size:12px;color:#8BA3C7">${r.subcategoria}</td>
+    <td><strong style="font-size:13px;color:#E8EDF5">${r.componente}</strong></td>
+    <td style="font-size:13px;color:#C5D8F0">${r.falha !== '—' ? r.falha : '<span style="color:#4A6280">—</span>'}</td>
+    <td>${bdg}</td>
+    <td>${obs}</td>
+    <td style="color:#4A6280;font-size:11px;white-space:nowrap">${r.data}</td>
+    <td class="gp-cat-cell">
+      <select class="gp-cat-select${selectFilled}" data-key="${safeKey}"
+        onchange="gpOnSelectChange(this)">
+        <option value="">— selecionar —</option>${opts}
+      </select>
+      <input type="text" class="gp-cat-outro" data-key="${safeKey}"
+        placeholder="Descreva..." style="${outroDisplay}"
+        value="${outroVal.replace(/"/g,'&quot;')}"
+        oninput="gpSaveAll()">
+    </td>
+    <td class="gp-custo-cell">
+      <div class="gp-custo-wrap">
+        <span class="gp-custo-prefix">R$</span>
+        <input type="text" class="gp-custo-input${custoHasVal?' has-value':''}"
+          data-key="${safeKey}" data-aero="${aero}"
+          placeholder="0,00" value="${custoVal}"
+          oninput="gpOnCustoInput(this)">
+      </div>
+    </td>
+  </tr>`;
+}
+
+// ── EVENTS ────────────────────────────────────────────────────
+function gpOnSelectChange(sel) {
+  const key = sel.dataset.key;
+  const inp = document.querySelector(`.gp-cat-outro[data-key="${CSS.escape(key)}"]`);
+  if (inp) {
+    inp.style.display = sel.value === 'outro' ? '' : 'none';
+    if (sel.value !== 'outro') inp.value = '';
+  }
+  sel.classList.toggle('filled', sel.value !== '');
+  gpSaveAll();
+}
+
+function gpOnCustoInput(inp) {
+  inp.classList.toggle('has-value', gpParseBRL(inp.value) > 0);
+  gpSaveAll();
+}
+
+// ── SAVE / LOAD ───────────────────────────────────────────────
+function gpLoadSaved() {
+  try { return JSON.parse(localStorage.getItem(GP_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function gpSaveAll() {
+  const data = gpLoadSaved();
+
+  document.querySelectorAll('.gp-cat-select').forEach(sel => {
+    const key = sel.dataset.key;
+    if (!data[key]) data[key] = {};
+    data[key].cat = sel.value;
+    if (sel.value === 'outro') {
+      const inp = document.querySelector(`.gp-cat-outro[data-key="${CSS.escape(key)}"]`);
+      data[key].outro = inp ? inp.value : '';
+    } else {
+      delete data[key].outro;
+    }
+  });
+
+  document.querySelectorAll('.gp-custo-input').forEach(inp => {
+    const key = inp.dataset.key;
+    if (!data[key]) data[key] = {};
+    data[key].custo = inp.value;
+  });
+
+  localStorage.setItem(GP_KEY, JSON.stringify(data));
+  gpUpdateTotals(data, gpDadosAtivos);
+
+  const now = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const ind = document.getElementById('gpSaveIndicator');
+  if (ind) ind.textContent = '✓ Salvo às ' + now;
+}
+
+// ── TOTALS ────────────────────────────────────────────────────
+function gpParseBRL(str) {
+  if (!str || !str.trim()) return 0;
+  let s = str.trim().replace(/\s/g,'');
+  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
+  else if (s.includes(',')) s = s.replace(',','.');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function gpFmtBRL(n) {
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function gpUpdateTotals(saved, linhas) {
+  let grandTotal = 0, grandFilled = 0;
+
+  // Subtotais por aero
+  const subTotals = {};
+  linhas.forEach(r => {
+    const s = saved[r.rowKey] || {};
+    const v = gpParseBRL(s.custo || '');
+    if (v > 0) { grandFilled++; grandTotal += v; }
+    if (!subTotals[r.aero]) subTotals[r.aero] = 0;
+    subTotals[r.aero] += v;
+  });
+
+  Object.entries(subTotals).forEach(([aero, val]) => {
+    const uid = 'gpaero_' + aero.replace(/[^a-zA-Z0-9]/g,'_');
+    const el = document.getElementById('gpsub_' + uid);
+    if (el) el.textContent = gpFmtBRL(val);
+  });
+
+  // KPI custo
+  const kc = document.getElementById('gpKCusto');
+  if (kc) kc.textContent = gpFmtBRL(grandTotal);
+
+  // KPI categorizados
+  let catCount = 0;
+  linhas.forEach(r => { if ((saved[r.rowKey]||{}).cat) catCount++; });
+  const kcat = document.getElementById('gpKCat');
+  if (kcat) kcat.textContent = catCount;
+
+  // Progress
+  const total = gpTotalAtivo;
+  const pct = total > 0 ? Math.round(catCount / total * 100) : 0;
+  const pf = document.getElementById('gpProgFill');
+  if (pf) pf.style.width = pct + '%';
+  const pt = document.getElementById('gpProgTxt');
+  if (pt) pt.textContent = `${catCount} / ${total} categorizados`;
+
+  // Summary totals
+  const gt = document.getElementById('gpGrandTotal');
+  if (gt) gt.textContent = gpFmtBRL(grandTotal);
+  const gf = document.getElementById('gpGrandFilled');
+  if (gf) gf.textContent = grandFilled;
+  const sc = document.getElementById('gpSumCat');
+  if (sc) sc.textContent = catCount;
+  const st = document.getElementById('gpSumTotal');
+  if (st) st.textContent = total;
+
+  // Category breakdown
+  const catTotals = {}, catCounts = {};
+  GP_CATS.forEach(c => { catTotals[c]=0; catCounts[c]=0; });
+  linhas.forEach(r => {
+    const s = saved[r.rowKey] || {};
+    const cat = s.cat || '';
+    if (!cat) return;
+    const key = GP_CATS.includes(cat) ? cat : 'outro';
+    catCounts[key]++;
+    catTotals[key] += gpParseBRL(s.custo || '');
+  });
+
+const tbody = document.getElementById('gpCatSumBody');
+  if (tbody) {
+    tbody.innerHTML = GP_CATS.map(c => {
+      const zero = catTotals[c] === 0;
+      const clique = !zero ? `onclick="gpOpenCatModal('${c}')"` : '';
+      const cursor = !zero ? 'pointer' : 'default';
+      const seta = !zero ? ' <span style="font-size:10px;color:#4A6280;">▶</span>' : '';
+      return `<tr style="cursor:${cursor}" ${clique}>
+        <td>${GP_CAT_LABELS[c]}${seta}</td>
+        <td class="gp-sum-count">${catCounts[c]>0 ? catCounts[c]+' item'+(catCounts[c]>1?'s':'') : '—'}</td>
+        <td class="gp-sum-val${zero?' gp-sum-val-zero':''}">R$ ${gpFmtBRL(catTotals[c])}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const ctv = document.getElementById('gpCatSumTotalVal');
+  if (ctv) ctv.textContent = gpFmtBRL(grandTotal);
+  const ctc = document.getElementById('gpCatSumTotalCount');
+  if (ctc) ctc.textContent = catCount > 0 ? catCount + ' itens' : '';
+}
+
+// ── EXPORT EXCEL ──────────────────────────────────────────────
+function gpExportExcel() {
+  if (!gpDadosAtivos.length) { showToast('⚠️ Nenhum dado para exportar', 'warning'); return; }
+
+  function doExport() {
+    const saved = gpLoadSaved();
+
+    // Aba 1 — Todos os Defeitos
+    const h1 = ['Aerogerador','Categoria','Subcategoria','Componente','Falha','Observações','Data','Categorização','Custo Estimado (R$)'];
+    const rows1 = [h1];
+    gpDadosAtivos.forEach(r => {
+      const s = saved[r.rowKey] || {};
+      let catLabel = '';
+      if (s.cat === 'outro') catLabel = 'Outro: ' + (s.outro || '');
+      else if (s.cat) catLabel = GP_CAT_LABELS[s.cat] || s.cat;
+      const custo = gpParseBRL(s.custo || '');
+      rows1.push([
+        r.aero, r.categoria, r.subcategoria, r.componente,
+        r.falha, r.observacoes, r.data,
+        catLabel, custo > 0 ? custo : ''
+      ]);
+    });
+    const ws1 = XLSX.utils.aoa_to_sheet(rows1);
+    ws1['!cols'] = [{wch:10},{wch:26},{wch:26},{wch:30},{wch:30},{wch:38},{wch:12},{wch:36},{wch:18}];
+
+    // Aba 2 — Resumo por Categoria
+    const catTotals = {}, catCounts = {};
+    GP_CATS.forEach(c => { catTotals[c]=0; catCounts[c]=0; });
+    let grandTotal = 0;
+    gpDadosAtivos.forEach(r => {
+      const s = saved[r.rowKey] || {};
+      if (!s.cat) return;
+      const key = GP_CATS.includes(s.cat) ? s.cat : 'outro';
+      catTotals[key] += gpParseBRL(s.custo||'');
+      catCounts[key]++;
+      grandTotal += gpParseBRL(s.custo||'');
+    });
+    const h2 = ['Categoria de Atendimento','Qtd. Itens','Custo Estimado (R$)'];
+    const rows2 = [h2];
+    GP_CATS.forEach(c => rows2.push([GP_CAT_LABELS[c], catCounts[c]||0, catTotals[c]||0]));
+    rows2.push(['TOTAL GERAL', gpDadosAtivos.filter(r=>(saved[r.rowKey]||{}).cat).length, grandTotal]);
+    const ws2 = XLSX.utils.aoa_to_sheet(rows2);
+    ws2['!cols'] = [{wch:42},{wch:14},{wch:22}];
+
+    // Aba 3 — Resumo por Aerogerador
+    const aeroTotals = {};
+    gpDadosAtivos.forEach(r => {
+      if (!aeroTotals[r.aero]) aeroTotals[r.aero] = {im:0,gr:0,lt:0,total:0,custo:0};
+      if (r.classificacao==='Ação Imediata') aeroTotals[r.aero].im++;
+      else if (r.classificacao==='Defeito Grave') aeroTotals[r.aero].gr++;
+      else aeroTotals[r.aero].lt++;
+      aeroTotals[r.aero].total++;
+      aeroTotals[r.aero].custo += gpParseBRL((saved[r.rowKey]||{}).custo||'');
+    });
+    const h3 = ['Aerogerador','Ação Imediata','Defeito Grave','Defeito Ligeiro','Total Defeitos','Custo Estimado (R$)'];
+    const rows3 = [h3];
+    Object.entries(aeroTotals).sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true}))
+      .forEach(([aero,t]) => rows3.push([aero,t.im,t.gr,t.lt,t.total,t.custo>0?t.custo:'']));
+    const ws3 = XLSX.utils.aoa_to_sheet(rows3);
+    ws3['!cols'] = [{wch:12},{wch:16},{wch:16},{wch:16},{wch:16},{wch:22}];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws1, 'Todos os Defeitos');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Resumo por Categoria');
+    XLSX.utils.book_append_sheet(wb, ws3, 'Resumo por Aerogerador');
+    XLSX.writeFile(wb, `gestao_pecas_${new Date().toISOString().slice(0,10)}.xlsx`);
+    showToast('✅ Excel exportado!', 'success');
+  }
+
+  if (typeof XLSX !== 'undefined') { doExport(); }
+  else {
+    const xlsxScript = document.createElement('script');
+    xlsxScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    xlsxScript.onload = doExport;
+    xlsxScript.onerror = () => showToast('❌ Erro ao carregar biblioteca Excel', 'error');
+    document.head.appendChild(xlsxScript);
+  }
+}
+
+// ── EXPORT HTML ───────────────────────────────────────────────
+function gpExportHTML() {
+  const saved = gpLoadSaved();
+  const src = document.documentElement.outerHTML;
+  const escaped = JSON.stringify(saved);
+
+  const injection = `<scr`+`ipt>
+(function(){
+  var _d = ${escaped};
+  function _p(s){ if(!s||!s.trim())return 0; var t=s.trim().replace(/\\s/g,''); if(t.includes(',')&&t.includes('.'))t=t.replace(/\\./g,'').replace(',','.'); else if(t.includes(','))t=t.replace(',','.'); var n=parseFloat(t); return isNaN(n)?0:n; }
+  window.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.gp-cat-select').forEach(function(sel){
+      var key=sel.dataset.key; var obj=_d[key]||{};
+      sel.value=obj.cat||'';
+      sel.classList.toggle('filled',!!sel.value);
+      if(obj.cat==='outro'){
+        var inp=document.querySelector('.gp-cat-outro[data-key="'+key+'"]');
+        if(inp){inp.style.display='';inp.value=obj.outro||'';}
+      }
+    });
+    document.querySelectorAll('.gp-custo-input').forEach(function(inp){
+      var key=inp.dataset.key; var obj=_d[key]||{};
+      if(obj.custo){inp.value=obj.custo;inp.classList.toggle('has-value',_p(obj.custo)>0);}
+    });
+    if(typeof gpSaveAll==='function') gpSaveAll();
+  });
+})();
+<\/scr`+`ipt>`;
+
+  const finalHtml = src.replace('</body>', injection + '</body>');
+  const blob = new Blob([finalHtml], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `gestao_pecas_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+  showToast('✅ HTML salvo!', 'success');
+}
+// ── MODAL CATEGORIA ───────────────────────────────────────────
+function gpOpenCatModal(cat) {
+  const saved = gpLoadSaved();
+  const label = GP_CAT_LABELS[cat] || cat;
+
+  const itens = gpDadosAtivos.filter(r => {
+    const s = saved[r.rowKey] || {};
+    const key = GP_CATS.includes(s.cat) ? s.cat : 'outro';
+    return key === cat;
+  }).map(r => {
+    const s = saved[r.rowKey] || {};
+    return {
+      aero:      r.aero,
+      componente:r.componente,
+      falha:     r.falha,
+      cls:       r.classificacao,
+      custo:     gpParseBRL(s.custo || '')
+    };
+  }).sort((a,b) => b.custo - a.custo);
+
+  const total = itens.reduce((s,i) => s + i.custo, 0);
+
+  const BADGE_CLS = {
+    'Ação Imediata':'gp-bdg-im',
+    'Defeito Grave':'gp-bdg-gr',
+    'Defeito Ligeiro':'gp-bdg-lt'
+  };
+
+  const rows = itens.map(i => `
+    <tr>
+      <td style="padding:8px 10px;font-weight:700;color:#7FB3FF;white-space:nowrap">${i.aero}</td>
+      <td style="padding:8px 10px;color:#E8EDF5">${i.componente}</td>
+      <td style="padding:8px 10px;color:#C5D8F0">${i.falha !== '—' ? i.falha : '<span style="color:#4A6280">—</span>'}</td>
+      <td style="padding:8px 10px"><span class="gp-bdg ${BADGE_CLS[i.cls]||''}">${i.cls}</span></td>
+      <td style="padding:8px 10px;text-align:right;font-weight:700;color:${i.custo>0?'#00C850':'#4A6280'};white-space:nowrap">${i.custo>0?'R$ '+gpFmtBRL(i.custo):'—'}</td>
+    </tr>`).join('');
+
+  const html = `
+    <div id="gpCatModal" onclick="if(event.target===this)gpCloseCatModal()" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;padding:16px;font-family:'DM Sans',sans-serif;">
+      <div style="background:#0F2440;border:1px solid rgba(0,102,255,0.25);border-radius:16px;width:100%;max-width:900px;max-height:85vh;overflow-y:auto;padding:28px 32px;color:#C5D8F0;">
+        
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h2 style="margin:0;font-size:18px;color:#fff;">${label}</h2>
+            <div style="font-size:12px;color:#4A6280;margin-top:4px">${itens.length} item${itens.length!==1?'s':''} · Total: <strong style="color:#00C850">R$ ${gpFmtBRL(total)}</strong></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button onclick="gpExportCatExcel('${cat}')" style="background:#0a3d22;border:1px solid rgba(0,200,80,0.3);color:#7fff7f;border-radius:8px;padding:7px 16px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">📊 Exportar Excel</button>
+            <button onclick="gpCloseCatModal()" style="background:transparent;border:none;color:#8BA3C7;font-size:22px;cursor:pointer;line-height:1;">×</button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;border-radius:8px;border:1px solid rgba(0,102,255,0.15);">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:rgba(0,102,255,0.12);">
+                <th style="padding:8px 10px;text-align:left;color:#7FB3FF;font-size:11px;text-transform:uppercase;letter-spacing:0.7px;white-space:nowrap">Aerogerador</th>
+                <th style="padding:8px 10px;text-align:left;color:#7FB3FF;font-size:11px;text-transform:uppercase;letter-spacing:0.7px">Componente</th>
+                <th style="padding:8px 10px;text-align:left;color:#7FB3FF;font-size:11px;text-transform:uppercase;letter-spacing:0.7px">Falha</th>
+                <th style="padding:8px 10px;text-align:left;color:#7FB3FF;font-size:11px;text-transform:uppercase;letter-spacing:0.7px">Classificação</th>
+                <th style="padding:8px 10px;text-align:right;color:#7FB3FF;font-size:11px;text-transform:uppercase;letter-spacing:0.7px;white-space:nowrap">Custo Est.</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+            <tfoot>
+              <tr style="background:rgba(0,200,80,0.07);border-top:1px solid rgba(0,200,80,0.2);">
+                <td colspan="4" style="padding:10px;font-weight:700;color:#00C850;text-align:right">Total</td>
+                <td style="padding:10px;text-align:right;font-weight:800;color:#00C850;font-size:15px;white-space:nowrap">R$ ${gpFmtBRL(total)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+      </div>
+    </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function gpCloseCatModal() {
+  const m = document.getElementById('gpCatModal');
+  if (m) m.remove();
+}
+
+function gpExportCatExcel(cat) {
+  const saved = gpLoadSaved();
+  const label = GP_CAT_LABELS[cat] || cat;
+
+  const itens = gpDadosAtivos.filter(r => {
+    const s = saved[r.rowKey] || {};
+    const key = GP_CATS.includes(s.cat) ? s.cat : 'outro';
+    return key === cat;
+  }).map(r => {
+    const s = saved[r.rowKey] || {};
+    return {
+      aero:      r.aero,
+      componente:r.componente,
+      falha:     r.falha,
+      cls:       r.classificacao,
+      custo:     gpParseBRL(s.custo || '')
+    };
+  }).sort((a,b) => b.custo - a.custo);
+
+  const total = itens.reduce((s,i) => s + i.custo, 0);
+
+  function doExport() {
+    const headers = ['Aerogerador','Componente','Falha','Classificação','Custo Estimado (R$)'];
+    const rows = itens.map(i => [i.aero, i.componente, i.falha, i.cls, i.custo > 0 ? i.custo : '']);
+    rows.push(['', '', '', 'TOTAL', total > 0 ? total : '']);
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{wch:12},{wch:30},{wch:30},{wch:18},{wch:20}];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, label.replace(/[^\w\s]/g,'').trim().slice(0,31));
+    XLSX.writeFile(wb, `categoria_${cat}_${new Date().toISOString().slice(0,10)}.xlsx`);
+    showToast('✅ Excel exportado!', 'success');
+  }
+
+  if (typeof XLSX !== 'undefined') { doExport(); }
+  else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = doExport;
+    s.onerror = () => showToast('❌ Erro ao carregar biblioteca Excel', 'error');
+    document.head.appendChild(s);
+  }
+}
+</script>
+
+<!-- ===== MODAL IMPORTAR PARQUE ===== -->
+<div id="importParqueModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#0F2440;border:1px solid rgba(0,102,255,0.25);border-radius:16px;width:100%;max-width:820px;max-height:90vh;overflow-y:auto;padding:28px 32px;font-family:'DM Sans',sans-serif;color:#C5D8F0;">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;font-size:20px;color:#fff;">📥 Importar Novo Parque</h2>
+      <button onclick="importParqueFechar()" style="background:transparent;border:none;color:#8BA3C7;font-size:22px;cursor:pointer;line-height:1;">×</button>
+    </div>
+
+    <!-- INSTRUÇÕES -->
+    <div style="background:rgba(0,102,255,0.08);border:1px solid rgba(0,102,255,0.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;line-height:1.6;">
+      <strong style="color:#7FB3FF;">Formato esperado da planilha:</strong><br>
+      <strong>Aba "Aerogeradores"</strong> (obrigatória) — colunas: <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;">parque</code>, <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;">sub_parque</code>, <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;">codigo</code><br>
+      <strong>Aba "Componentes"</strong> (opcional) — colunas: <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;">categoria</code>, <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;">subcategoria</code>, <code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;">componente</code><br>
+      <span style="color:#8BA3C7;">Se a aba Componentes não existir, será usada a estrutura de <em>Coxilha Negra</em>.</span>
+    </div>
+
+    <!-- UPLOAD -->
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:13px;color:#8BA3C7;margin-bottom:6px;">Selecione o arquivo Excel (.xlsx ou .xls):</label>
+      <input type="file" id="importParqueFile" accept=".xlsx,.xls"
+        style="background:#0A1628;border:1px solid rgba(0,102,255,0.3);border-radius:8px;padding:8px 12px;color:#C5D8F0;width:100%;font-size:13px;cursor:pointer;">
+    </div>
+
+    <!-- TABELA AEROGERADORES -->
+    <div id="importAeroSection" style="display:none;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong style="font-size:14px;color:#7FB3FF;">💨 Aerogeradores encontrados: <span id="importAeroCount">0</span></strong>
+        <span id="importParqueNomeLabel" style="font-size:13px;color:#8BA3C7;"></span>
+      </div>
+      <div style="overflow-x:auto;border-radius:8px;border:1px solid rgba(0,102,255,0.15);">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:rgba(0,102,255,0.12);">
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">#</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Parque</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Sub-parque</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Código</th>
+            </tr>
+          </thead>
+          <tbody id="importAeroTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABELA COMPONENTES -->
+    <div id="importCompSection" style="display:none;margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <strong style="font-size:14px;color:#7FB3FF;">🔧 Componentes encontrados: <span id="importCompCount">0</span></strong>
+        <span style="font-size:12px;color:#8BA3C7;">Estrutura personalizada será criada</span>
+      </div>
+      <div style="overflow-x:auto;border-radius:8px;border:1px solid rgba(0,102,255,0.15);">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:rgba(0,102,255,0.12);">
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">#</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Categoria</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Subcategoria</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Componente</th>
+              <th style="padding:8px 12px;text-align:left;color:#7FB3FF;font-weight:600;">Falhas</th>
+            </tr>
+          </thead>
+          <tbody id="importCompTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AVISO ESTRUTURA PADRÃO -->
+    <div id="importEstrPadraoAviso" style="display:none;background:rgba(255,180,0,0.07);border:1px solid rgba(255,180,0,0.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#FFD580;margin-bottom:16px;">
+      ⚠️ Aba "Componentes" não encontrada. Será usada a estrutura padrão de <strong>Coxilha Negra</strong> (138 componentes).
+    </div>
+
+    <!-- BOTÕES -->
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button onclick="importParqueFechar()" style="background:transparent;border:1px solid rgba(139,163,199,0.3);color:#8BA3C7;border-radius:8px;padding:10px 22px;font-size:14px;cursor:pointer;">Cancelar</button>
+      <button id="importParqueConfirmarBtn" onclick="importParqueConfirmar()" disabled
+        style="background:linear-gradient(135deg,#1e7a4a,#0d5c38);color:#7fffa0;border:1px solid rgba(0,200,80,0.35);border-radius:8px;padding:10px 28px;font-size:14px;font-weight:600;cursor:pointer;opacity:0.4;">
+        ✅ Confirmar Importação
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ===== FIM MODAL IMPORTAR PARQUE ===== -->
+
+<script>
+// ===== IMPORTAR PARQUE =====
+
+let importParqueDados = null; // { aerogeradores: [], componentes: [] | null, parqueNome, parqueKey }
+
+function importParqueAbrir() {
+  document.getElementById('importParqueModal').style.display = 'flex';
+  document.getElementById('importParqueFile').value = '';
+  document.getElementById('importAeroSection').style.display = 'none';
+  document.getElementById('importCompSection').style.display = 'none';
+  document.getElementById('importEstrPadraoAviso').style.display = 'none';
+  document.getElementById('importParqueConfirmarBtn').disabled = true;
+  document.getElementById('importParqueConfirmarBtn').style.opacity = '0.4';
+  importParqueDados = null;
+}
+
+function importParqueFechar() {
+  document.getElementById('importParqueModal').style.display = 'none';
+}
+
+function importParqueCarregarCustoms() {
+  try {
+    const raw = localStorage.getItem('parques_customizados');
+    if (!raw) return;
+    const customs = JSON.parse(raw); // [{ parqueNome, parqueKey, aerogeradores:[], estrutura:{} }]
+    customs.forEach(p => {
+      // Adicionar aerogeradores se não existirem
+      p.aerogeradores.forEach(a => {
+        if (!AEROGERADORES.find(x => x.codigo === a.codigo)) AEROGERADORES.push(a);
+      });
+      // Adicionar option no select se não existir
+      const sel = document.getElementById('parque');
+      if (!sel.querySelector(`option[value="${p.parqueKey}"]`)) {
+        const opt = document.createElement('option');
+        opt.value = p.parqueKey;
+        opt.textContent = p.parqueNome;
+        sel.appendChild(opt);
+      }
+      // Registrar estrutura
+      if (p.estrutura) window['ESTRUTURA_' + p.parqueKey.toUpperCase()] = p.estrutura;
+    });
+  } catch(e) { console.warn('importParqueCarregarCustoms:', e); }
+}
+
+function importParqueConfirmar() {
+  if (!importParqueDados) return;
+  const { aerogeradores, estrutura, parqueNome, parqueKey } = importParqueDados;
+
+  // Salvar no localStorage
+  let customs = [];
+  try { customs = JSON.parse(localStorage.getItem('parques_customizados') || '[]'); } catch(e){}
+  // Substituir se já existe
+  customs = customs.filter(p => p.parqueKey !== parqueKey);
+  customs.push({ parqueNome, parqueKey, aerogeradores, estrutura });
+  localStorage.setItem('parques_customizados', JSON.stringify(customs));
+
+  // Aplicar em memória
+  aerogeradores.forEach(a => {
+    if (!AEROGERADORES.find(x => x.codigo === a.codigo)) AEROGERADORES.push(a);
+  });
+  if (estrutura) window['ESTRUTURA_' + parqueKey.toUpperCase()] = estrutura;
+
+  // Adicionar ao select
+  const sel = document.getElementById('parque');
+  if (!sel.querySelector(`option[value="${parqueKey}"]`)) {
+    const opt = document.createElement('option');
+    opt.value = parqueKey;
+    opt.textContent = parqueNome;
+    sel.appendChild(opt);
+  }
+
+  importParqueFechar();
+  showToast(`✅ Parque "${parqueNome}" importado com ${aerogeradores.length} aerogeradores!`, 'success');
+}
+
+// Processar arquivo Excel com SheetJS (CDN)
+function importParqueProcessarArquivo(file) {
+  document.getElementById('importAeroSection').style.display = 'none';
+  document.getElementById('importCompSection').style.display = 'none';
+  document.getElementById('importEstrPadraoAviso').style.display = 'none';
+  document.getElementById('importParqueConfirmarBtn').disabled = true;
+  document.getElementById('importParqueConfirmarBtn').style.opacity = '0.4';
+  importParqueDados = null;
+
+  if (!file) return;
+
+  // Carregar SheetJS se não estiver disponível
+  function processarComXLSX() {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // === ABA AEROGERADORES ===
+        const abaAero = workbook.SheetNames.find(n => n.toLowerCase().includes('aerogerador')) || workbook.SheetNames[0];
+        const wsAero = workbook.Sheets[abaAero];
+        const rowsAero = XLSX.utils.sheet_to_json(wsAero, { defval: '' });
+
+        if (!rowsAero.length) { alert('⚠️ Aba de aerogeradores vazia ou não encontrada.'); return; }
+
+        // Normalizar cabeçalhos (tolerante a maiúsculas/espaços)
+        const normalizar = obj => {
+          const n = {};
+          Object.keys(obj).forEach(k => { n[k.toLowerCase().trim().replace(/\s+/g,'_')] = String(obj[k]).trim(); });
+          return n;
+        };
+
+        const aerogeradores = rowsAero.map(normalizar).filter(r => r.codigo).map(r => ({
+          parque: r.parque || r['parque_eólico'] || r.parque_eolico || '',
+          sub_parque: r.sub_parque || r.subparque || r['sub-parque'] || '',
+          codigo: r.codigo
+        }));
+
+        if (!aerogeradores.length) { alert('⚠️ Nenhum aerogerador válido encontrado. Verifique as colunas: parque, sub_parque, codigo.'); return; }
+
+        const parqueNome = aerogeradores[0].parque || 'Parque Importado';
+        const parqueKey = 'custom_' + parqueNome.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+
+        // === ABA COMPONENTES (opcional) ===
+        const abaComp = workbook.SheetNames.find(n => n.toLowerCase().includes('componente') || n.toLowerCase().includes('estrutura'));
+        let estrutura = null;
+        let rowsComp = [];
+
+        if (abaComp) {
+          const wsComp = workbook.Sheets[abaComp];
+          rowsComp = XLSX.utils.sheet_to_json(wsComp, { defval: '' }).map(normalizar).filter(r => r.componente);
+
+          if (rowsComp.length) {
+            // Montar objeto ESTRUTURA compatível
+            estrutura = { categorias: {} };
+            rowsComp.forEach(r => {
+              const cat = r.categoria || 'Geral';
+              const sub = r.subcategoria || cat;
+              const comp = r.componente;
+              const falhas = (r.falha || r.falhas || '')
+                .split(';').map(f => f.trim()).filter(Boolean);
+              if (!estrutura.categorias[cat]) estrutura.categorias[cat] = {};
+              if (!estrutura.categorias[cat][sub]) estrutura.categorias[cat][sub] = {};
+              estrutura.categorias[cat][sub][comp] = { classificacoes: [], falhas };
+            });
+          }
+        }
+
+        importParqueDados = { aerogeradores, estrutura, parqueNome, parqueKey };
+
+        // Renderizar tabela aerogeradores
+        document.getElementById('importAeroCount').textContent = aerogeradores.length;
+        document.getElementById('importParqueNomeLabel').textContent = `Parque: ${parqueNome}`;
+        const tbodyA = document.getElementById('importAeroTbody');
+        tbodyA.innerHTML = aerogeradores.map((a, i) =>
+          `<tr style="border-top:1px solid rgba(0,102,255,0.08);${i%2===0?'':'background:rgba(255,255,255,0.02)'}">
+            <td style="padding:7px 12px;color:#8BA3C7;">${i+1}</td>
+            <td style="padding:7px 12px;">${a.parque}</td>
+            <td style="padding:7px 12px;">${a.sub_parque}</td>
+            <td style="padding:7px 12px;font-weight:600;color:#7FB3FF;">${a.codigo}</td>
+          </tr>`
+        ).join('');
+        document.getElementById('importAeroSection').style.display = 'block';
+
+        // Renderizar tabela componentes ou aviso
+        if (estrutura && rowsComp.length) {
+          document.getElementById('importCompCount').textContent = rowsComp.length;
+          const tbodyC = document.getElementById('importCompTbody');
+          tbodyC.innerHTML = rowsComp.map((r, i) =>
+            `<tr style="border-top:1px solid rgba(0,102,255,0.08);${i%2===0?'':'background:rgba(255,255,255,0.02)'}">
+              <td style="padding:7px 12px;color:#8BA3C7;">${i+1}</td>
+              <td style="padding:7px 12px;">${r.categoria||''}</td>
+              <td style="padding:7px 12px;">${r.subcategoria||''}</td>
+              <td style="padding:7px 12px;font-weight:600;color:#7FB3FF;">${r.componente}</td>
+              <td style="padding:7px 12px;color:#8BA3C7;font-size:12px;">${(r.falha||r.falhas) ? (r.falha||r.falhas).split(';').map(f=>f.trim()).filter(Boolean).join(', ') : '<em>nenhuma</em>'}</td>
+            </tr>`
+          ).join('');
+          document.getElementById('importCompSection').style.display = 'block';
+        } else {
+          document.getElementById('importEstrPadraoAviso').style.display = 'block';
+        }
+
+        // Habilitar botão confirmar
+        document.getElementById('importParqueConfirmarBtn').disabled = false;
+        document.getElementById('importParqueConfirmarBtn').style.opacity = '1';
+
+      } catch(err) {
+        console.error('Erro ao processar Excel:', err);
+        alert('❌ Erro ao ler o arquivo Excel. Verifique se é um arquivo .xlsx válido.\n\n' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  if (typeof XLSX !== 'undefined') {
+    processarComXLSX();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = processarComXLSX;
+    s.onerror = () => alert('❌ Não foi possível carregar a biblioteca de leitura de Excel. Verifique sua conexão.');
+    document.head.appendChild(s);
+  }
+}
+
+// Event listeners do módulo importação
+document.addEventListener('DOMContentLoaded', function() {
+  const btnImportar = document.getElementById('importarParqueBtn');
+  if (btnImportar) btnImportar.addEventListener('click', importParqueAbrir);
+
+  const fileInput = document.getElementById('importParqueFile');
+  if (fileInput) fileInput.addEventListener('change', function() {
+    importParqueProcessarArquivo(this.files[0] || null);
+  });
+});
+// ===== FIM IMPORTAR PARQUE =====
+</script>
 
 </body>
 </html>
