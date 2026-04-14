@@ -6670,8 +6670,12 @@ const AEROGERADORES = [
             // Carregar dados salvos se existirem
             loadComponentData();
             
-            // Scroll suave
-            document.getElementById('inspectionSection').scrollIntoView({behavior: 'smooth'});
+            // Scroll suave — compatível com mobile
+            requestAnimationFrame(() => {
+                const el = document.getElementById('inspectionSection');
+                const top = el.getBoundingClientRect().top + window.pageYOffset - 10;
+                window.scrollTo({ top, behavior: 'smooth' });
+            });
         }
 
         function loadComponentData() {
