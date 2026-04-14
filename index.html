@@ -696,6 +696,21 @@
         </div>
     </div>
 
+    <!-- Modal Câmera Personalizada -->
+    <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column;">
+        <video id="cameraVideo" autoplay playsinline muted style="display:block; width:100%; height:calc(100% - 90px); object-fit:cover; pointer-events:none;"></video>
+        <canvas id="cameraCanvas" style="display:none; width:100%; height:calc(100% - 90px);"></canvas>
+        <div id="cameraBtnsCaptura" style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
+            <button onclick="fecharCamera()" style="flex:1; max-width:140px; height:54px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Cancelar</button>
+            <button onclick="capturarFoto()" style="flex:1; max-width:160px; height:54px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
+            <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; height:54px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
+        </div>
+        <div id="cameraBtnsConfirmacao" style="display:none; position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; gap:12px; justify-content:center; align-items:center; background:#111;">
+            <button onclick="repetirFoto()" style="flex:1; max-width:160px; height:54px; background:#c0392b; color:#fff; border:none; border-radius:12px; font-size:22px; font-weight:bold; cursor:pointer;">✕</button>
+            <button onclick="usarFoto()" style="flex:1; max-width:160px; height:54px; background:#4CAF50; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">✓ Usar foto</button>
+        </div>
+    </div>
+
     <!-- Modal de Foto Ampliada -->
     <div id="photoModal" class="photo-modal-overlay" style="display: none;" onclick="closePhotoModal()">
         <div class="photo-modal-content" onclick="event.stopPropagation()">
@@ -847,7 +862,7 @@
                         <label>Fotos (opcional)</label>
                         <div class="photo-upload" id="photoUpload">
                             <p>📸 Clique ou arraste fotos aqui</p>
-                            <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display: none;">
+                            <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
                         </div>
                         <div class="photo-preview" id="photoPreview"></div>
                     </div>
@@ -6861,12 +6876,12 @@ const AEROGERADORES = [
             document.getElementById('falha3').addEventListener('change', () => handleFalhaChange('3'));
             
             document.getElementById('photoUpload').addEventListener('click', () => {
-                document.getElementById('photoInput').click();
+                abrirCameraPersonalizada();
             });
 const photoUpload = document.getElementById('photoUpload');
 
 photoUpload.addEventListener('click', () => {
-    document.getElementById('photoInput').click();
+    abrirCameraPersonalizada();
 });
 
 photoUpload.addEventListener('dragover', (e) => {
@@ -7118,6 +7133,143 @@ if (mergeFileInput) {
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        // ===== LANTERNA =====
+        let lanternaStream = null;
+        let lanternaAtiva = false;
+
+        async function toggleLanterna() {
+            if (!lanternaAtiva) {
+                try {
+                    lanternaStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment' }
+                    });
+                    const track = lanternaStream.getVideoTracks()[0];
+                    await track.applyConstraints({ advanced: [{ torch: true }] });
+                    lanternaAtiva = true;
+                } catch (e) {
+                    if (e.name === 'NotAllowedError') {
+                        showToast('⚠️ Permissão de câmera negada', 'warning');
+                    } else if (e.name === 'OverconstrainedError') {
+                        showToast('⚠️ Este dispositivo não suporta lanterna via app', 'warning');
+                    } else {
+                        showToast('⚠️ Lanterna não disponível neste dispositivo', 'warning');
+                    }
+                }
+            } else {
+                desligarLanterna();
+            }
+        }
+
+        function desligarLanterna() {
+            if (lanternaStream) {
+                lanternaStream.getTracks().forEach(t => t.stop());
+                lanternaStream = null;
+            }
+            lanternaAtiva = false;
+        }
+
+        // ===== CÂMERA PERSONALIZADA =====
+        let cameraStream = null;
+        let fotoCapturadaDataUrl = null;
+
+        async function abrirCameraPersonalizada() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            document.getElementById('cameraBtnsCaptura').style.display = 'flex';
+            document.getElementById('cameraBtnsConfirmacao').style.display = 'none';
+            fotoCapturadaDataUrl = null;
+
+            try {
+                // Se a lanterna já estiver ativa, reutiliza o mesmo stream (torch já ligado)
+                if (lanternaAtiva && lanternaStream) {
+                    cameraStream = lanternaStream;
+                } else {
+                    try {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: 'environment', advanced: [{ torch: true }] }
+                        });
+                        lanternaAtiva = true;
+                        lanternaStream = cameraStream;
+                    } catch {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: 'environment' }
+                        });
+                    }
+                }
+                video.srcObject = cameraStream;
+                modal.style.display = 'flex';
+            } catch (e) {
+                showToast('⚠️ Não foi possível acessar a câmera', 'warning');
+            }
+        }
+
+        function capturarFoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            fotoCapturadaDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            document.getElementById('cameraBtnsCaptura').style.display = 'none';
+            document.getElementById('cameraBtnsConfirmacao').style.display = 'flex';
+        }
+
+        function repetirFoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            document.getElementById('cameraBtnsCaptura').style.display = 'flex';
+            document.getElementById('cameraBtnsConfirmacao').style.display = 'none';
+            fotoCapturadaDataUrl = null;
+        }
+
+        async function usarFoto() {
+            if (!fotoCapturadaDataUrl) return;
+            const dataUrl = fotoCapturadaDataUrl;
+
+            // Anima a foto congelada encolhendo para o canto inferior esquerdo
+            const canvas = document.getElementById('cameraCanvas');
+            canvas.style.transition = 'transform 0.45s cubic-bezier(0.4, 0, 0.8, 0.6), opacity 0.45s ease-in';
+            canvas.style.transformOrigin = 'bottom left';
+            canvas.style.transform = 'scale(0.05) translate(0, 20%)';
+            canvas.style.opacity = '0';
+
+            setTimeout(() => {
+                canvas.style.transition = '';
+                canvas.style.transform = '';
+                canvas.style.opacity = '';
+                repetirFoto();
+            }, 450);
+
+            const compressed = await compressImage(dataUrl);
+            currentPhotos.push(compressed);
+            displayPhotos();
+        }
+
+        function fecharCamera() {
+            const modal = document.getElementById('cameraModal');
+            const video = document.getElementById('cameraVideo');
+            modal.style.display = 'none';
+            video.srcObject = null;
+            fotoCapturadaDataUrl = null;
+
+            // Só para o stream se não for o stream da lanterna
+            if (cameraStream && cameraStream !== lanternaStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+            }
+            cameraStream = null;
         }
 
         function displayPhotos() {
