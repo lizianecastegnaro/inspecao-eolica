@@ -688,12 +688,22 @@
 
     <!-- Modal Câmera Personalizada -->
     <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column;">
+        <!-- Preview ao vivo -->
         <video id="cameraVideo" autoplay playsinline muted style="display:block; width:100%; height:calc(100% - 90px); object-fit:cover; pointer-events:none;"></video>
-        <canvas id="cameraCanvas" style="display:none;"></canvas>
-        <div style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
+        <!-- Foto congelada (confirmação) -->
+        <canvas id="cameraCanvas" style="display:none; width:100%; height:calc(100% - 90px); object-fit:cover;"></canvas>
+
+        <!-- Botões: modo captura -->
+        <div id="cameraBtnsCaptura" style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
             <button onclick="fecharCamera()" style="flex:1; max-width:140px; height:54px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Cancelar</button>
             <button onclick="capturarFoto()" style="flex:1; max-width:160px; height:54px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
             <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; height:54px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
+        </div>
+
+        <!-- Botões: modo confirmação -->
+        <div id="cameraBtnsConfirmacao" style="display:none; position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; gap:12px; justify-content:center; align-items:center; background:#111;">
+            <button onclick="repetirFoto()" style="flex:1; max-width:160px; height:54px; background:#c0392b; color:#fff; border:none; border-radius:12px; font-size:22px; font-weight:bold; cursor:pointer;">✕</button>
+            <button onclick="usarFoto()" style="flex:1; max-width:160px; height:54px; background:#4CAF50; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">✓ Usar foto</button>
         </div>
     </div>
 
@@ -5939,10 +5949,19 @@ const AEROGERADORES = [
 
         // ===== CÂMERA PERSONALIZADA =====
         let cameraStream = null;
+        let fotoCapturadaDataUrl = null;
 
         async function abrirCameraPersonalizada() {
             const modal = document.getElementById('cameraModal');
             const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            // Garante que começa no modo captura
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            document.getElementById('cameraBtnsCaptura').style.display = 'flex';
+            document.getElementById('cameraBtnsConfirmacao').style.display = 'none';
+            fotoCapturadaDataUrl = null;
 
             try {
                 // Se a lanterna já estiver ativa, reutiliza o mesmo stream (torch já ligado)
@@ -5967,20 +5986,42 @@ const AEROGERADORES = [
             }
         }
 
-        async function capturarFoto() {
+        function capturarFoto() {
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
 
+            // Congela a imagem no canvas
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
+            fotoCapturadaDataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-            const compressed = await compressImage(dataUrl);
+            // Mostra o canvas congelado e os botões de confirmação
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            document.getElementById('cameraBtnsCaptura').style.display = 'none';
+            document.getElementById('cameraBtnsConfirmacao').style.display = 'flex';
+        }
+
+        function repetirFoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+
+            // Volta ao preview ao vivo
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            document.getElementById('cameraBtnsCaptura').style.display = 'flex';
+            document.getElementById('cameraBtnsConfirmacao').style.display = 'none';
+            fotoCapturadaDataUrl = null;
+        }
+
+        async function usarFoto() {
+            if (!fotoCapturadaDataUrl) return;
+            const compressed = await compressImage(fotoCapturadaDataUrl);
             currentPhotos.push(compressed);
             displayPhotos();
-
-            fecharCamera();
+            // Volta para o preview ao vivo sem fechar a câmera
+            repetirFoto();
         }
 
         function fecharCamera() {
@@ -5988,6 +6029,7 @@ const AEROGERADORES = [
             const video = document.getElementById('cameraVideo');
             modal.style.display = 'none';
             video.srcObject = null;
+            fotoCapturadaDataUrl = null;
 
             // Só para o stream se não for o stream da lanterna
             if (cameraStream && cameraStream !== lanternaStream) {
