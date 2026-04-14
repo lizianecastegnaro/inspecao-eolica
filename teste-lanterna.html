@@ -860,21 +860,6 @@
                             <p>📸 Clique ou arraste fotos aqui</p>
                             <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
                         </div>
-                        <div style="margin-top: 8px;">
-                            <button type="button" id="btnLanterna" onclick="toggleLanterna()" style="
-                                background: #1a1a2e;
-                                color: #f0c040;
-                                border: 2px solid #f0c040;
-                                border-radius: 8px;
-                                padding: 8px 18px;
-                                font-size: 13px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                display: flex;
-                                align-items: center;
-                                gap: 6px;
-                            ">🔦 Ligar Lanterna</button>
-                        </div>
                         <div class="photo-preview" id="photoPreview"></div>
                     </div>
 
@@ -5522,9 +5507,11 @@ const AEROGERADORES = [
 
             // Carregar dados salvos se existirem
             loadComponentData();
-            
-            // Scroll suave
-            document.getElementById('inspectionSection').scrollIntoView({behavior: 'smooth'});
+
+            // Scroll suave — aguarda o layout ser recalculado antes de scrollar
+            requestAnimationFrame(() => {
+                document.getElementById('inspectionSection').scrollIntoView({behavior: 'smooth', block: 'start'});
+            });
         }
 
         function loadComponentData() {
@@ -6017,11 +6004,25 @@ const AEROGERADORES = [
 
         async function usarFoto() {
             if (!fotoCapturadaDataUrl) return;
-            const compressed = await compressImage(fotoCapturadaDataUrl);
+            const dataUrl = fotoCapturadaDataUrl;
+            const canvas = document.getElementById('cameraCanvas');
+
+            // Anima a foto congelada encolhendo para o canto inferior esquerdo
+            canvas.style.transition = 'transform 0.45s cubic-bezier(0.4, 0, 0.8, 0.6), opacity 0.45s ease-in';
+            canvas.style.transformOrigin = 'bottom left';
+            canvas.style.transform = 'scale(0.05) translate(0, 20%)';
+            canvas.style.opacity = '0';
+
+            setTimeout(() => {
+                canvas.style.transition = '';
+                canvas.style.transform = '';
+                canvas.style.opacity = '';
+                repetirFoto();
+            }, 450);
+
+            const compressed = await compressImage(dataUrl);
             currentPhotos.push(compressed);
             displayPhotos();
-            // Volta para o preview ao vivo sem fechar a câmera
-            repetirFoto();
         }
 
         function fecharCamera() {
