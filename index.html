@@ -698,8 +698,14 @@
 
     <!-- Modal Câmera Personalizada -->
     <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column;">
-        <video id="cameraVideo" autoplay playsinline muted style="display:block; width:100%; height:calc(100% - 90px); object-fit:cover; pointer-events:none;"></video>
-        <canvas id="cameraCanvas" style="display:none; width:100%; height:calc(100% - 90px);"></canvas>
+        <video id="cameraVideo" autoplay playsinline muted style="display:block; width:100%; flex:1; min-height:0; object-fit:cover;"></video>
+        <canvas id="cameraCanvas" style="display:none; width:100%; flex:1; min-height:0; object-fit:contain; background:#000;"></canvas>
+        <div id="zoomContainer" style="display:none; width:100%; padding:6px 20px; box-sizing:border-box; background:#111; align-items:center; gap:10px;">
+            <span style="color:#aaa; font-size:13px; white-space:nowrap;">🔍 <span id="zoomLabel">1.0x</span></span>
+            <input id="zoomSlider" type="range" min="1" max="1" step="0.1" value="1"
+                oninput="aplicarZoom(this.value)"
+                style="flex:1; height:4px; accent-color:#f0c040; cursor:pointer;">
+        </div>
         <div id="cameraBtnsCaptura" style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
             <button onclick="fecharCamera()" style="flex:1; max-width:140px; height:54px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Voltar</button>
             <button onclick="capturarFoto()" style="flex:1; max-width:160px; height:54px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
@@ -7178,6 +7184,73 @@ if (mergeFileInput) {
         let cameraStream = null;
         let fotoCapturadaDataUrl = null;
 
+        // ===== ZOOM =====
+        let zoomAtual = 1;
+        let zoomMin = 1;
+        let zoomMax = 1;
+        let zoomSuportado = false;
+
+        async function inicializarZoom() {
+            const track = cameraStream && cameraStream.getVideoTracks()[0];
+            if (!track) return;
+            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+            const slider = document.getElementById('zoomSlider');
+            const zoomContainer = document.getElementById('zoomContainer');
+            if (capabilities.zoom) {
+                zoomSuportado = true;
+                zoomMin = capabilities.zoom.min;
+                zoomMax = capabilities.zoom.max;
+                zoomAtual = zoomMin;
+                slider.min = zoomMin;
+                slider.max = zoomMax;
+                slider.step = (zoomMax - zoomMin) / 100;
+                slider.value = zoomAtual;
+                document.getElementById('zoomLabel').textContent = zoomAtual.toFixed(1) + 'x';
+                zoomContainer.style.display = 'flex';
+            } else {
+                zoomSuportado = false;
+                zoomContainer.style.display = 'none';
+            }
+        }
+
+        async function aplicarZoom(valor) {
+            const track = cameraStream && cameraStream.getVideoTracks()[0];
+            if (!track || !zoomSuportado) return;
+            zoomAtual = parseFloat(valor);
+            await track.applyConstraints({ advanced: [{ zoom: zoomAtual }] });
+            document.getElementById('zoomLabel').textContent = zoomAtual.toFixed(1) + 'x';
+        }
+
+        // Pinch-to-zoom
+        (function() {
+            let pinchDist0 = null;
+            let pinchZoom0 = 1;
+            function dist(e) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                return Math.sqrt(dx*dx + dy*dy);
+            }
+            document.addEventListener('touchstart', function(e) {
+                if (!document.getElementById('cameraModal').style.display.includes('flex')) return;
+                if (e.touches.length === 2) {
+                    pinchDist0 = dist(e);
+                    pinchZoom0 = zoomAtual;
+                }
+            }, { passive: true });
+            document.addEventListener('touchmove', function(e) {
+                if (!document.getElementById('cameraModal').style.display.includes('flex')) return;
+                if (e.touches.length === 2 && pinchDist0 && zoomSuportado) {
+                    const scale = dist(e) / pinchDist0;
+                    const novoZoom = Math.min(zoomMax, Math.max(zoomMin, pinchZoom0 * scale));
+                    aplicarZoom(novoZoom);
+                    document.getElementById('zoomSlider').value = novoZoom;
+                }
+            }, { passive: true });
+            document.addEventListener('touchend', function(e) {
+                if (e.touches.length < 2) pinchDist0 = null;
+            }, { passive: true });
+        })();
+
         async function abrirCameraPersonalizada() {
             const modal = document.getElementById('cameraModal');
             const video = document.getElementById('cameraVideo');
@@ -7190,24 +7263,23 @@ if (mergeFileInput) {
             fotoCapturadaDataUrl = null;
 
             try {
-                // Se a lanterna já estiver ativa, reutiliza o mesmo stream (torch já ligado)
+                // Se a lanterna já estiver ativa, reutiliza o mesmo stream
                 if (lanternaAtiva && lanternaStream) {
                     cameraStream = lanternaStream;
                 } else {
-                    try {
-                        cameraStream = await navigator.mediaDevices.getUserMedia({
-                            video: { facingMode: 'environment', advanced: [{ torch: true }] }
-                        });
-                        lanternaAtiva = true;
-                        lanternaStream = cameraStream;
-                    } catch {
-                        cameraStream = await navigator.mediaDevices.getUserMedia({
-                            video: { facingMode: 'environment' }
-                        });
-                    }
+                    // Abre câmera normalmente, com boa resolução
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    });
                 }
                 video.srcObject = cameraStream;
                 modal.style.display = 'flex';
+                // Inicializa zoom após o stream estar pronto
+                await inicializarZoom();
             } catch (e) {
                 showToast('⚠️ Não foi possível acessar a câmera', 'warning');
             }
