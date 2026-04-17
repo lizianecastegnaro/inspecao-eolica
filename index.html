@@ -696,35 +696,6 @@
         </div>
     </div>
 
-    <!-- Modal Câmera Personalizada -->
-    <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:10002; flex-direction:column;">
-        <div style="position:relative; flex:1; min-height:0; overflow:hidden;">
-            <video id="cameraVideo" autoplay playsinline muted
-                style="display:block; width:100%; height:100%; object-fit:cover;"></video>
-            <canvas id="cameraCanvas"
-                style="display:none; width:100%; height:100%; object-fit:contain; background:#000;"></canvas>
-            <!-- Botão flash sobreposto ao vídeo -->
-            <button id="flashBtn" onclick="toggleFlashCamera()" title="Flash"
-                style="position:absolute; top:14px; right:14px; width:46px; height:46px; background:rgba(0,0,0,0.55); color:#fff; border:2px solid rgba(255,255,255,0.45); border-radius:50%; font-size:22px; cursor:pointer; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
-                ⚡
-            </button>
-        </div>
-        <div id="zoomContainer" style="display:none; width:100%; padding:6px 20px; box-sizing:border-box; background:#111; align-items:center; gap:10px;">
-            <span style="color:#aaa; font-size:13px; white-space:nowrap;">🔍 <span id="zoomLabel">1.0x</span></span>
-            <input id="zoomSlider" type="range" min="1" max="1" step="0.1" value="1"
-                oninput="aplicarZoom(this.value)"
-                style="flex:1; height:4px; accent-color:#f0c040; cursor:pointer;">
-        </div>
-        <div id="cameraBtnsCaptura" style="position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; display:flex; gap:12px; justify-content:center; align-items:center; background:#111;">
-            <button onclick="fecharCamera()" style="flex:1; max-width:140px; height:54px; background:#444; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">✕ Voltar</button>
-            <button onclick="capturarFoto()" style="flex:1; max-width:160px; height:54px; background:#f0c040; color:#1a1a2e; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">📷 Capturar</button>
-            <button onclick="document.getElementById('photoInput').click()" style="flex:1; max-width:140px; height:54px; background:#333; color:#fff; border:none; border-radius:12px; font-size:15px; cursor:pointer;">🖼 Galeria</button>
-        </div>
-        <div id="cameraBtnsConfirmacao" style="display:none; position:relative; z-index:1; width:100%; height:90px; box-sizing:border-box; padding:16px; gap:12px; justify-content:center; align-items:center; background:#111;">
-            <button onclick="repetirFoto()" style="flex:1; max-width:160px; height:54px; background:#c0392b; color:#fff; border:none; border-radius:12px; font-size:22px; font-weight:bold; cursor:pointer;">✕</button>
-            <button onclick="usarFoto()" style="flex:1; max-width:160px; height:54px; background:#4CAF50; color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer;">✓ Usar foto</button>
-        </div>
-    </div>
 
     <!-- Modal de Foto Ampliada -->
     <div id="photoModal" class="photo-modal-overlay" style="display: none;" onclick="closePhotoModal()">
@@ -877,7 +848,7 @@
                         <label>Fotos (opcional)</label>
                         <div class="photo-upload" id="photoUpload">
                             <p>📸 Clique ou arraste fotos aqui</p>
-                            <input type="file" id="photoInput" accept="image/*" multiple style="display: none;">
+                            <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display: none;">
                         </div>
                         <div class="photo-preview" id="photoPreview"></div>
                     </div>
@@ -6907,13 +6878,12 @@ const AEROGERADORES = [
             document.getElementById('falha2').addEventListener('change', () => handleFalhaChange('2'));
             document.getElementById('falha3').addEventListener('change', () => handleFalhaChange('3'));
             
-            document.getElementById('photoUpload').addEventListener('click', () => {
-                abrirCameraPersonalizada();
-            });
 const photoUpload = document.getElementById('photoUpload');
 
 photoUpload.addEventListener('click', () => {
-    abrirCameraPersonalizada();
+    const inp = document.getElementById('photoInput');
+    inp.value = '';   // garante que change dispara mesmo para a mesma foto
+    inp.click();
 });
 
 photoUpload.addEventListener('dragover', (e) => {
@@ -7167,276 +7137,30 @@ if (mergeFileInput) {
             });
         }
 
-        // ===== LANTERNA =====
-        let lanternaStream = null;
-        let lanternaAtiva = false;
 
-        async function toggleLanterna() {
-            if (!lanternaAtiva) {
-                try {
-                    lanternaStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment' }
-                    });
-                    const track = lanternaStream.getVideoTracks()[0];
-                    await track.applyConstraints({ advanced: [{ torch: true }] });
-                    lanternaAtiva = true;
-                } catch (e) {
-                    if (e.name === 'NotAllowedError') {
-                        showToast('⚠️ Permissão de câmera negada', 'warning');
-                    } else if (e.name === 'OverconstrainedError') {
-                        showToast('⚠️ Este dispositivo não suporta lanterna via app', 'warning');
-                    } else {
-                        showToast('⚠️ Lanterna não disponível neste dispositivo', 'warning');
-                    }
-                }
-            } else {
-                desligarLanterna();
-            }
-        }
-
-        function desligarLanterna() {
-            if (lanternaStream) {
-                lanternaStream.getTracks().forEach(t => t.stop());
-                lanternaStream = null;
-            }
-            lanternaAtiva = false;
-        }
-
-        // ===== CÂMERA PERSONALIZADA =====
-        let cameraStream = null;
-        let fotoCapturadaDataUrl = null;
-        let flashCameraAtiva = false;
-
-        async function toggleFlashCamera() {
-            const track = cameraStream && cameraStream.getVideoTracks()[0];
-            if (!track) return;
-            const cap = track.getCapabilities ? track.getCapabilities() : {};
-            if (!cap.torch) {
-                showToast('⚠️ Este dispositivo não suporta flash via app', 'warning');
-                return;
-            }
-            try {
-                flashCameraAtiva = !flashCameraAtiva;
-                await track.applyConstraints({ advanced: [{ torch: flashCameraAtiva }] });
-                const btn = document.getElementById('flashBtn');
-                if (btn) {
-                    btn.style.background = flashCameraAtiva ? '#f0c040' : 'rgba(0,0,0,0.55)';
-                    btn.style.color = flashCameraAtiva ? '#1a1a2e' : '#fff';
-                    btn.style.borderColor = flashCameraAtiva ? '#f0c040' : 'rgba(255,255,255,0.45)';
-                }
-            } catch(e) {
-                showToast('⚠️ Não foi possível ativar o flash', 'warning');
-                flashCameraAtiva = false;
-            }
-        }
-
-
-        // ===== ZOOM =====
-        let zoomAtual = 1;
-        let zoomMin = 1;
-        let zoomMax = 1;
-        let zoomSuportado = false;
-
-        async function inicializarZoom() {
-            const track = cameraStream && cameraStream.getVideoTracks()[0];
-            if (!track) return;
-            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-            const slider = document.getElementById('zoomSlider');
-            const zoomContainer = document.getElementById('zoomContainer');
-            if (capabilities.zoom) {
-                zoomSuportado = true;
-                zoomMin = capabilities.zoom.min;
-                zoomMax = capabilities.zoom.max;
-                zoomAtual = zoomMin;
-                slider.min = zoomMin;
-                slider.max = zoomMax;
-                slider.step = (zoomMax - zoomMin) / 100;
-                slider.value = zoomAtual;
-                document.getElementById('zoomLabel').textContent = zoomAtual.toFixed(1) + 'x';
-                zoomContainer.style.display = 'flex';
-            } else {
-                zoomSuportado = false;
-                zoomContainer.style.display = 'none';
-            }
-        }
-
-        async function aplicarZoom(valor) {
-            const track = cameraStream && cameraStream.getVideoTracks()[0];
-            if (!track || !zoomSuportado) return;
-            zoomAtual = parseFloat(valor);
-            await track.applyConstraints({ advanced: [{ zoom: zoomAtual }] });
-            document.getElementById('zoomLabel').textContent = zoomAtual.toFixed(1) + 'x';
-        }
-
-        // Pinch-to-zoom
-        (function() {
-            let pinchDist0 = null;
-            let pinchZoom0 = 1;
-            function dist(e) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX;
-                const dy = e.touches[0].clientY - e.touches[1].clientY;
-                return Math.sqrt(dx*dx + dy*dy);
-            }
-            document.addEventListener('touchstart', function(e) {
-                if (!document.getElementById('cameraModal').style.display.includes('flex')) return;
-                if (e.touches.length === 2) {
-                    pinchDist0 = dist(e);
-                    pinchZoom0 = zoomAtual;
-                }
-            }, { passive: true });
-            document.addEventListener('touchmove', function(e) {
-                if (!document.getElementById('cameraModal').style.display.includes('flex')) return;
-                if (e.touches.length === 2 && pinchDist0 && zoomSuportado) {
-                    const scale = dist(e) / pinchDist0;
-                    const novoZoom = Math.min(zoomMax, Math.max(zoomMin, pinchZoom0 * scale));
-                    aplicarZoom(novoZoom);
-                    document.getElementById('zoomSlider').value = novoZoom;
-                }
-            }, { passive: true });
-            document.addEventListener('touchend', function(e) {
-                if (e.touches.length < 2) pinchDist0 = null;
-            }, { passive: true });
-        })();
-
-        async function abrirCameraPersonalizada() {
-            const modal = document.getElementById('cameraModal');
-            const video = document.getElementById('cameraVideo');
-            const canvas = document.getElementById('cameraCanvas');
-
-            video.style.display = 'block';
-            canvas.style.display = 'none';
-            document.getElementById('cameraBtnsCaptura').style.display = 'flex';
-            document.getElementById('cameraBtnsConfirmacao').style.display = 'none';
-            fotoCapturadaDataUrl = null;
-
-            try {
-                // Se a lanterna já estiver ativa, reutiliza o mesmo stream
-                if (lanternaAtiva && lanternaStream) {
-                    cameraStream = lanternaStream;
-                } else {
-                    cameraStream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment' }
-                    });
-                }
-                video.srcObject = cameraStream;
-                modal.style.display = 'flex';
-                await inicializarZoom();
-
-                const track = cameraStream.getVideoTracks()[0];
-                if (track) {
-                    // Flash: reflete estado atual (ex.: lanterna já estava ligada)
-                    const btn = document.getElementById('flashBtn');
-                    if (btn) {
-                        const cap2 = track.getCapabilities ? track.getCapabilities() : {};
-                        btn.style.display = cap2.torch ? 'flex' : 'none';
-                        btn.style.background = 'rgba(0,0,0,0.55)';
-                        btn.style.color = '#fff';
-                        btn.style.borderColor = 'rgba(255,255,255,0.45)';
-                    }
-                    flashCameraAtiva = false;
-                }
-            } catch (e) {
-                showToast('⚠️ Não foi possível acessar a câmera', 'warning');
-            }
-        }
-
-        function capturarFoto() {
-            const video = document.getElementById('cameraVideo');
-            const canvas = document.getElementById('cameraCanvas');
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            fotoCapturadaDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-            video.style.display = 'none';
-            canvas.style.display = 'block';
-            document.getElementById('cameraBtnsCaptura').style.display = 'none';
-            document.getElementById('cameraBtnsConfirmacao').style.display = 'flex';
-            // Oculta flash durante revisão da foto
-            const flashBtn = document.getElementById('flashBtn');
-            if (flashBtn) flashBtn.style.display = 'none';
-        }
-
-        function repetirFoto() {
-            const video = document.getElementById('cameraVideo');
-            const canvas = document.getElementById('cameraCanvas');
-
-            video.style.display = 'block';
-            canvas.style.display = 'none';
-            document.getElementById('cameraBtnsCaptura').style.display = 'flex';
-            document.getElementById('cameraBtnsConfirmacao').style.display = 'none';
-            fotoCapturadaDataUrl = null;
-            // Reexibe botão de flash
-            const flashBtn = document.getElementById('flashBtn');
-            if (flashBtn) flashBtn.style.display = 'flex';
-        }
-
-        async function usarFoto() {
-            if (!fotoCapturadaDataUrl) return;
-            const dataUrl = fotoCapturadaDataUrl;
-
-            // Anima a foto congelada encolhendo para o canto inferior esquerdo
-            const canvas = document.getElementById('cameraCanvas');
-            canvas.style.transition = 'transform 0.45s cubic-bezier(0.4, 0, 0.8, 0.6), opacity 0.45s ease-in';
-            canvas.style.transformOrigin = 'bottom left';
-            canvas.style.transform = 'scale(0.05) translate(0, 20%)';
-            canvas.style.opacity = '0';
-
-            setTimeout(() => {
-                canvas.style.transition = '';
-                canvas.style.transform = '';
-                canvas.style.opacity = '';
-                repetirFoto();
-            }, 450);
-
-            const compressed = await compressImage(dataUrl);
-            currentPhotos.push(compressed);
-            displayPhotos();
-        }
-
-        function fecharCamera() {
-            const modal = document.getElementById('cameraModal');
-            const video = document.getElementById('cameraVideo');
-            modal.style.display = 'none';
-            video.srcObject = null;
-            fotoCapturadaDataUrl = null;
-
-            // Desliga flash se estava ativo
-            if (flashCameraAtiva && cameraStream) {
-                const track = cameraStream.getVideoTracks()[0];
-                if (track) {
-                    try { track.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) {}
-                }
-            }
-            flashCameraAtiva = false;
-
-            // Só para o stream se não for o stream da lanterna
-            if (cameraStream && cameraStream !== lanternaStream) {
-                cameraStream.getTracks().forEach(t => t.stop());
-            }
-            cameraStream = null;
-        }
 
         function displayPhotos() {
             const preview = document.getElementById('photoPreview');
             preview.innerHTML = '';
-            
+
             currentPhotos.forEach((photo, index) => {
                 const div = document.createElement('div');
                 div.className = 'photo-item';
-                
+
                 const img = document.createElement('img');
                 img.src = photo;
-                
+                img.style.cursor = 'pointer';
+                img.onclick = () => openPhotoModal(photo);
+
                 const btn = document.createElement('button');
                 btn.className = 'photo-remove';
                 btn.textContent = '×';
-                btn.onclick = () => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
                     currentPhotos.splice(index, 1);
                     displayPhotos();
                 };
-                
+
                 div.appendChild(img);
                 div.appendChild(btn);
                 preview.appendChild(div);
