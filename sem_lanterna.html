@@ -6878,13 +6878,12 @@ const AEROGERADORES = [
             document.getElementById('falha2').addEventListener('change', () => handleFalhaChange('2'));
             document.getElementById('falha3').addEventListener('change', () => handleFalhaChange('3'));
             
-            document.getElementById('photoUpload').addEventListener('click', () => {
-                document.getElementById('photoInput').click();
-            });
 const photoUpload = document.getElementById('photoUpload');
 
 photoUpload.addEventListener('click', () => {
-    document.getElementById('photoInput').click();
+    const inp = document.getElementById('photoInput');
+    inp.value = '';   // garante que change dispara mesmo para a mesma foto
+    inp.click();
 });
 
 photoUpload.addEventListener('dragover', (e) => {
@@ -7143,22 +7142,25 @@ if (mergeFileInput) {
         function displayPhotos() {
             const preview = document.getElementById('photoPreview');
             preview.innerHTML = '';
-            
+
             currentPhotos.forEach((photo, index) => {
                 const div = document.createElement('div');
                 div.className = 'photo-item';
-                
+
                 const img = document.createElement('img');
                 img.src = photo;
-                
+                img.style.cursor = 'pointer';
+                img.onclick = () => openPhotoModal(photo);
+
                 const btn = document.createElement('button');
                 btn.className = 'photo-remove';
                 btn.textContent = '×';
-                btn.onclick = () => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
                     currentPhotos.splice(index, 1);
                     displayPhotos();
                 };
-                
+
                 div.appendChild(img);
                 div.appendChild(btn);
                 preview.appendChild(div);
