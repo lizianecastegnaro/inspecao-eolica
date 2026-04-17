@@ -7301,13 +7301,8 @@ if (mergeFileInput) {
                 if (lanternaAtiva && lanternaStream) {
                     cameraStream = lanternaStream;
                 } else {
-                    // Abre câmera normalmente, com boa resolução
                     cameraStream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: 'environment',
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 }
-                        }
+                        video: { facingMode: 'environment' }
                     });
                 }
                 video.srcObject = cameraStream;
