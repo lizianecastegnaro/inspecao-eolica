@@ -8579,7 +8579,7 @@ if (mergeFileInput) {
         }
 
         function normalizeImportHeader(header) {
-            return String(header || '')
+            return fixImportTextEncoding(header)
                 .normalize('NFD')
                 .replace(/[\u0300-\u036f]/g, '')
                 .toLowerCase()
@@ -8587,10 +8587,37 @@ if (mergeFileInput) {
                 .replace(/^_+|_+$/g, '');
         }
 
+        function fixImportTextEncoding(value) {
+            const text = String(value ?? '');
+            if (!/[ÃÂâ]/.test(text) || typeof TextDecoder === 'undefined') return text;
+
+            try {
+                const bytes = Uint8Array.from(text, ch => windows1252ByteForChar(ch));
+                const decoded = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                return decoded.includes('\uFFFD') ? text : decoded;
+            } catch (e) {
+                return text;
+            }
+        }
+
+        function windows1252ByteForChar(ch) {
+            const code = ch.charCodeAt(0);
+            const map = {
+                0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84,
+                0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88,
+                0x2030: 0x89, 0x0160: 0x8A, 0x2039: 0x8B, 0x0152: 0x8C,
+                0x017D: 0x8E, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93,
+                0x201D: 0x94, 0x2022: 0x95, 0x2013: 0x96, 0x2014: 0x97,
+                0x02DC: 0x98, 0x2122: 0x99, 0x0161: 0x9A, 0x203A: 0x9B,
+                0x0153: 0x9C, 0x017E: 0x9E, 0x0178: 0x9F
+            };
+            return map[code] ?? (code & 0xff);
+        }
+
         function getImportValue(row, aliases) {
             for (const alias of aliases) {
                 const key = normalizeImportHeader(alias);
-                if (row[key] !== undefined && String(row[key]).trim() !== '') return String(row[key]).trim();
+                if (row[key] !== undefined && String(row[key]).trim() !== '') return fixImportTextEncoding(row[key]).trim();
             }
             return '';
         }
@@ -8613,7 +8640,7 @@ if (mergeFileInput) {
             rows.forEach(row => {
                 const normalizedRow = {};
                 Object.keys(row || {}).forEach(k => {
-                    normalizedRow[normalizeImportHeader(k)] = String(row[k] ?? '').trim();
+                    normalizedRow[normalizeImportHeader(k)] = fixImportTextEncoding(row[k]).trim();
                 });
 
                 const aerogerador = getImportValue(normalizedRow, ['Aerogerador', 'Aero', 'WTG']);
@@ -8878,16 +8905,16 @@ if (mergeFileInput) {
 
                     const numInspecoesAtuais = Object.keys(inspectionData).length;
                     const dataBackup = new Date(backup.createdAt || Date.now()).toLocaleString('pt-BR');
-                    const confirmMsg = `ðŸ”€ MESCLAR BACKUPS\n\n` +
+                    const confirmMsg = `🔀 MESCLAR BACKUPS\n\n` +
                         `Arquivo a mesclar: ${file.name}\n` +
                         `Data identificada: ${dataBackup}\n\n` +
-                        `ConteÃºdo:\n` +
-                        `â€¢ ${numInspecoesBackup} inspeÃ§Ãµes\n` +
-                        `â€¢ ${numFotosBackup} fotos\n\n` +
+                        `Conteúdo:\n` +
+                        `• ${numInspecoesBackup} inspeções\n` +
+                        `• ${numFotosBackup} fotos\n\n` +
                         `Dados atuais:\n` +
-                        `â€¢ ${numInspecoesAtuais} inspeÃ§Ãµes\n\n` +
-                        `Os dados serÃ£o ADICIONADOS aos dados atuais.\n` +
-                        `Se houver conflito (mesmo componente nos dois), o dado mais recente serÃ¡ mantido.\n\n` +
+                        `• ${numInspecoesAtuais} inspeções\n\n` +
+                        `Os dados serão ADICIONADOS aos dados atuais.\n` +
+                        `Se houver conflito (mesmo componente nos dois), o dado mais recente será mantido.\n\n` +
                         `Deseja continuar?`;
 
                     if (!confirm(confirmMsg)) {
@@ -8906,11 +8933,11 @@ if (mergeFileInput) {
                     if (result.fotos > 0) resumo.push(`${result.fotos} fotos`);
                     if (result.migradas > 0) resumo.push(`${result.migradas} migradas`);
 
-                    showToast(`âœ… Mesclagem concluÃ­da! ${resumo.join(', ') || 'Nenhuma alteraÃ§Ã£o'}`, 'success');
+                    showToast(`✅ Mesclagem concluída! ${resumo.join(', ') || 'Nenhuma alteração'}`, 'success');
                     console.log('Backup mesclado com sucesso');
                 } catch (error) {
                     console.error('Erro ao mesclar backup:', error);
-                    showToast('âŒ Erro ao mesclar backup: ' + error.message, 'error');
+                    showToast('❌ Erro ao mesclar backup: ' + error.message, 'error');
                 }
                 return;
             }
@@ -9937,7 +9964,7 @@ if (mergeFileInput) {
     </div>
     <!-- Filters -->
     <div class="bi-flt">
-      <div class="bi-fg"><label>Ano</label><select id="biAno"><option value="">Todos</option></select></div>
+      <div class="bi-fg"><label>Ano</label><select id="biAno" onchange="biOnSharedFilterChange()"><option value="">Todos</option></select></div>
       <div class="bi-fg"><label>Parque Eólico</label><select id="biPQ" onchange="biOnParqueChange()"><option value="">Todos</option></select></div>
       <div class="bi-fg"><label>Sub-parque</label><select id="biSP" onchange="biOnSubparqueChange()"><option value="">Todos</option></select></div>
       <div class="bi-fg"><label>Categoria</label><select id="biCA"><option value="">Todas</option></select></div>
@@ -10164,16 +10191,47 @@ function biPopulateTurbines(){
 
 function biOnParqueChange(){
   biPopulateSubparques();
+  biApply();
+  biSyncSharedFiltersToGP();
 }
 
 function biOnSubparqueChange(){
   biPopulateTurbines();
+  biApply();
+  biSyncSharedFiltersToGP();
+}
+
+function biOnSharedFilterChange(){
+  biApply();
+  biSyncSharedFiltersToGP();
 }
 
 function biToggleCls(btn){
   const map={'Verificado':'Verificado','Defeito Ligeiro':'Ligeiro','Defeito Grave':'Grave','Ação Imediata':'Imediata'};
   const key=map[btn.dataset.cls];
   btn.classList.toggle('active-'+key);
+  biApply();
+  biSyncSharedFiltersToGP();
+}
+
+function biSyncSharedFiltersToGP(){
+  if (typeof gpVisible === 'undefined' || !gpVisible) return;
+  gpPopulateAnos();
+  const gpAno=document.getElementById('gpAno'), biAno=document.getElementById('biAno');
+  const gpPQ=document.getElementById('gpParque'), biPQ=document.getElementById('biPQ');
+  if(gpAno&&biAno)gpAno.value=biAno.value;
+  if(gpPQ&&biPQ)gpPQ.value=biPQ.value;
+  gpPopulateSubParques();
+  gpSyncSubParqueFromBI();
+  const activeBI=[...document.querySelectorAll('.bi-cls-btn[class*="active-"]')]
+    .map(btn=>btn.dataset.cls)
+    .filter(cls=>cls&&cls!=='N/A');
+  gpActiveClsSet=activeBI.length
+    ? new Set(activeBI)
+    : new Set(['Ação Imediata','Defeito Grave','Defeito Ligeiro','Verificado']);
+  gpUpdateClsButtonStates();
+  gpUpdateClsButtonsForTab();
+  gpRender();
 }
 
 function biApply(allOverride){
@@ -10209,6 +10267,7 @@ function biReset(){
   document.querySelectorAll('.bi-cls-btn').forEach(b=>{b.className='bi-cls-btn';});
   biPopulateSubparques();
   biApply();
+  biSyncSharedFiltersToGP();
 }
 
 function biRenderAll(){
@@ -10674,8 +10733,9 @@ document.addEventListener('keydown',e=>{
 /* NAV PILLS */
 .gp-nav-pills { background:#0F1E35; border:1px solid rgba(0,102,255,0.15); border-radius:10px; padding:10px 16px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:20px; }
 .gp-nav-lbl { font-size:13px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-right:4px; }
-.gp-nav-pill { text-decoration:none; border:1.5px solid; border-radius:20px; padding:3px 10px; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer; background:transparent; }
-.gp-nav-pill:hover { opacity:0.75; }
+.gp-nav-pill { text-decoration:none; border:1px solid rgba(139,163,199,0.22); border-radius:7px; padding:5px 10px; font-size:12px; font-weight:700; white-space:nowrap; cursor:pointer; background:#152640; color:#C5D8F0; display:inline-flex; align-items:center; gap:6px; }
+.gp-nav-pill:hover { border-color:rgba(127,179,255,0.45); background:#1A2D4A; color:#E8EDF5; }
+.gp-nav-dot { width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:#4A6280; }
 
 /* SUMMARY BLOCK */
 .gp-summary { background:#0D2145; border:1px solid rgba(0,102,255,0.2); border-radius:12px; margin-bottom:24px; overflow:hidden; }
@@ -10738,7 +10798,7 @@ document.addEventListener('keydown',e=>{
 .gp-custo-cell { min-width:120px; text-align:right; }
 .gp-custo-wrap { display:flex; align-items:center; gap:4px; justify-content:flex-end; }
 .gp-custo-prefix { font-size:11px; color:#4A6280; white-space:nowrap; }
-.gp-custo-input { width:88px; background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; text-align:right; outline:none; color:#E8EDF5; }
+.gp-custo-input { width:118px; background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; text-align:right; outline:none; color:#E8EDF5; }
 .gp-custo-input:focus { border-color:#00C850; box-shadow:0 0 0 2px rgba(0,200,80,0.15); }
 .gp-custo-input.has-value { background:#0d3d22; font-weight:600; color:#7fff7f; border-color:rgba(0,200,80,0.5); }
 
@@ -10760,6 +10820,7 @@ document.addEventListener('keydown',e=>{
 /* CLASSIFICATION BUTTONS */
 .gp-cls-btn { background:#152640; border:1px solid rgba(0,102,255,0.18); color:#4A6280; border-radius:7px; padding:6px 11px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.18s; white-space:nowrap; }
 .gp-cls-btn:hover { border-color:#0066FF; color:#8BA3C7; }
+.gp-cls-btn:disabled { opacity:0.35; cursor:not-allowed; border-color:rgba(0,102,255,0.12) !important; color:#4A6280 !important; background:#152640 !important; }
 .gp-cls-btn.active-Verificado { background:rgba(0,229,160,0.15); border-color:rgba(0,229,160,0.6); color:#00E5A0; }
 .gp-cls-btn.active-Ligeiro { background:rgba(51,133,255,0.15); border-color:rgba(51,133,255,0.6); color:#3385FF; }
 .gp-cls-btn.active-Grave { background:rgba(255,157,0,0.15); border-color:rgba(255,157,0,0.6); color:#FF9D00; }
@@ -10798,6 +10859,7 @@ document.addEventListener('keydown',e=>{
 @media(max-width:768px) { .gp-main { padding:16px 12px 80px; } .gp-hdr { padding:14px 16px; } }
 </style>
 
+<template id="gpOverlayLegacy" style="display:none">
 <div id="gpOverlay">
   <div class="gp-hdr">
     <div>
@@ -10816,6 +10878,12 @@ document.addEventListener('keydown',e=>{
     <!-- Filtros -->
     <div class="gp-flt">
       <div class="gp-fg">
+        <label>Ano</label>
+        <select id="gpAno" onchange="gpOnSharedFilterChange()">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="gp-fg">
         <label>Parque Eólico</label>
         <select id="gpParque" onchange="gpOnParqueChange()">
           <option value="">Todos</option>
@@ -10823,7 +10891,7 @@ document.addEventListener('keydown',e=>{
       </div>
       <div class="gp-fg">
         <label>Sub-parque</label>
-        <select id="gpSubParque" onchange="gpRender()">
+        <select id="gpSubParque" onchange="gpOnSharedFilterChange()">
           <option value="">Todos</option>
         </select>
       </div>
@@ -10925,6 +10993,7 @@ document.addEventListener('keydown',e=>{
     </div><!-- /gpPanelComp -->
 
   </div>
+</template>
 <!-- ============================================================
      GESTÃO DE PEÇAS
      ============================================================ -->
@@ -10978,8 +11047,9 @@ document.addEventListener('keydown',e=>{
 /* NAV PILLS */
 .gp-nav-pills { background:#0F1E35; border:1px solid rgba(0,102,255,0.15); border-radius:10px; padding:10px 16px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:20px; }
 .gp-nav-lbl { font-size:13px; color:#4A6280; text-transform:uppercase; letter-spacing:0.8px; margin-right:4px; }
-.gp-nav-pill { text-decoration:none; border:1.5px solid; border-radius:20px; padding:3px 10px; font-size:13px; font-weight:600; white-space:nowrap; cursor:pointer; background:transparent; }
-.gp-nav-pill:hover { opacity:0.75; }
+.gp-nav-pill { text-decoration:none; border:1px solid rgba(139,163,199,0.22); border-radius:7px; padding:5px 10px; font-size:12px; font-weight:700; white-space:nowrap; cursor:pointer; background:#152640; color:#C5D8F0; display:inline-flex; align-items:center; gap:6px; }
+.gp-nav-pill:hover { border-color:rgba(127,179,255,0.45); background:#1A2D4A; color:#E8EDF5; }
+.gp-nav-dot { width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:#4A6280; }
 
 /* SUMMARY BLOCK */
 .gp-summary { background:#0D2145; border:1px solid rgba(0,102,255,0.2); border-radius:12px; margin-bottom:24px; overflow:hidden; }
@@ -11042,7 +11112,7 @@ document.addEventListener('keydown',e=>{
 .gp-custo-cell { min-width:120px; text-align:right; }
 .gp-custo-wrap { display:flex; align-items:center; gap:4px; justify-content:flex-end; }
 .gp-custo-prefix { font-size:11px; color:#4A6280; white-space:nowrap; }
-.gp-custo-input { width:88px; background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; text-align:right; outline:none; color:#E8EDF5; }
+.gp-custo-input { width:118px; background:#0B2B1A; border:1px solid rgba(0,200,80,0.2); border-radius:6px; padding:5px 7px; font-size:12px; font-family:'DM Sans',sans-serif; text-align:right; outline:none; color:#E8EDF5; }
 .gp-custo-input:focus { border-color:#00C850; box-shadow:0 0 0 2px rgba(0,200,80,0.15); }
 .gp-custo-input.has-value { background:#0d3d22; font-weight:600; color:#7fff7f; border-color:rgba(0,200,80,0.5); }
 
@@ -11064,6 +11134,7 @@ document.addEventListener('keydown',e=>{
 /* CLASSIFICATION BUTTONS */
 .gp-cls-btn { background:#152640; border:1px solid rgba(0,102,255,0.18); color:#4A6280; border-radius:7px; padding:6px 11px; font-size:13px; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.18s; white-space:nowrap; }
 .gp-cls-btn:hover { border-color:#0066FF; color:#8BA3C7; }
+.gp-cls-btn:disabled { opacity:0.35; cursor:not-allowed; border-color:rgba(0,102,255,0.12) !important; color:#4A6280 !important; background:#152640 !important; }
 .gp-cls-btn.active-Verificado { background:rgba(0,229,160,0.15); border-color:rgba(0,229,160,0.6); color:#00E5A0; }
 .gp-cls-btn.active-Ligeiro { background:rgba(51,133,255,0.15); border-color:rgba(51,133,255,0.6); color:#3385FF; }
 .gp-cls-btn.active-Grave { background:rgba(255,157,0,0.15); border-color:rgba(255,157,0,0.6); color:#FF9D00; }
@@ -11253,6 +11324,7 @@ let gpTotalAtivo = 0;   // total de linhas do filtro atual
 let gpActiveClsSet = new Set(['Defeito Grave', 'Ação Imediata']); // classificações ativas
 
 function gpToggle() {
+  gpEnsureSingleOverlay();
   gpVisible = !gpVisible;
   const o = document.getElementById('gpOverlay');
   if (gpVisible) {
@@ -11264,24 +11336,86 @@ function gpToggle() {
   }
 }
 
+function gpEnsureSingleOverlay() {
+  const overlays = document.querySelectorAll('#gpOverlay');
+  if (overlays.length <= 1) return;
+  overlays.forEach((overlay, i) => {
+    if (i < overlays.length - 1) overlay.remove();
+  });
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 function gpInit() {
+  gpPopulateAnos();
   const parques = [...new Set(AEROGERADORES.map(a => a.parque))].sort();
   const sel = document.getElementById('gpParque');
   const val = sel.value;
   sel.innerHTML = '<option value="">Todos os parques</option>' +
     parques.map(p => `<option value="${p}">${p}</option>`).join('');
   if (parques.includes(val)) sel.value = val;
+  gpSyncFromBI();
   gpPopulateSubParques();
+  gpSyncSubParqueFromBI();
+  gpUpdateClsButtonsForTab();
   gpRender();
+}
+
+function gpPopulateAnos() {
+  const sel = document.getElementById('gpAno');
+  if (!sel) return;
+  const val = sel.value;
+  const anos = [...new Set(Object.values(inspectionData)
+    .map(r => String((r && (r.mesAno || r.data)) || '').slice(0, 4))
+    .filter(a => /^\d{4}$/.test(a)))].sort().reverse();
+  sel.innerHTML = '<option value="">Todos</option>' +
+    anos.map(a => `<option value="${a}">${a}</option>`).join('');
+  if (anos.includes(val)) sel.value = val;
+}
+
+function gpSyncFromBI() {
+  const gpAno = document.getElementById('gpAno');
+  const gpPQ = document.getElementById('gpParque');
+  const biAno = document.getElementById('biAno');
+  const biPQ = document.getElementById('biPQ');
+
+  if (gpAno && biAno) gpAno.value = biAno.value;
+  if (gpPQ && biPQ) gpPQ.value = biPQ.value;
+
+  const activeBI = [...document.querySelectorAll('.bi-cls-btn[class*="active-"]')]
+    .map(btn => btn.dataset.cls)
+    .filter(cls => cls && cls !== 'N/A');
+  gpActiveClsSet = activeBI.length
+    ? new Set(activeBI)
+    : new Set(['Ação Imediata', 'Defeito Grave', 'Defeito Ligeiro', 'Verificado']);
+  gpUpdateClsButtonStates();
+}
+
+function gpSyncSubParqueFromBI() {
+  const gpSP = document.getElementById('gpSubParque');
+  const biSP = document.getElementById('biSP');
+  if (gpSP && biSP && [...gpSP.options].some(opt => opt.value === biSP.value)) {
+    gpSP.value = biSP.value;
+  }
+}
+
+function gpUpdateClsButtonStates() {
+  const map = {'Verificado':'Verificado','Defeito Ligeiro':'Ligeiro','Defeito Grave':'Grave','Ação Imediata':'Imediata'};
+  document.querySelectorAll('.gp-cls-btn').forEach(btn => {
+    const cls = btn.dataset.gpcls;
+    const key = map[cls];
+    btn.classList.remove('active-Verificado', 'active-Ligeiro', 'active-Grave', 'active-Imediata');
+    if (gpActiveClsSet.has(cls) && key) btn.classList.add('active-' + key);
+  });
 }
 
 function gpOnParqueChange() {
   gpPopulateSubParques();
+  gpPushSharedFiltersToBI();
   gpRender();
 }
 
 function gpToggleCls(btn) {
+  if (btn.disabled) return;
   const cls = btn.dataset.gpcls;
   const map = {'Verificado':'Verificado','Defeito Ligeiro':'Ligeiro','Defeito Grave':'Grave','Ação Imediata':'Imediata'};
   const key = map[cls];
@@ -11292,7 +11426,40 @@ function gpToggleCls(btn) {
     gpActiveClsSet.add(cls);
     btn.classList.add('active-' + key);
   }
+  gpPushSharedFiltersToBI();
   gpRender();
+}
+
+function gpOnSharedFilterChange() {
+  gpPushSharedFiltersToBI();
+  gpRender();
+}
+
+function gpPushSharedFiltersToBI() {
+  const gpAno = document.getElementById('gpAno');
+  const gpPQ = document.getElementById('gpParque');
+  const gpSP = document.getElementById('gpSubParque');
+  const biAno = document.getElementById('biAno');
+  const biPQ = document.getElementById('biPQ');
+  const biSP = document.getElementById('biSP');
+
+  if (biAno && gpAno) biAno.value = gpAno.value;
+  if (biPQ && gpPQ) biPQ.value = gpPQ.value;
+  if (biSP && gpSP) {
+    biPopulateSubparques();
+    if ([...biSP.options].some(opt => opt.value === gpSP.value)) biSP.value = gpSP.value;
+    biPopulateTurbines();
+  }
+
+  const map = {'Verificado':'Verificado','Defeito Ligeiro':'Ligeiro','Defeito Grave':'Grave','Ação Imediata':'Imediata'};
+  document.querySelectorAll('.bi-cls-btn').forEach(btn => {
+    const cls = btn.dataset.cls;
+    const key = map[cls];
+    btn.classList.remove('active-Verificado', 'active-Ligeiro', 'active-Grave', 'active-Imediata');
+    if (gpActiveClsSet.has(cls) && key) btn.classList.add('active-' + key);
+  });
+
+  if (typeof biVisible !== 'undefined' && biVisible) biApply();
 }
 
 function gpPopulateSubParques() {
@@ -11309,6 +11476,7 @@ function gpPopulateSubParques() {
 
 // ── DADOS ─────────────────────────────────────────────────────
 function gpGetDados() {
+  const ano        = document.getElementById('gpAno') ? document.getElementById('gpAno').value : '';
   const parque     = document.getElementById('gpParque').value;
   const subParque  = document.getElementById('gpSubParque').value;
   let turbinas = AEROGERADORES;
@@ -11324,8 +11492,10 @@ function gpGetDados() {
 
   // agrupar por aerogerador → lista de linhas de defeito
   const porAero = {};
+  [...codigos].forEach(codigo => { porAero[codigo] = []; });
   for (const [k, r] of Object.entries(inspectionData)) {
     if (!codigos.has(r.aerogerador)) continue;
+    if (ano && !String(r.mesAno || r.data || '').startsWith(ano)) continue;
     if (!incluir.has(r.classificacao)) continue;
 
     const aero = r.aerogerador;
@@ -11335,7 +11505,8 @@ function gpGetDados() {
       ? r.falhas
       : (r.falha ? [r.falha] : ['—']);
 
-    falhasArr.forEach(f => {
+    falhasArr.forEach((f, idx) => {
+      const oldRowKey = `${aero}||${r.componente}||${f}`;
       porAero[aero].push({
         aero,
         categoria:    r.categoria    || '',
@@ -11345,7 +11516,8 @@ function gpGetDados() {
         classificacao:r.classificacao,
         observacoes:  r.observacoes  || '',
         data:         r.data         || '',
-        rowKey: `${aero}||${r.componente}||${f}`
+        rowKey: `${k}||falha:${idx}`,
+        oldRowKey
       });
     });
   }
@@ -11353,7 +11525,7 @@ function gpGetDados() {
   // ordenar aerogeradores: maior severidade primeiro, depois alfabético
   const sevOrd = { 'Ação Imediata': 3, 'Defeito Grave': 2, 'Defeito Ligeiro': 1 };
   const aerosSorted = Object.keys(porAero).sort((a, b) => {
-    const maxSev = arr => Math.max(...arr.map(r => sevOrd[r.classificacao] || 0));
+    const maxSev = arr => arr.length ? Math.max(...arr.map(r => sevOrd[r.classificacao] || 0)) : 0;
     const diff = maxSev(porAero[b]) - maxSev(porAero[a]);
     return diff !== 0 ? diff : a.localeCompare(b, undefined, { numeric: true });
   });
@@ -11365,6 +11537,7 @@ function gpGetDados() {
 function gpRender() {
   const { porAero, aerosSorted, codigos } = gpGetDados();
   const saved = gpLoadSaved();
+  const ano = document.getElementById('gpAno') ? document.getElementById('gpAno').value : '';
 
   // KPIs
   let cA = 0, cT = 0, cI = 0, cG = 0, cL = 0;
@@ -11377,6 +11550,7 @@ function gpRender() {
   aerosSorted.forEach(a => { cA++; });
   for (const r of Object.values(inspectionData)) {
     if (!codigos.has(r.aerogerador)) continue;
+    if (ano && !String(r.mesAno || r.data || '').startsWith(ano)) continue;
     if (!incluir.has(r.classificacao)) continue;
     cT++;
     if (r.classificacao === 'Ação Imediata') cI++;
@@ -11419,9 +11593,10 @@ function gpRender() {
     const maxCls = porAero[a].reduce((m, r) => {
       const s = { 'Ação Imediata':3,'Defeito Grave':2,'Defeito Ligeiro':1 };
       return (s[r.classificacao]||0) > (s[m]||0) ? r.classificacao : m;
-    }, 'Defeito Ligeiro');
+    }, '');
     const c = CLS_COLOR[maxCls] || '#7FB3FF';
-    return `<button class="gp-nav-pill" style="border-color:${c};color:${c}" onclick="document.getElementById('gpaero_${a.replace(/[^a-zA-Z0-9]/g,'_')}').scrollIntoView({behavior:'smooth',block:'start'})">${a}</button>`;
+    const dot = porAero[a].length ? `<span class="gp-nav-dot" style="background:${c}"></span>` : '';
+    return `<button class="gp-nav-pill" onclick="document.getElementById('gpaero_${a.replace(/[^a-zA-Z0-9]/g,'_')}').scrollIntoView({behavior:'smooth',block:'start'})">${dot}<span>${a}</span></button>`;
   }).join('');
 
   // Summary visible
@@ -11445,7 +11620,7 @@ function gpBuildAeroBlock(aero, linhas, saved) {
     else if (r.classificacao==='Defeito Grave') cG++;
     else cL++;
   });
-  const topCls = cI > 0 ? 'aero-im' : cG > 0 ? 'aero-gr' : 'aero-lt';
+  const topCls = cI > 0 ? 'aero-im' : cG > 0 ? 'aero-gr' : cL > 0 ? 'aero-lt' : '';
   const uid = 'gpaero_' + aero.replace(/[^a-zA-Z0-9]/g,'_');
 
   const badges = [
@@ -11454,7 +11629,9 @@ function gpBuildAeroBlock(aero, linhas, saved) {
     cL > 0 ? `<span class="gp-mini-badge gp-mini-lt">${cL} Ligeiro</span>` : ''
   ].filter(Boolean).join('');
 
-  const rows = linhas.map(r => gpBuildRow(r, aero, saved)).join('');
+  const rows = linhas.length
+    ? linhas.map(r => gpBuildRow(r, aero, saved)).join('')
+    : '<tr><td colspan="9" style="padding:18px 12px;text-align:center;color:#4A6280;font-size:13px;">Nenhum defeito encontrado para este aerogerador.</td></tr>';
 
   const subId = 'gpsub_' + uid;
 
@@ -11491,7 +11668,7 @@ function gpBuildAeroBlock(aero, linhas, saved) {
 // ── BUILD ROW ─────────────────────────────────────────────────
 function gpBuildRow(r, aero, saved) {
   const key = r.rowKey;
-  const s = saved[key] || {};
+  const s = gpSavedFor(saved, r);
   const catVal  = s.cat  || '';
   const outroVal= s.outro|| '';
   const custoVal= s.custo|| '';
@@ -11517,6 +11694,7 @@ function gpBuildRow(r, aero, saved) {
   const outroDisplay = catVal==='outro' ? '' : 'display:none';
   const selectFilled = catVal ? ' filled' : '';
   const custoHasVal  = gpParseBRL(custoVal) > 0;
+  const custoDisplay = custoHasVal ? gpFmtBRLInput(custoVal) : '';
   const safeKey = key.replace(/"/g, '&quot;');
 
   return `<tr>
@@ -11539,11 +11717,10 @@ function gpBuildRow(r, aero, saved) {
     </td>
     <td class="gp-custo-cell">
       <div class="gp-custo-wrap">
-        <span class="gp-custo-prefix">R$</span>
         <input type="text" class="gp-custo-input${custoHasVal?' has-value':''}"
           data-key="${safeKey}" data-aero="${aero}"
-          placeholder="0,00" value="${custoVal}"
-          oninput="gpOnCustoInput(this)">
+          inputmode="decimal" placeholder="R$ 0,00" value="${custoDisplay}"
+          oninput="gpOnCustoInput(this)" onblur="gpFormatCustoInput(this)">
       </div>
     </td>
   </tr>`;
@@ -11566,9 +11743,31 @@ function gpOnCustoInput(inp) {
   gpSaveAll();
 }
 
+function gpFormatCustoInput(inp) {
+  inp.value = gpFmtBRLInput(inp.value);
+  inp.classList.toggle('has-value', gpParseBRL(inp.value) > 0);
+  gpSaveAll();
+}
+
 // ── SAVE / LOAD ───────────────────────────────────────────────
 function gpLoadSaved() {
   try { return JSON.parse(localStorage.getItem(GP_KEY) || '{}'); } catch(e) { return {}; }
+}
+
+function gpSavedFor(saved, row) {
+  return saved[row.rowKey] || (row.oldRowKey ? saved[row.oldRowKey] : null) || {};
+}
+
+function gpLiveSavedFor(saved, row) {
+  const s = { ...gpSavedFor(saved, row) };
+  const key = CSS.escape(row.rowKey);
+  const custoInp = document.querySelector(`.gp-custo-input[data-key="${key}"]`);
+  const catSel = document.querySelector(`.gp-cat-select[data-key="${key}"]`);
+  const outroInp = document.querySelector(`.gp-cat-outro[data-key="${key}"]`);
+  if (custoInp) s.custo = custoInp.value;
+  if (catSel) s.cat = catSel.value;
+  if (outroInp) s.outro = outroInp.value;
+  return s;
 }
 
 function gpSaveAll() {
@@ -11589,7 +11788,7 @@ function gpSaveAll() {
   document.querySelectorAll('.gp-custo-input').forEach(inp => {
     const key = inp.dataset.key;
     if (!data[key]) data[key] = {};
-    data[key].custo = inp.value;
+    data[key].custo = gpFmtBRLInput(inp.value);
   });
 
   localStorage.setItem(GP_KEY, JSON.stringify(data));
@@ -11603,9 +11802,14 @@ function gpSaveAll() {
 // ── TOTALS ────────────────────────────────────────────────────
 function gpParseBRL(str) {
   if (!str || !str.trim()) return 0;
-  let s = str.trim().replace(/\s/g,'');
+  let s = str.trim().replace(/[R$\s]/g,'');
   if (s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
   else if (s.includes(',')) s = s.replace(',','.');
+  else if (s.includes('.')) {
+    const parts = s.split('.');
+    const looksLikeThousands = parts.length > 1 && parts.slice(1).every(p => p.length === 3);
+    if (looksLikeThousands) s = s.replace(/\./g,'');
+  }
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
@@ -11614,13 +11818,18 @@ function gpFmtBRL(n) {
   return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
+function gpFmtBRLInput(value) {
+  const n = gpParseBRL(value);
+  return n > 0 ? 'R$ ' + gpFmtBRL(n) : '';
+}
+
 function gpUpdateTotals(saved, linhas) {
   let grandTotal = 0, grandFilled = 0;
 
   // Subtotais por aero
   const subTotals = {};
   linhas.forEach(r => {
-    const s = saved[r.rowKey] || {};
+    const s = gpLiveSavedFor(saved, r);
     const v = gpParseBRL(s.custo || '');
     if (v > 0) { grandFilled++; grandTotal += v; }
     if (!subTotals[r.aero]) subTotals[r.aero] = 0;
@@ -11639,7 +11848,7 @@ function gpUpdateTotals(saved, linhas) {
 
   // KPI categorizados
   let catCount = 0;
-  linhas.forEach(r => { if ((saved[r.rowKey]||{}).cat) catCount++; });
+  linhas.forEach(r => { if (gpLiveSavedFor(saved, r).cat) catCount++; });
   const kcat = document.getElementById('gpKCat');
   if (kcat) kcat.textContent = catCount;
 
@@ -11665,7 +11874,7 @@ function gpUpdateTotals(saved, linhas) {
   const catTotals = {}, catCounts = {};
   GP_CATS.forEach(c => { catTotals[c]=0; catCounts[c]=0; });
   linhas.forEach(r => {
-    const s = saved[r.rowKey] || {};
+    const s = gpLiveSavedFor(saved, r);
     const cat = s.cat || '';
     if (!cat) return;
     const key = GP_CATS.includes(cat) ? cat : 'outro';
@@ -11703,7 +11912,17 @@ function gpSwitchTab(tab) {
   document.getElementById('gpTabBtnComp').classList.toggle('active', tab === 'comp');
   document.getElementById('gpPanelAero').classList.toggle('active', tab === 'aero');
   document.getElementById('gpPanelComp').classList.toggle('active', tab === 'comp');
+  gpUpdateClsButtonsForTab();
   if (tab === 'comp') gpRenderComponentes();
+}
+
+function gpUpdateClsButtonsForTab() {
+  document.querySelectorAll('.gp-cls-btn[data-gpcls="Verificado"]').forEach(btn => {
+    btn.disabled = gpActiveTab === 'aero';
+    btn.title = gpActiveTab === 'aero'
+      ? 'Filtro Verificado suspenso na aba Por Aerogerador'
+      : '';
+  });
 }
 
 // ── COMPONENTES ───────────────────────────────────────────────
@@ -11712,6 +11931,7 @@ function gpRenderComponentes() {
   if (!el) return;
 
   // Filtros de parque / sub-parque
+  const ano       = document.getElementById('gpAno') ? document.getElementById('gpAno').value : '';
   const parque    = document.getElementById('gpParque').value;
   const subParque = document.getElementById('gpSubParque').value;
   let turbinas = AEROGERADORES;
@@ -11736,6 +11956,7 @@ function gpRenderComponentes() {
   const mapa = {};
   for (const r of Object.values(inspectionData)) {
     if (!codigos.has(r.aerogerador)) continue;
+    if (ano && !String(r.mesAno || r.data || '').startsWith(ano)) continue;
     const comp = (r.componente || '').trim() || '(sem componente)';
     if (!mapa[comp]) mapa[comp] = { defeitos: {}, verificados: new Set() };
 
@@ -11825,7 +12046,7 @@ function gpExportExcel() {
     const h1 = ['Aerogerador','Categoria','Subcategoria','Componente','Falha','Observações','Data','Categorização','Custo Estimado (R$)'];
     const rows1 = [h1];
     gpDadosAtivos.forEach(r => {
-      const s = saved[r.rowKey] || {};
+      const s = gpSavedFor(saved, r);
       let catLabel = '';
       if (s.cat === 'outro') catLabel = 'Outro: ' + (s.outro || '');
       else if (s.cat) catLabel = GP_CAT_LABELS[s.cat] || s.cat;
@@ -11844,7 +12065,7 @@ function gpExportExcel() {
     GP_CATS.forEach(c => { catTotals[c]=0; catCounts[c]=0; });
     let grandTotal = 0;
     gpDadosAtivos.forEach(r => {
-      const s = saved[r.rowKey] || {};
+      const s = gpSavedFor(saved, r);
       if (!s.cat) return;
       const key = GP_CATS.includes(s.cat) ? s.cat : 'outro';
       catTotals[key] += gpParseBRL(s.custo||'');
@@ -11854,7 +12075,7 @@ function gpExportExcel() {
     const h2 = ['Categoria de Atendimento','Qtd. Itens','Custo Estimado (R$)'];
     const rows2 = [h2];
     GP_CATS.forEach(c => rows2.push([GP_CAT_LABELS[c], catCounts[c]||0, catTotals[c]||0]));
-    rows2.push(['TOTAL GERAL', gpDadosAtivos.filter(r=>(saved[r.rowKey]||{}).cat).length, grandTotal]);
+    rows2.push(['TOTAL GERAL', gpDadosAtivos.filter(r=>gpSavedFor(saved, r).cat).length, grandTotal]);
     const ws2 = XLSX.utils.aoa_to_sheet(rows2);
     ws2['!cols'] = [{wch:42},{wch:14},{wch:22}];
 
@@ -11866,7 +12087,7 @@ function gpExportExcel() {
       else if (r.classificacao==='Defeito Grave') aeroTotals[r.aero].gr++;
       else aeroTotals[r.aero].lt++;
       aeroTotals[r.aero].total++;
-      aeroTotals[r.aero].custo += gpParseBRL((saved[r.rowKey]||{}).custo||'');
+      aeroTotals[r.aero].custo += gpParseBRL(gpLiveSavedFor(saved, r).custo||'');
     });
     const h3 = ['Aerogerador','Ação Imediata','Defeito Grave','Defeito Ligeiro','Total Defeitos','Custo Estimado (R$)'];
     const rows3 = [h3];
@@ -11936,11 +12157,11 @@ function gpOpenCatModal(cat) {
   const label = GP_CAT_LABELS[cat] || cat;
 
   const itens = gpDadosAtivos.filter(r => {
-    const s = saved[r.rowKey] || {};
+    const s = gpSavedFor(saved, r);
     const key = GP_CATS.includes(s.cat) ? s.cat : 'outro';
     return key === cat;
   }).map(r => {
-    const s = saved[r.rowKey] || {};
+    const s = gpSavedFor(saved, r);
     return {
       aero:      r.aero,
       componente:r.componente,
@@ -12019,11 +12240,11 @@ function gpExportCatExcel(cat) {
   const label = GP_CAT_LABELS[cat] || cat;
 
   const itens = gpDadosAtivos.filter(r => {
-    const s = saved[r.rowKey] || {};
+    const s = gpSavedFor(saved, r);
     const key = GP_CATS.includes(s.cat) ? s.cat : 'outro';
     return key === cat;
   }).map(r => {
-    const s = saved[r.rowKey] || {};
+    const s = gpSavedFor(saved, r);
     return {
       aero:      r.aero,
       componente:r.componente,
