@@ -874,7 +874,7 @@
                     <button class="btn btn-warning desktop-only" id="mergeData" title="Juntar dados de outro backup com os dados atuais">🔀 Carregar Backups</button>
                     <button class="btn desktop-only" id="importarParqueBtn" title="Importar novo parque a partir de planilha Excel" style="background:linear-gradient(135deg,#1a3a2a,#1e7a4a);color:#7fffa0;border:1px solid rgba(0,200,80,0.35);">📥 Importar Parque (Excel)</button>
                     <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
-                    <input type="file" id="mergeFileInput" accept=".json" multiple style="display: none;">
+                    <input type="file" id="mergeFileInput" accept=".json,.csv,.xlsx,.xls" multiple style="display: none;">
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
                     <button class="btn" id="openDashboardBI" onclick="biToggle()" style="background:linear-gradient(135deg,#0A1628,#0047CC);color:white;width:100%;font-size:18px;padding:16px;border:1px solid rgba(0,102,255,0.4);box-shadow:0 4px 20px rgba(0,102,255,0.3);">📊 Dashboard BI</button>
@@ -7474,9 +7474,10 @@ if (mergeFileInput) {
             }
             
             // Validar se categoria existe na estrutura
-            if (!ESTRUTURA.categorias[data.categoria]) {
+            const isBIImport = data.importadoBI === true || !!data.origemImportacao;
+            if (!isBIImport && !ESTRUTURA.categorias[data.categoria]) {
                 errors.push(`Categoria não encontrada: "${data.categoria}"`);
-            } else {
+            } else if (!isBIImport) {
                 // Validar subcategoria
                 if (!ESTRUTURA.categorias[data.categoria][data.subcategoria]) {
                     errors.push(`Subcategoria não encontrada: "${data.subcategoria}"`);
@@ -7544,7 +7545,12 @@ if (mergeFileInput) {
                 componente: String(data.componente || '').trim(),
                 classificacao: VALID_CLASSIFICATIONS.includes(data.classificacao) ? data.classificacao : 'Verificado',
                 falha: String(data.falha || '').trim(),
+                falhas: Array.isArray(data.falhas) ? data.falhas.map(f => String(f || '').trim()).filter(Boolean) : [],
                 observacoes: String(data.observacoes || '').trim(),
+                categoriaParque: String(data.categoriaParque || '').trim(),
+                parqueEolico: String(data.parqueEolico || '').trim(),
+                importadoBI: data.importadoBI === true,
+                origemImportacao: String(data.origemImportacao || '').trim(),
                 temFotos: Boolean(data.temFotos),
                 numFotos: Math.max(0, parseInt(data.numFotos) || 0),
                 timestamp: data.timestamp || new Date().toISOString()
@@ -7553,6 +7559,7 @@ if (mergeFileInput) {
             // Se classificação é Verificado, limpar falha
             if (sanitized.classificacao === 'Verificado' || sanitized.classificacao === 'N/A') {
                 sanitized.falha = '';
+                sanitized.falhas = [];
             }
             
             return { 
@@ -8483,6 +8490,267 @@ if (mergeFileInput) {
             }
         }
 
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+                reader.readAsText(file, 'utf-8');
+            });
+        }
+
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function ensureXLSXLoaded() {
+            return new Promise((resolve, reject) => {
+                if (typeof XLSX !== 'undefined') {
+                    resolve();
+                    return;
+                }
+
+                const existing = document.querySelector('script[data-xlsx-loader="true"]');
+                if (existing) {
+                    existing.addEventListener('load', resolve, { once: true });
+                    existing.addEventListener('error', () => reject(new Error('Erro ao carregar biblioteca Excel')), { once: true });
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                script.dataset.xlsxLoader = 'true';
+                script.onload = resolve;
+                script.onerror = () => reject(new Error('Erro ao carregar biblioteca Excel'));
+                document.head.appendChild(script);
+            });
+        }
+
+        function parseCSVText(text) {
+            const clean = String(text || '').replace(/^\uFEFF/, '');
+            const firstLine = clean.split(/\r?\n/, 1)[0] || '';
+            const delimiter = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';
+            const rows = [];
+            let row = [];
+            let cell = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < clean.length; i++) {
+                const ch = clean[i];
+                const next = clean[i + 1];
+
+                if (ch === '"') {
+                    if (inQuotes && next === '"') {
+                        cell += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === delimiter && !inQuotes) {
+                    row.push(cell);
+                    cell = '';
+                } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+                    if (ch === '\r' && next === '\n') i++;
+                    row.push(cell);
+                    if (row.some(v => String(v).trim() !== '')) rows.push(row);
+                    row = [];
+                    cell = '';
+                } else {
+                    cell += ch;
+                }
+            }
+
+            row.push(cell);
+            if (row.some(v => String(v).trim() !== '')) rows.push(row);
+
+            if (!rows.length) return [];
+
+            const headers = rows[0].map(normalizeImportHeader);
+            return rows.slice(1).map(values => {
+                const obj = {};
+                headers.forEach((h, i) => obj[h] = String(values[i] ?? '').trim());
+                return obj;
+            });
+        }
+
+        function normalizeImportHeader(header) {
+            return String(header || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+        }
+
+        function getImportValue(row, aliases) {
+            for (const alias of aliases) {
+                const key = normalizeImportHeader(alias);
+                if (row[key] !== undefined && String(row[key]).trim() !== '') return String(row[key]).trim();
+            }
+            return '';
+        }
+
+        function normalizeImportedMesAno(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            if (/^\d{4}$/.test(raw)) return `${raw}-01`;
+            const yearMonth = raw.match(/^(\d{4})[-\/](\d{1,2})/);
+            if (yearMonth) return `${yearMonth[1]}-${yearMonth[2].padStart(2, '0')}`;
+            const brDate = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (brDate) return `${brDate[3]}-${brDate[2].padStart(2, '0')}`;
+            return raw;
+        }
+
+        function importedRowsToBackup(rows, sourceName) {
+            const inspectionDataImportado = {};
+            const photosImportadas = {};
+
+            rows.forEach(row => {
+                const normalizedRow = {};
+                Object.keys(row || {}).forEach(k => {
+                    normalizedRow[normalizeImportHeader(k)] = String(row[k] ?? '').trim();
+                });
+
+                const aerogerador = getImportValue(normalizedRow, ['Aerogerador', 'Aero', 'WTG']);
+                const categoria = getImportValue(normalizedRow, ['Categoria']);
+                const subcategoria = getImportValue(normalizedRow, ['Sub-categoria', 'Subcategoria', 'Sub categoria']);
+                const componente = getImportValue(normalizedRow, ['Componente']);
+
+                if (!aerogerador || !categoria || !subcategoria || !componente) return;
+
+                const classificacao = getImportValue(normalizedRow, ['Classificacao', 'Classificação']) || 'Verificado';
+                const falha = getImportValue(normalizedRow, ['Falha', 'Falhas']);
+                const observacoes = getImportValue(normalizedRow, ['Observacoes', 'Observações', 'Observacao', 'Observação']);
+                const mesAno = normalizeImportedMesAno(getImportValue(normalizedRow, ['Mes/Ano', 'Mês/Ano', 'Mes Ano', 'Ano']));
+                const categoriaParque = getImportValue(normalizedRow, ['CategoriaParque', 'Categoria Parque']);
+                const parqueEolico = getImportValue(normalizedRow, ['Parque Eolico', 'Parque Eólico', 'Parque']);
+                const timestamp = getImportValue(normalizedRow, ['Data/Hora', 'Data Hora', 'Timestamp', 'Data']) || new Date().toISOString();
+                const key = `${aerogerador}_${categoria}_${subcategoria}_${componente}`;
+
+                if (!inspectionDataImportado[key]) {
+                    inspectionDataImportado[key] = {
+                        aerogerador,
+                        mesAno,
+                        categoriaParque,
+                        parqueEolico,
+                        importadoBI: true,
+                        origemImportacao: sourceName || '',
+                        responsavel: getImportValue(normalizedRow, ['Inspetor', 'Responsavel', 'Responsável']) || '',
+                        categoria,
+                        subcategoria,
+                        componente,
+                        classificacao,
+                        falha: '',
+                        falhas: [],
+                        observacoes,
+                        temFotos: false,
+                        numFotos: 0,
+                        timestamp
+                    };
+                }
+
+                if (falha && !inspectionDataImportado[key].falhas.includes(falha)) {
+                    inspectionDataImportado[key].falhas.push(falha);
+                }
+
+                inspectionDataImportado[key].falha = inspectionDataImportado[key].falhas[0] || '';
+                if (inspectionDataImportado[key].falhas.length > 0) {
+                    inspectionDataImportado[key].classificacao = classificacao;
+                }
+            });
+
+            const count = Object.keys(inspectionDataImportado).length;
+            if (!count) {
+                throw new Error('Nenhuma inspeção válida encontrada. Confira as colunas Aerogerador, Categoria, Sub-categoria e Componente.');
+            }
+
+            return {
+                version: 'csv-xlsx-import',
+                createdAt: new Date().toISOString(),
+                sourceFile: sourceName,
+                data: {
+                    inspectionData: inspectionDataImportado,
+                    photos: photosImportadas
+                }
+            };
+        }
+
+        async function parseBackupImportFile(file) {
+            const name = (file && file.name ? file.name : '').toLowerCase();
+
+            if (name.endsWith('.json')) {
+                const backup = JSON.parse(await readFileAsText(file));
+                if (!backup.data || !backup.version) throw new Error('Arquivo de backup inválido');
+                return backup;
+            }
+
+            if (name.endsWith('.csv')) {
+                const rows = parseCSVText(await readFileAsText(file));
+                return importedRowsToBackup(rows, file.name);
+            }
+
+            if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                await ensureXLSXLoaded();
+                const data = await readFileAsArrayBuffer(file);
+                const workbook = XLSX.read(new Uint8Array(data), { type: 'array' });
+                if (!workbook.SheetNames.length) throw new Error('Planilha sem abas');
+                const rows = workbook.SheetNames.flatMap(sheetName =>
+                    XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '', raw: false })
+                );
+                return importedRowsToBackup(rows, file.name);
+            }
+
+            throw new Error('Formato não suportado. Use JSON, CSV, XLSX ou XLS.');
+        }
+
+        async function mergeBackupObject(backup) {
+            const backupInspections = backup.data.inspectionData || {};
+            const backupPhotos = backup.data.photos || {};
+            let adicionadas = 0, atualizadas = 0, fotos = 0, migradas = 0;
+
+            for (const [key, data] of Object.entries(backupInspections)) {
+                const newKey = migrateKey(key);
+                const newData = migrateData(data);
+                if (newKey !== key) migradas++;
+
+                const existingData = inspectionData[newKey];
+                if (!existingData) {
+                    inspectionData[newKey] = newData;
+                    await saveInspectionToDB(newKey, newData);
+                    adicionadas++;
+                } else {
+                    const existingTime = existingData.timestamp ? new Date(existingData.timestamp).getTime() : 0;
+                    const newTime = newData.timestamp ? new Date(newData.timestamp).getTime() : 0;
+                    if (newTime > existingTime) {
+                        inspectionData[newKey] = newData;
+                        await saveInspectionToDB(newKey, newData);
+                        atualizadas++;
+                    }
+                }
+            }
+
+            for (const [key, newPhotos] of Object.entries(backupPhotos)) {
+                if (Array.isArray(newPhotos) && newPhotos.length > 0) {
+                    const migratedKey = migrateKey(key);
+                    let existingPhotos = await loadPhotosFromDB(migratedKey) || [];
+                    for (const newPhoto of newPhotos) {
+                        if (!existingPhotos.includes(newPhoto)) {
+                            existingPhotos.push(newPhoto);
+                            fotos++;
+                        }
+                    }
+                    await savePhotosToDB(migratedKey, existingPhotos);
+                }
+            }
+
+            return { adicionadas, atualizadas, fotos, migradas };
+        }
+
         async function restoreBackup(file) {
             console.log('=== RESTAURANDO BACKUP ===');
             
@@ -8597,6 +8865,56 @@ if (mergeFileInput) {
         }
 
         async function mergeBackup(file) {
+            if (file) {
+                try {
+                    const backup = await parseBackupImportFile(file);
+                    const backupInspections = backup.data.inspectionData || {};
+                    const backupPhotos = backup.data.photos || {};
+                    const numInspecoesBackup = Object.keys(backupInspections).length;
+                    let numFotosBackup = 0;
+                    for (const photos of Object.values(backupPhotos)) {
+                        if (Array.isArray(photos)) numFotosBackup += photos.length;
+                    }
+
+                    const numInspecoesAtuais = Object.keys(inspectionData).length;
+                    const dataBackup = new Date(backup.createdAt || Date.now()).toLocaleString('pt-BR');
+                    const confirmMsg = `ðŸ”€ MESCLAR BACKUPS\n\n` +
+                        `Arquivo a mesclar: ${file.name}\n` +
+                        `Data identificada: ${dataBackup}\n\n` +
+                        `ConteÃºdo:\n` +
+                        `â€¢ ${numInspecoesBackup} inspeÃ§Ãµes\n` +
+                        `â€¢ ${numFotosBackup} fotos\n\n` +
+                        `Dados atuais:\n` +
+                        `â€¢ ${numInspecoesAtuais} inspeÃ§Ãµes\n\n` +
+                        `Os dados serÃ£o ADICIONADOS aos dados atuais.\n` +
+                        `Se houver conflito (mesmo componente nos dois), o dado mais recente serÃ¡ mantido.\n\n` +
+                        `Deseja continuar?`;
+
+                    if (!confirm(confirmMsg)) {
+                        showToast('Mesclagem cancelada', 'info');
+                        return;
+                    }
+
+                    const result = await mergeBackupObject(backup);
+                    buildTree();
+                    updateProgress();
+                    updateParqueProgress();
+
+                    const resumo = [];
+                    if (result.adicionadas > 0) resumo.push(`${result.adicionadas} novas`);
+                    if (result.atualizadas > 0) resumo.push(`${result.atualizadas} atualizadas`);
+                    if (result.fotos > 0) resumo.push(`${result.fotos} fotos`);
+                    if (result.migradas > 0) resumo.push(`${result.migradas} migradas`);
+
+                    showToast(`âœ… Mesclagem concluÃ­da! ${resumo.join(', ') || 'Nenhuma alteraÃ§Ã£o'}`, 'success');
+                    console.log('Backup mesclado com sucesso');
+                } catch (error) {
+                    console.error('Erro ao mesclar backup:', error);
+                    showToast('âŒ Erro ao mesclar backup: ' + error.message, 'error');
+                }
+                return;
+            }
+
             console.log('=== MESCLANDO BACKUP ===');
             
             if (!file) {
@@ -8735,6 +9053,8 @@ if (mergeFileInput) {
          * Versão silenciosa do mergeBackup para processamento em lote.
          */
         function mergeBackupSilent(file) {
+            return parseBackupImportFile(file).then(mergeBackupObject);
+
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
