@@ -877,7 +877,7 @@
                     <input type="file" id="mergeFileInput" accept=".json,.csv,.xlsx,.xls" multiple style="display: none;">
                 </div>
                 <div class="buttons-row" style="margin-top: 10px;">
-                    <button class="btn" id="openDashboardBI" onclick="biToggle()" style="background:linear-gradient(135deg,#0A1628,#0047CC);color:white;width:100%;font-size:18px;padding:16px;border:1px solid rgba(0,102,255,0.4);box-shadow:0 4px 20px rgba(0,102,255,0.3);">📊 Dashboard BI</button>
+                    <button class="btn" id="openDashboardBI" onclick="biToggle()" disabled title="Carregando dados..." style="background:linear-gradient(135deg,#0A1628,#0047CC);color:white;width:100%;font-size:18px;padding:16px;border:1px solid rgba(0,102,255,0.4);box-shadow:0 4px 20px rgba(0,102,255,0.3);opacity:0.6;cursor:not-allowed;">📊 Dashboard BI</button>
                 </div>
             </div>
         </div>
@@ -6354,35 +6354,39 @@ const AEROGERADORES = [
 
                 console.log('1. Inicializando banco de dados...');
                 await initDB();
-                
+
                 console.log('2. Contando componentes...');
                 countTotalComponents();
-                
+
                 console.log('3. Carregando aerogeradores...');
                 if (typeof importParqueCarregarCustoms === 'function') importParqueCarregarCustoms();
                 loadAerogeradores();
-                
-                console.log('4. Construindo árvore...');
-                buildTree();
-                
-                console.log('5. Configurando event listeners...');
+
+                console.log('4. Configurando event listeners...');
                 setupEventListeners();
-                
-                console.log('6. Carregando dados salvos...');
+
+                console.log('5. Carregando dados salvos...');
                 await loadSavedData();
-                
+
+                console.log('6. Construindo árvore...');
+                buildTree();
+
                 console.log('7. Definindo mês padrão...');
                 setDefaultMonth();
-                
+
                 console.log('8. Atualizando progresso do parque...');
                 updateParqueProgress();
-                
+
+                // Liberar Dashboard BI após init completo
+                const btnBI = document.getElementById('openDashboardBI');
+                if (btnBI) { btnBI.disabled = false; btnBI.title = ''; btnBI.style.opacity = ''; btnBI.style.cursor = ''; }
+
                 // Mostrar estatísticas de armazenamento
                 const stats = await getStorageStats();
                 if (stats) {
                     console.log(`Armazenamento: ${stats.usageFormatted} de ${stats.quotaFormatted} (${stats.percentUsed})`);
                 }
-                
+
                 console.log('=== APLICAÇÃO PWA INICIADA COM SUCESSO ===');
             } catch (error) {
                 console.error('ERRO AO INICIAR:', error);
@@ -7655,21 +7659,29 @@ if (mergeFileInput) {
                     if (saved) {
                         console.log('Migrando dados do localStorage para IndexedDB...');
                         rawData = JSON.parse(saved);
-                        
-                        // Salvar no IndexedDB
-                        for (const [key, data] of Object.entries(rawData)) {
+
+                        // Salvar inspeções — só prossegue se TODAS tiverem sucesso
+                        const entries = Object.entries(rawData);
+                        let migratedCount = 0;
+                        for (const [key, data] of entries) {
                             await saveInspectionToDB(key, data);
+                            migratedCount++;
                         }
-                        
-                        // Migrar fotos também
+                        if (migratedCount !== entries.length) {
+                            throw new Error(`Migração incompleta: ${migratedCount}/${entries.length} itens salvos`);
+                        }
+
+                        // Migrar fotos — capturar chaves antes de iterar para evitar índice mutável
+                        const photoKeys = [];
                         for (let i = 0; i < localStorage.length; i++) {
                             const lsKey = localStorage.key(i);
-                            if (lsKey.startsWith('photos_')) {
-                                const photos = JSON.parse(localStorage.getItem(lsKey));
-                                await savePhotosToDB(lsKey, photos);
-                            }
+                            if (lsKey && lsKey.startsWith('photos_')) photoKeys.push(lsKey);
                         }
-                        
+                        for (const lsKey of photoKeys) {
+                            const photos = JSON.parse(localStorage.getItem(lsKey));
+                            await savePhotosToDB(lsKey, photos);
+                        }
+
                         console.log('Migração concluída! Dados movidos para IndexedDB.');
                         showToast('📦 Dados migrados para novo formato!', 'success');
                     }
@@ -10099,6 +10111,7 @@ if (mergeFileInput) {
 // ================================================================
 let biVisible=false, biCharts={}, biFD=[], biParetoLv='componente', biRankN=10;
 let biPhotoMap={}, biCompPhotosMap={}, biCarPhotos=[], biCarIdx=0;
+let biAllData=[], biPhotosReady=false;
 const BI_SEV={'Ação Imediata':4,'Defeito Grave':3,'Defeito Ligeiro':2,'Verificado':1,'N/A':0};
 const BI_COL={'Verificado':'rgba(0,229,160,0.8)','N/A':'rgba(150,150,150,0.7)','Defeito Ligeiro':'rgba(51,133,255,0.8)','Defeito Grave':'rgba(255,157,0,0.8)','Ação Imediata':'rgba(255,61,61,0.85)'};
 const BI_CLS=['Ação Imediata','Defeito Grave','Defeito Ligeiro','Verificado','N/A'];
@@ -10120,11 +10133,12 @@ function biGetAll(){
 }
 
 async function biRefresh(){
-  const all=biGetAll();
-  // Load photos from IndexedDB (await to ensure photos are ready before rendering)
-  await biLoadPhotos();
+  biAllData=biGetAll();
+  // Render immediately — photos load in background and re-render when ready
+  biPhotosReady=false;
+  biLoadPhotos().then(()=>{biPhotosReady=true;if(biVisible)biRankings(biFD);}).catch(e=>console.log('BI: photo load error',e));
   // Populate year filter
-  const anos=[...new Set(all.map(r=>(r.data||'').slice(0,4)).filter(a=>a&&a.length===4))].sort().reverse();
+  const anos=[...new Set(biAllData.map(r=>(r.data||'').slice(0,4)).filter(a=>a&&a.length===4))].sort().reverse();
   const anoSel=document.getElementById('biAno');const anoVal=anoSel.value;
   anoSel.innerHTML='<option value="">Todos</option>'+anos.map(a=>`<option value="${a}">${a}</option>`).join('');
   anoSel.value=anoVal;
@@ -10137,12 +10151,12 @@ async function biRefresh(){
   // Cascade sub-parques and turbines
   biPopulateSubparques();
   // Populate categories
-  const cats=[...new Set(all.map(r=>r.categoria).filter(Boolean))].sort();
+  const cats=[...new Set(biAllData.map(r=>r.categoria).filter(Boolean))].sort();
   const caSel=document.getElementById('biCA');const caVal=caSel.value;
   caSel.innerHTML='<option value="">Todas</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
   caSel.value=caVal;
-  biApply(all);
-  document.getElementById('biStatusBadge').style.display=all.length?'inline-block':'none';
+  biApply(biAllData);
+  document.getElementById('biStatusBadge').style.display=biAllData.length?'inline-block':'none';
 }
 
 function biPopulateSubparques(){
@@ -10278,8 +10292,9 @@ function biRenderAll(){
   document.getElementById('bK4').textContent=im;
   document.getElementById('bK5').textContent=conf+'%';
 
-  biChartCls(d);biChartCat(d);biChartSP(d);biChartFl(d);
-  biTurbMap(d);biPareto(d);biRankings(d);biEvolucao(d);biCritTbls(d);biFullTbl(d);
+  // Split rendering across frames so the browser can paint between batches
+  biChartCls(d);biChartCat(d);biChartSP(d);biChartFl(d);biTurbMap(d);biCritTbls(d);biFullTbl(d);
+  requestAnimationFrame(()=>{biPareto(d);biRankings(d);biEvolucao(d);});
 }
 
 function biDC(id){if(biCharts[id]){biCharts[id].destroy();delete biCharts[id];}}
@@ -10298,7 +10313,6 @@ function biChartCat(d){
 
 function biChartSP(d){
   biDC('sp');
-  // Map aerogerador -> sub_parque using AEROGERADORES
   const spMap={};if(typeof AEROGERADORES!=='undefined')AEROGERADORES.forEach(a=>{spMap[a.codigo]=a.sub_parque;});
   const pq=document.getElementById('biPQ').value;
   const sp=document.getElementById('biSP').value;
@@ -10306,8 +10320,10 @@ function biChartSP(d){
   if(pq)aeros=aeros.filter(a=>a.parque===pq);
   if(sp)aeros=aeros.filter(a=>a.sub_parque===sp);
   const parks=[...new Set(aeros.map(a=>a.sub_parque))].sort();if(!parks.length)return;
+  // Pre-compute count map to avoid O(parks×cls×n) nested filters
+  const cnt={};d.forEach(r=>{const p=spMap[r.aerogerador]||'';if(!p)return;if(!cnt[p])cnt[p]={};cnt[p][r.classificacao]=(cnt[p][r.classificacao]||0)+1;});
   const cls=['Verificado','Defeito Ligeiro','Defeito Grave','Ação Imediata'];
-  biCharts.sp=new Chart(document.getElementById('bChSP'),{type:'bar',data:{labels:parks,datasets:cls.map(c=>({label:c,data:parks.map(p=>d.filter(r=>(spMap[r.aerogerador]||'')=== p&&r.classificacao===c).length),backgroundColor:BI_COL[c],borderRadius:4}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BA3C7',font:{size:10},maxRotation:45}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
+  biCharts.sp=new Chart(document.getElementById('bChSP'),{type:'bar',data:{labels:parks,datasets:cls.map(c=>({label:c,data:parks.map(p=>(cnt[p]&&cnt[p][c])||0),backgroundColor:BI_COL[c],borderRadius:4}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8BA3C7',font:{size:11},boxWidth:10,padding:10}}},scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BA3C7',font:{size:10},maxRotation:45}},y:{stacked:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8BA3C7',font:{size:11}}}}}});
 }
 
 function biChartFl(d){
@@ -10319,7 +10335,8 @@ function biChartFl(d){
 function biTurbMap(d){
   const c=document.getElementById('bTurbMap');c.innerHTML='';
   const ts={};d.forEach(r=>{const sv=BI_SEV[r.classificacao]||0;if(!ts[r.aerogerador]||sv>ts[r.aerogerador].sv)ts[r.aerogerador]={sv,cls:r.classificacao}});
-  // Usar filtros ativos do BI para determinar quais turbinas mostrar
+  // Pre-compute defect count per turbine (avoids O(turbines×n) filter loop)
+  const dcMap={};d.forEach(r=>{if(r.classificacao!=='Verificado')dcMap[r.aerogerador]=(dcMap[r.aerogerador]||0)+1;});
   const pq=document.getElementById('biPQ').value;
   const sp=document.getElementById('biSP').value;
   let allT;
@@ -10328,20 +10345,23 @@ function biTurbMap(d){
     if(pq) aeros=aeros.filter(a=>a.parque===pq);
     if(sp) aeros=aeros.filter(a=>a.sub_parque===sp);
     allT=aeros.map(a=>a.codigo);
-    d.forEach(r=>{if(r.aerogerador&&!allT.includes(r.aerogerador))allT.push(r.aerogerador);});
+    const allTSet=new Set(allT);
+    d.forEach(r=>{if(r.aerogerador&&!allTSet.has(r.aerogerador))allT.push(r.aerogerador);});
     allT.sort();
   } else {
     allT=[...new Set(d.map(r=>r.aerogerador).filter(Boolean))].sort();
   }
+  const frag=document.createDocumentFragment();
   allT.forEach(t=>{
-    const s=ts[t];const dc=d.filter(r=>r.aerogerador===t&&r.classificacao!=='Verificado').length;
+    const s=ts[t];const dc=dcMap[t]||0;
     let cls='tc-em';
     if(s){if(s.cls==='Ação Imediata')cls='tc-dg';else if(s.cls==='Defeito Grave')cls='tc-wr';else if(s.cls==='Defeito Ligeiro')cls='tc-lt';else cls='tc-ok';}
     const el=document.createElement('div');el.className=`bi-turb-cell ${cls}`;
     el.title=s?`${t}\n${s.cls}\n${dc} defeitos`:`${t}\nNão inspecionado`;
     el.innerHTML=`<span class="tc-c">${s?(dc||'✓'):'–'}</span><span class="tc-n">${t}</span>`;
-    c.appendChild(el);
+    frag.appendChild(el);
   });
+  c.appendChild(frag);
 }
 
 function biSetPareto(btn){document.querySelectorAll('.bi-pareto-btn[data-lv]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');biParetoLv=btn.dataset.lv;biPareto(biFD);}
@@ -10393,8 +10413,8 @@ function biSetEvo(btn){document.querySelectorAll('.bi-pareto-btn[data-ev]').forE
 
 function biEvolucao(d){
   biDC('evo');
-  // Use ALL data but apply current filters EXCEPT year
-  const all=biGetAll();
+  // Use ALL data but apply current filters EXCEPT year (reuse cached data)
+  const all=biAllData.length?biAllData:biGetAll();
   const pq=document.getElementById('biPQ').value;
   const sp=document.getElementById('biSP').value,ca=document.getElementById('biCA').value;
   const tu=document.getElementById('biTU').value;
@@ -11297,6 +11317,9 @@ const GP_CAT_LABELS = {
   nao_impeditiva:   '📋 Pendência Não Impeditiva',
   outro:            '✏️ Outro — especificar'
 };
+// Pre-built options string — shared across all rows (avoids N × K string concatenation)
+const GP_OPTS_BASE = '<option value="">— selecionar —</option>' + GP_CATS.map(c => `<option value="${c}">${GP_CAT_LABELS[c]}</option>`).join('');
+let _gpSaveTimer = null;
 
 let gpVisible = false;
 let gpDadosAtivos = []; // cache da última renderização
@@ -11504,9 +11527,15 @@ function gpGetDados() {
 
   // ordenar aerogeradores: maior severidade primeiro, depois alfabético
   const sevOrd = { 'Ação Imediata': 3, 'Defeito Grave': 2, 'Defeito Ligeiro': 1 };
+  // Pre-compute max severity per aero to avoid O(n²) array creation inside sort comparator
+  const aeroMaxSev = {};
+  Object.keys(porAero).forEach(a => {
+    let mx = 0;
+    porAero[a].forEach(r => { const s = sevOrd[r.classificacao] || 0; if (s > mx) mx = s; });
+    aeroMaxSev[a] = mx;
+  });
   const aerosSorted = Object.keys(porAero).sort((a, b) => {
-    const maxSev = arr => arr.length ? Math.max(...arr.map(r => sevOrd[r.classificacao] || 0)) : 0;
-    const diff = maxSev(porAero[b]) - maxSev(porAero[a]);
+    const diff = aeroMaxSev[b] - aeroMaxSev[a];
     return diff !== 0 ? diff : a.localeCompare(b, undefined, { numeric: true });
   });
 
@@ -11582,14 +11611,22 @@ function gpRender() {
   // Summary visible
   document.getElementById('gpSummary').style.display = '';
 
-  // Render blocks
+  // Render blocks incrementally to avoid freezing the main thread
   const wrap = document.getElementById('gpBlocksWrap');
-  wrap.innerHTML = aerosSorted.map(aero => gpBuildAeroBlock(aero, porAero[aero], saved)).join('');
-
-  gpUpdateTotals(saved, gpDadosAtivos);
-
-  // se a aba de componentes estiver ativa, re-renderizar
-  if (gpActiveTab === 'comp') gpRenderComponentes();
+  wrap.innerHTML = '';
+  const CHUNK = 5;
+  const renderChunk = (i) => {
+    const end = Math.min(i + CHUNK, aerosSorted.length);
+    const html = aerosSorted.slice(i, end).map(aero => gpBuildAeroBlock(aero, porAero[aero], saved)).join('');
+    wrap.insertAdjacentHTML('beforeend', html);
+    if (end < aerosSorted.length) {
+      requestAnimationFrame(() => renderChunk(end));
+    } else {
+      gpUpdateTotals(saved, gpDadosAtivos);
+      if (gpActiveTab === 'comp') gpRenderComponentes();
+    }
+  };
+  requestAnimationFrame(() => renderChunk(0));
 }
 
 // ── BUILD AERO BLOCK ──────────────────────────────────────────
@@ -11667,9 +11704,9 @@ function gpBuildRow(r, aero, saved) {
   const bdg = `<span class="gp-bdg ${BADGE_CLS[r.classificacao]||''}">${EMOJI[r.classificacao]||''} ${r.classificacao}</span>`;
   const obs = r.observacoes ? `<span style="color:#4A6280;font-size:13px;font-style:italic">${r.observacoes}</span>` : `<span style="color:#4A6280">—</span>`;
 
-  const opts = GP_CATS.map(c =>
-    `<option value="${c}"${catVal===c?' selected':''}>${GP_CAT_LABELS[c]}</option>`
-  ).join('');
+  const opts = catVal
+    ? GP_OPTS_BASE.replace(`value="${catVal}"`, `value="${catVal}" selected`)
+    : GP_OPTS_BASE;
 
   const outroDisplay = catVal==='outro' ? '' : 'display:none';
   const selectFilled = catVal ? ' filled' : '';
@@ -11751,6 +11788,11 @@ function gpLiveSavedFor(saved, row) {
 }
 
 function gpSaveAll() {
+  if (_gpSaveTimer) clearTimeout(_gpSaveTimer);
+  _gpSaveTimer = setTimeout(_gpSaveAllNow, 250);
+}
+function _gpSaveAllNow() {
+  _gpSaveTimer = null;
   const data = gpLoadSaved();
 
   document.querySelectorAll('.gp-cat-select').forEach(sel => {
@@ -11804,16 +11846,27 @@ function gpFmtBRLInput(value) {
 }
 
 function gpUpdateTotals(saved, linhas) {
-  let grandTotal = 0, grandFilled = 0;
+  let grandTotal = 0, grandFilled = 0, catCount = 0;
 
-  // Subtotais por aero
+  // Single pass: subtotals + catCount + category breakdown
   const subTotals = {};
+  const catTotals = {}, catCounts = {};
+  GP_CATS.forEach(c => { catTotals[c]=0; catCounts[c]=0; });
+
   linhas.forEach(r => {
-    const s = gpLiveSavedFor(saved, r);
+    // gpSavedFor is enough — `saved` is always up-to-date when this is called
+    const s = gpSavedFor(saved, r);
     const v = gpParseBRL(s.custo || '');
     if (v > 0) { grandFilled++; grandTotal += v; }
     if (!subTotals[r.aero]) subTotals[r.aero] = 0;
     subTotals[r.aero] += v;
+    const cat = s.cat || '';
+    if (cat) {
+      catCount++;
+      const key = GP_CATS.includes(cat) ? cat : 'outro';
+      catCounts[key]++;
+      catTotals[key] += v;
+    }
   });
 
   Object.entries(subTotals).forEach(([aero, val]) => {
@@ -11822,13 +11875,9 @@ function gpUpdateTotals(saved, linhas) {
     if (el) el.textContent = gpFmtBRL(val);
   });
 
-  // KPI custo
+  // KPIs
   const kc = document.getElementById('gpKCusto');
   if (kc) kc.textContent = gpFmtBRL(grandTotal);
-
-  // KPI categorizados
-  let catCount = 0;
-  linhas.forEach(r => { if (gpLiveSavedFor(saved, r).cat) catCount++; });
   const kcat = document.getElementById('gpKCat');
   if (kcat) kcat.textContent = catCount;
 
@@ -11849,18 +11898,6 @@ function gpUpdateTotals(saved, linhas) {
   if (sc) sc.textContent = catCount;
   const st = document.getElementById('gpSumTotal');
   if (st) st.textContent = total;
-
-  // Category breakdown
-  const catTotals = {}, catCounts = {};
-  GP_CATS.forEach(c => { catTotals[c]=0; catCounts[c]=0; });
-  linhas.forEach(r => {
-    const s = gpLiveSavedFor(saved, r);
-    const cat = s.cat || '';
-    if (!cat) return;
-    const key = GP_CATS.includes(cat) ? cat : 'outro';
-    catCounts[key]++;
-    catTotals[key] += gpParseBRL(s.custo || '');
-  });
 
 const tbody = document.getElementById('gpCatSumBody');
   if (tbody) {
