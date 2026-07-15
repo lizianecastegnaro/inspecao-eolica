@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -5054,6 +5054,88 @@ const ESTRUTURA_CERRO_CHATO = {
             "Conexão solta"
           ]
         }
+      },
+      "Gabinetes de Potência": {
+        "Gabinete de Potência 01": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "Gabinete de Potência 02": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "Gabinete de Potência 03": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "Gabinete de Potência 04": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "Gabinete de Potência 05": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "Gabinete de Potência 06": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "Gabinete de Potência 07": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        },
+        "QGBT": {
+          "classificacoes": [],
+          "falhas": [
+            "Porta danificada",
+            "Vedação comprometida",
+            "Corrosão",
+            "Sinais de superaquecimento",
+            "Fixação inadequada"
+          ]
+        }
       }
     },
     "Torre Seção do Yaw e Loop": {
@@ -6284,17 +6366,6 @@ const AEROGERADORES = [
             });
         }
 
-        function loadAllPhotoKeysFromDB() {
-            return new Promise((resolve, reject) => {
-                if (!db) { resolve([]); return; }
-                const tx = db.transaction([STORE_PHOTOS], 'readonly');
-                const store = tx.objectStore(STORE_PHOTOS);
-                const req = store.getAllKeys();
-                req.onsuccess = e => resolve(e.target.result || []);
-                req.onerror = e => reject(e.target.error);
-            });
-        }
-
         /**
          * Limpa todos os dados do IndexedDB
          */
@@ -6425,26 +6496,21 @@ const AEROGERADORES = [
                 });
                 parqueNome = custom ? custom.parque : 'Coxilha Negra';
             }
-            // Conta em uma única passagem — O(n) em vez de O(n_aeros × n)
-            const aeroCounts = {};
-            for (const key of Object.keys(inspectionData)) {
-                const idx = key.indexOf('_');
-                if (idx > 0) {
-                    const code = key.slice(0, idx);
-                    aeroCounts[code] = (aeroCounts[code] || 0) + 1;
-                }
-            }
             const select = document.getElementById('aerogerador');
             select.innerHTML = '<option value="">Selecione o aerogerador...</option>';
             AEROGERADORES.filter(a => a.parque === parqueNome).forEach(aero => {
                 const option = document.createElement('option');
                 option.value = aero.codigo;
                 option.textContent = `${aero.codigo} - ${aero.sub_parque}`;
-                if ((aeroCounts[aero.codigo] || 0) >= totalComponentes) {
+                
+                // Verificar se este aerogerador está 100% completo
+                const progresso = getAerogeradorProgress(aero.codigo);
+                if (progresso.percentual === 100) {
                     option.textContent = `✅ ${aero.codigo} - ${aero.sub_parque} (Completo)`;
                     option.style.color = '#28a745';
                     option.style.fontWeight = 'bold';
                 }
+                
                 select.appendChild(option);
             });
         }
@@ -6968,9 +7034,9 @@ photoUpload.addEventListener('drop', (e) => {
             }
             
             if (diagBtn) {
-                diagBtn.addEventListener('click', async () => {
+                diagBtn.addEventListener('click', () => {
                     console.log('Botão DIAGNÓSTICO clicado!');
-                    try { await runDiagnostics(); } catch (e) { console.error('Erro no diagnóstico:', e); showToast('❌ Erro ao executar diagnóstico: ' + e.message, 'error'); }
+                    runDiagnostics();
                 });
             }
             
@@ -7767,25 +7833,19 @@ if (mergeFileInput) {
                 parqueNome = custom ? custom.parque : 'Coxilha Negra';
             }
             const aerosFiltrados = AEROGERADORES.filter(a => a.parque === parqueNome);
-            const totalAeros = aerosFiltrados.length;
-
-            // Conta por aerogerador em uma única passagem pelos keys — O(n) em vez de O(n_aeros × n)
-            const aeroCounts = {};
-            for (const key of Object.keys(inspectionData)) {
-                const idx = key.indexOf('_');
-                if (idx > 0) {
-                    const code = key.slice(0, idx);
-                    aeroCounts[code] = (aeroCounts[code] || 0) + 1;
-                }
-            }
+            let totalAeros = aerosFiltrados.length;
             let completosAeros = 0;
+            
             aerosFiltrados.forEach(aero => {
-                if ((aeroCounts[aero.codigo] || 0) >= totalComponentes) completosAeros++;
+                const progresso = getAerogeradorProgress(aero.codigo);
+                if (progresso.percentual === 100) {
+                    completosAeros++;
+                }
             });
-
+            
             const percentualParque = totalAeros > 0 ? (completosAeros / totalAeros) * 100 : 0;
-
-            document.getElementById('progressoParque').innerHTML =
+            
+            document.getElementById('progressoParque').innerHTML = 
                 `📊 Aerogeradores completos: <strong>${completosAeros}/${totalAeros}</strong> (${Math.round(percentualParque)}%)`;
             document.getElementById('progressoParqueBarra').style.width = `${percentualParque}%`;
         }
@@ -8774,31 +8834,19 @@ if (mergeFileInput) {
                     }
                 }
             }
-            // Libera memória das inspeções antes de processar fotos
-            backup.data.inspectionData = null;
 
-            const photoEntries = Object.entries(backupPhotos);
-            for (let pi = 0; pi < photoEntries.length; pi++) {
-                const [key, newPhotos] = photoEntries[pi];
+            for (const [key, newPhotos] of Object.entries(backupPhotos)) {
                 if (Array.isArray(newPhotos) && newPhotos.length > 0) {
                     const migratedKey = migrateKey(key);
                     let existingPhotos = await loadPhotosFromDB(migratedKey) || [];
-                    // Fingerprint: comprimento + primeiros 128 chars — evita comparar strings base64 inteiras
-                    const fp = p => p.length + ':' + p.slice(0, 128);
-                    const existingSet = new Set(existingPhotos.map(fp));
                     for (const newPhoto of newPhotos) {
-                        const key = fp(newPhoto);
-                        if (!existingSet.has(key)) {
-                            existingSet.add(key);
+                        if (!existingPhotos.includes(newPhoto)) {
                             existingPhotos.push(newPhoto);
                             fotos++;
                         }
                     }
                     await savePhotosToDB(migratedKey, existingPhotos);
-                    existingPhotos = null;
                 }
-                // Yield a cada 5 entradas para não bloquear a UI
-                if (pi % 5 === 4) await new Promise(r => setTimeout(r, 0));
             }
 
             return { adicionadas, atualizadas, fotos, migradas };
@@ -8872,22 +8920,14 @@ if (mergeFileInput) {
                         inspectionData = migratedInspectionData;
                     }
 
-                    // Libera memória das inspeções antes de processar fotos
-                    backup.data.inspectionData = null;
-
                     // Restaurar fotos no IndexedDB (com migração de chaves)
                     if (backup.data.photos) {
-                        const photoEntries = Object.entries(backup.data.photos);
-                        for (let pi = 0; pi < photoEntries.length; pi++) {
-                            const [key, photos] = photoEntries[pi];
+                        for (const [key, photos] of Object.entries(backup.data.photos)) {
                             if (Array.isArray(photos) && photos.length > 0) {
                                 const newKey = migrateKey(key);
                                 await savePhotosToDB(newKey, photos);
                             }
-                            // Yield a cada 5 entradas para não bloquear a UI
-                            if (pi % 5 === 4) await new Promise(r => setTimeout(r, 0));
                         }
-                        backup.data.photos = null;
                     }
 
                     // Atualizar interface
@@ -9290,9 +9330,9 @@ if (mergeFileInput) {
             // 3. Análise das fotos
             let totalPhotos = 0;
             const photoKeys = [];
-            let allPhotos = {};
+            
             try {
-                allPhotos = await loadAllPhotosFromDB();
+                const allPhotos = await loadAllPhotosFromDB();
                 for (const [key, photos] of Object.entries(allPhotos)) {
                     if (Array.isArray(photos) && photos.length > 0) {
                         photoKeys.push(key);
@@ -9415,19 +9455,26 @@ if (mergeFileInput) {
                                 const componentName = key.replace('photos_', '').split('_').slice(1).join(' > ');
                                 const aeroName = key.replace('photos_', '').split('_')[0];
                                 let photosHtml = '';
-                                {
-                                    const photoCount = (allPhotos[key] || []).length;
-                                    if (photoCount > 0) {
+                                try {
+                                    const photos = JSON.parse(localStorage.getItem(key) || '[]');
+                                    if (photos.length > 0) {
                                         photosHtml = `
                                             <div class="diag-photo-group">
                                                 <div class="diag-photo-title">
                                                     <strong>${aeroName}</strong> - ${componentName}
-                                                    <span class="diag-photo-count">(${photoCount} foto${photoCount > 1 ? 's' : ''})</span>
+                                                    <span class="diag-photo-count">(${photos.length} foto${photos.length > 1 ? 's' : ''})</span>
+                                                </div>
+                                                <div class="diag-photo-thumbs">
+                                                    ${photos.map((photo, idx) => `
+                                                        <div class="diag-thumb" onclick="openPhotoModal('${photo.replace(/'/g, "\\'")}')">
+                                                            <img src="${photo}" alt="Foto ${idx + 1}">
+                                                        </div>
+                                                    `).join('')}
                                                 </div>
                                             </div>
                                         `;
                                     }
-                                }
+                                } catch(e) {}
                                 return photosHtml;
                             }).join('')}
                         </div>
@@ -10145,7 +10192,7 @@ if (mergeFileInput) {
 // BI DASHBOARD ENGINE — reads from inspectionData variable
 // ================================================================
 let biVisible=false, biCharts={}, biFD=[], biParetoLv='componente', biRankN=10;
-let biPhotoMap={}, biCompPhotosMap={}, biCarPhotos=[], biCarIdx=0, biTipCache={};
+let biPhotoMap={}, biCompPhotosMap={}, biCarPhotos=[], biCarIdx=0;
 let biAllData=[], biPhotosReady=false;
 const BI_SEV={'Ação Imediata':4,'Defeito Grave':3,'Defeito Ligeiro':2,'Verificado':1,'N/A':0};
 const BI_COL={'Verificado':'rgba(0,229,160,0.8)','N/A':'rgba(150,150,150,0.7)','Defeito Ligeiro':'rgba(51,133,255,0.8)','Defeito Grave':'rgba(255,157,0,0.8)','Ação Imediata':'rgba(255,61,61,0.85)'};
@@ -10592,63 +10639,62 @@ function biExportCSV(){
 // PHOTO SYSTEM — loads from IndexedDB, shows tooltip + carousel
 // ============================================================
 async function biLoadPhotos(){
-  biPhotoMap={};biCompPhotosMap={};biTipCache={};
+  biPhotoMap={};biCompPhotosMap={};
   try{
-    // Carrega só as chaves (sem dados de imagem) — evita OOM com muitas fotos
-    const allKeys=await loadAllPhotoKeysFromDB();
-    for(const photoKey of allKeys){
+    const allPhotos=await loadAllPhotosFromDB();
+    for(const[photoKey,photos] of Object.entries(allPhotos)){
+      if(!photos||!photos.length)continue;
+      // photoKey format: "photos_ECN2-01_Categoria_Subcategoria_Componente"
       const inspKey=photoKey.replace('photos_','');
       const rec=inspectionData[inspKey];
       if(!rec)continue;
       const compName=rec.componente||rec.subcategoria||'';
       if(!compName)continue;
-      // Armazena referência à chave, não os dados da imagem
-      if(!biPhotoMap['comp:'+compName])biPhotoMap['comp:'+compName]='dbkey:'+photoKey;
+      const src0=photos[0].startsWith('data:')?photos[0]:'data:image/jpeg;base64,'+photos[0];
+      // First photo by component
+      if(!biPhotoMap['comp:'+compName])biPhotoMap['comp:'+compName]=src0;
+      // All photos for carousel
       if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
-      biCompPhotosMap[compName].push({photoKey,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName,categoria:rec.categoria||''});
+      photos.forEach(raw=>{
+        const src=raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw;
+        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName,categoria:rec.categoria||''});
+      });
     }
-  }catch(e){console.log('BI: Could not load photo keys from IndexedDB',e);}
-  // Fallback localStorage — só verifica existência das chaves, sem carregar dados
+  }catch(e){console.log('BI: Could not load photos from IndexedDB',e);}
+  // Also try localStorage fallback
   for(let i=0;i<localStorage.length;i++){
     const key=localStorage.key(i);
     if(!key||!key.startsWith('photos_'))continue;
-    const inspKey=key.replace('photos_','');
-    const rec=inspectionData[inspKey];
-    if(!rec)continue;
-    const compName=rec.componente||rec.subcategoria||'';
-    if(!compName)continue;
-    if(!biPhotoMap['comp:'+compName])biPhotoMap['comp:'+compName]='lskey:'+key;
-    if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
-    biCompPhotosMap[compName].push({lsKey:key,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName,categoria:rec.categoria||''});
+    try{
+      const photos=JSON.parse(localStorage.getItem(key));
+      if(!photos||!photos.length)continue;
+      const inspKey=key.replace('photos_','');
+      const rec=inspectionData[inspKey];
+      if(!rec)continue;
+      const compName=rec.componente||rec.subcategoria||'';
+      if(!compName)continue;
+      const src0=photos[0].startsWith('data:')?photos[0]:'data:image/jpeg;base64,'+photos[0];
+      if(!biPhotoMap['comp:'+compName])biPhotoMap['comp:'+compName]=src0;
+      if(!biCompPhotosMap[compName])biCompPhotosMap[compName]=[];
+      photos.forEach(raw=>{
+        const src=raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw;
+        biCompPhotosMap[compName].push({src,aerogerador:rec.aerogerador,classificacao:rec.classificacao,falha:rec.falha||'',componente:compName,categoria:rec.categoria||''});
+      });
+    }catch(e){}
   }
 }
 
-// Photo tooltip — lazy-load: só busca dados da imagem quando o mouse entra
-async function biShowTip(evt,compName){
-  const ref=biPhotoMap['comp:'+compName];
-  if(!ref)return;
+// Photo tooltip
+function biShowTip(evt,compName){
+  const photo=biPhotoMap['comp:'+compName];
+  if(!photo)return;
   const tip=document.getElementById('bi-photo-tip');
   document.getElementById('bi-photo-tip-lbl').textContent=compName;
+  document.getElementById('bi-photo-tip-img').src=photo;
   const sample=biFD.find(r=>(r.componente||r.subcategoria)===compName);
   document.getElementById('bi-photo-tip-info').textContent=sample?`${sample.aerogerador} · ${sample.componente||''}`:''  ;
   tip.style.display='block';
   biPosTip(evt);
-  // Usa cache para não recarregar a cada hover
-  if(biTipCache[compName]){
-    document.getElementById('bi-photo-tip-img').src=biTipCache[compName];
-    return;
-  }
-  try{
-    let src='';
-    if(ref.startsWith('dbkey:')){
-      const photos=await loadPhotosFromDB(ref.slice(6));
-      if(photos&&photos.length) src=photos[0].startsWith('data:')?photos[0]:'data:image/jpeg;base64,'+photos[0];
-    } else if(ref.startsWith('lskey:')){
-      const arr=JSON.parse(localStorage.getItem(ref.slice(6)));
-      if(arr&&arr.length) src=arr[0].startsWith('data:')?arr[0]:'data:image/jpeg;base64,'+arr[0];
-    }
-    if(src){ biTipCache[compName]=src; document.getElementById('bi-photo-tip-img').src=src; }
-  }catch(e){}
 }
 function biPosTip(evt){
   const tip=document.getElementById('bi-photo-tip');
@@ -10664,51 +10710,29 @@ function biHideTip(){document.getElementById('bi-photo-tip').style.display='none
 document.addEventListener('mousemove',e=>{const t=document.getElementById('bi-photo-tip');if(t&&t.style.display!=='none')biPosTip(e);});
 
 // Carousel
-async function biLoadCarPhotos(entries){
-  const photos=[];
-  for(const entry of entries){
-    let arr=[];
-    try{
-      if(entry.photoKey) arr=await loadPhotosFromDB(entry.photoKey)||[];
-      else if(entry.lsKey) arr=JSON.parse(localStorage.getItem(entry.lsKey))||[];
-    }catch(e){}
-    for(const raw of arr){
-      photos.push({src:raw.startsWith('data:')?raw:'data:image/jpeg;base64,'+raw,aerogerador:entry.aerogerador,classificacao:entry.classificacao,falha:entry.falha||'',componente:entry.componente,categoria:entry.categoria||''});
-    }
-  }
-  return photos;
-}
-async function biOpenCar(compName){
+function biOpenCar(compName){
   biHideTip();
-  const entries=biCompPhotosMap[compName];
-  if(!entries||!entries.length)return;
-  document.getElementById('bi-carousel').style.display='flex';
-  document.getElementById('bi-car-name').textContent=compName;
-  document.getElementById('bi-car-img').src='';
-  document.getElementById('bi-car-sub').textContent='⏳ Carregando fotos...';
-  const photos=await biLoadCarPhotos(entries);
-  if(!photos.length){biCloseCar();return;}
+  const photos=biCompPhotosMap[compName];
+  if(!photos||!photos.length)return;
   biCarPhotos=photos;biCarIdx=0;
+  document.getElementById('bi-car-name').textContent=compName;
   document.getElementById('bi-car-cat').textContent=photos[0].categoria||'';
   document.getElementById('bi-car-sub').textContent=photos.length+' foto'+(photos.length>1?'s':'')+' · '+[...new Set(photos.map(p=>p.aerogerador))].join(', ');
+  document.getElementById('bi-carousel').style.display='flex';
   biUpdateCar();
 }
-async function biOpenCarFiltered(compName){
+function biOpenCarFiltered(compName){
   biHideTip();
-  const allEntries=biCompPhotosMap[compName];
-  if(!allEntries||!allEntries.length)return;
+  const allPhotos=biCompPhotosMap[compName];
+  if(!allPhotos||!allPhotos.length)return;
   const fk=window._biFilteredKeys||new Set();
-  const entries=allEntries.filter(e=>fk.has(e.aerogerador+'|'+compName));
-  if(!entries.length)return;
-  document.getElementById('bi-carousel').style.display='flex';
-  document.getElementById('bi-car-name').textContent=compName;
-  document.getElementById('bi-car-img').src='';
-  document.getElementById('bi-car-sub').textContent='⏳ Carregando fotos...';
-  const photos=await biLoadCarPhotos(entries);
-  if(!photos.length){biCloseCar();return;}
+  const photos=allPhotos.filter(p=>fk.has(p.aerogerador+'|'+compName));
+  if(!photos.length)return;
   biCarPhotos=photos;biCarIdx=0;
+  document.getElementById('bi-car-name').textContent=compName;
   document.getElementById('bi-car-cat').textContent=photos[0].categoria||'';
   document.getElementById('bi-car-sub').textContent=photos.length+' foto'+(photos.length>1?'s':'')+' · '+[...new Set(photos.map(p=>p.aerogerador))].join(', ');
+  document.getElementById('bi-carousel').style.display='flex';
   biUpdateCar();
 }
 function biCloseCar(){document.getElementById('bi-carousel').style.display='none';}
